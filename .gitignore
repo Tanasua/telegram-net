@@ -5,5 +5,5 @@ __pycache__/
 .env
 *.session
 *.session-journal
-telegram_net.db
+/telegram_net.db
 .pytest_cache/

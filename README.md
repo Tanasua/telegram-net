@@ -9,7 +9,7 @@
 ## Архітектура
 
 ```
-Scheduler (зовнішній cron/systemd timer, щогодини)
+Scheduler (GitHub Actions, cron щогодини)
   → Fetchers: Telegram-джерела (Telethon) | Сайти (RSS/OG-теги)
   → Дедуп контенту (content hash)
   → Classifier (OpenAI): реклама? релевантність регіону? інтерес як новина?
@@ -39,17 +39,21 @@ Scheduler (зовнішній cron/systemd timer, щогодини)
 | `media.py` | Розбивка медіа на пачки ≤10 (ліміт `sendMediaGroup`) |
 | `publisher.py` | Публікація в Telegram Bot API (`sendMessage`/`sendPhoto`/`sendVideo`/`sendMediaGroup`) |
 | `pipeline.py` | Оркестрація одного прогону |
-| `scheduler.py` | Точка входу для cron/systemd timer |
+| `scheduler.py` | Точка входу, яку викликає `.github/workflows/scheduler.yml` |
 
-## Встановлення
+## Встановлення (локально — лише для розробки/тестів, продакшн — розділ нижче)
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
-cp .env.example .env   # і заповнити
+cp .env.example .env   # і заповнити — тільки для локального запуску/тестів
 ```
 
-### Обов'язково заповнити самостійно (нічого з цього не вигадано за тебе)
+Продакшн-бот **не використовує `.env`** — він живе на GitHub Actions і бере ті
+самі значення з GitHub Secrets (розділ "Запуск" нижче). `.env` потрібен лише
+якщо хочеш прогнати конвеєр зі свого комп'ютера для перевірки.
+
+### Ті самі значення (локально — у `.env`, у продакшні — GitHub Secrets)
 
 - `TELEGRAM_BOT_TOKEN` — бот, доданий адміном у всі канали мережі.
 - `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` — з https://my.telegram.org, для читання чужих публічних каналів-джерел через Telethon.
@@ -86,17 +90,59 @@ Facebook-групи ("Підслухано ...") і Viber — свідомо н�
 не реалізоване. Повний довідник (включно з FB/Viber, для ручного використання)
 надсилався окремим xlsx-файлом під час дослідження джерел.
 
-## Запуск
+## Запуск — все на GitHub Actions, без окремого сервера
+
+Бот працює як щогодинний `.github/workflows/scheduler.yml` (`cron: "0 * * * *"` +
+кнопка "Run workflow" для ручного запуску). Ніякого власного комп'ютера/VPS не
+потрібно — GitHub сам піднімає чисту віртуалку щогодини, ставить залежності й
+запускає `python -m telegram_net.scheduler`.
+
+Це рішення закриває два бар'єри, які інакше зробили б GitHub Actions
+непридатним для цього бота:
+
+1. **Стан бота (SQLite) переживає між запусками.** Кожен прогін пише
+   `state/telegram_net.db` і сам комітить його назад у репозиторій в кінці
+   workflow — тому курсори читання й дедуп не губляться, хоч кожен запуск і
+   стартує з чистої віртуалки. Це попутно й вирішує проблему "workflow
+   вимикається після 60 днів без активності репозиторію" — коміт щогодини
+   й є тією активністю.
+2. **Логін у Telegram (Telethon) не можна зробити всередині CI** — потрібен
+   код підтвердження з телефону, а CI не інтерактивний. Тому логін робиться
+   **один раз** на будь-якому своєму комп'ютері через `scripts/create_telethon_session.py`,
+   а результат (закодований у base64) зберігається як GitHub Secret і
+   розкодовується назад у файл на початку кожного запуску workflow.
+
+### Секрети (Settings → Secrets and variables → Actions → New secret)
+
+| Назва | Що туди |
+|---|---|
+| `TELEGRAM_BOT_TOKEN` | токен бота від @BotFather |
+| `TELEGRAM_API_ID` | з my.telegram.org |
+| `TELEGRAM_API_HASH` | з my.telegram.org |
+| `TELEGRAM_SESSION_B64` | вивід `scripts/create_telethon_session.py` (одноразово, локально) |
+| `OPENAI_API_KEY` | ключ з platform.openai.com |
+| `OPENAI_CLASSIFIER_MODEL` | напр. `gpt-5.6-luna` |
+| `OPENAI_GENERATOR_MODEL` | напр. `gpt-5.6-terra` |
+
+Google Sheets-секрети (`GOOGLE_SHEETS_*`) — не потрібні, поки конфіг береться
+з `data/sources_seed.json` у самому репозиторії.
+
+### Одноразовий локальний крок — сесія Telethon
+
+На будь-якому своєму комп'ютері (потрібен лише раз, потім забудь про нього):
 
 ```bash
-.venv/bin/python -m telegram_net.scheduler
+pip install telethon
+TELEGRAM_API_ID=... TELEGRAM_API_HASH=... python scripts/create_telethon_session.py
 ```
 
-Розклад — зовнішній (cron/systemd timer), напр. щогодини:
+Скрипт попросить номер телефону й код підтвердження з Telegram, а в кінці
+виведе рядок — його встав у секрет `TELEGRAM_SESSION_B64`.
 
-```
-0 * * * * cd /path/to/telegram-net && .venv/bin/python -m telegram_net.scheduler
-```
+### Перевірка вручну
+
+Actions → Hourly news pipeline → Run workflow — запускає прогін одразу, не
+чекаючи наступної години. Дивись логи там же.
 
 ## Тести
 
