@@ -60,18 +60,35 @@ def test_load_sources(seed_path):
     assert active[0].type == "telegram"
 
 
-def test_real_seed_file_loads_and_is_internally_consistent():
-    """data/sources_seed.json — реальний сід, зібраний дослідженням; тест
-    ловить регресії формату, а не конкретний вміст."""
-    source = LocalJSONConfigSource("data/sources_seed.json")
+def _assert_seed_file_is_internally_consistent(path, expected_channel_count):
+    """Спільна перевірка формату (не конкретного вмісту) для робочого й архівного сідів."""
+    source = LocalJSONConfigSource(path)
     channels = source.load_channels()
     sources = source.load_sources()
 
-    assert len(channels) == 23
+    assert len(channels) == expected_channel_count
     channel_ids = {c.channel_id for c in channels}
-    assert len(channel_ids) == 23  # усі унікальні
+    assert len(channel_ids) == expected_channel_count  # усі унікальні
 
     for s in sources:
         assert s.channel_id in channel_ids
         assert s.type in ("telegram", "website", "facebook_page")
         assert s.handle_or_url
+
+
+def test_active_seed_file_has_the_7_channels_in_work():
+    """data/sources_seed.json — лише канали, що зараз реально ведуться."""
+    _assert_seed_file_is_internally_consistent("data/sources_seed.json", expected_channel_count=7)
+
+
+def test_archived_seed_file_has_the_16_parked_channels():
+    """data/sources_archive.json — відкладені райцентри; не завантажується
+    конвеєром за замовчуванням, але джерела нікуди не зникли."""
+    _assert_seed_file_is_internally_consistent("data/sources_archive.json", expected_channel_count=16)
+
+
+def test_active_and_archived_channels_do_not_overlap():
+    active_ids = {c.channel_id for c in LocalJSONConfigSource("data/sources_seed.json").load_channels()}
+    archived_ids = {c.channel_id for c in LocalJSONConfigSource("data/sources_archive.json").load_channels()}
+    assert active_ids.isdisjoint(archived_ids)
+    assert len(active_ids | archived_ids) == 23
