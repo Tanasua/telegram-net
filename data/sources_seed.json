@@ -1,0 +1,1328 @@
+{
+  "channels": [
+    {
+      "channel_id": "zhytomyr",
+      "name": "Житомир",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "berdychiv",
+      "name": "Бердичів",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "korosten",
+      "name": "Коростень",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "zvyahel",
+      "name": "Звягель (Новоград-Волинський)",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "malyn",
+      "name": "Малин",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "radomyshl",
+      "name": "Радомишль",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "korostyshiv",
+      "name": "Коростишів",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "ovruch",
+      "name": "Овруч",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "olevsk",
+      "name": "Олевськ",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "chudniv",
+      "name": "Чуднів",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "andrushivka",
+      "name": "Андрушівка",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "ruzhyn",
+      "name": "Ружин",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "liubar",
+      "name": "Любар",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "popilnya",
+      "name": "Попільня",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "baranivka",
+      "name": "Баранівка",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "yemilchyne",
+      "name": "Ємільчине",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "narodychi",
+      "name": "Народичі",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "pulyny",
+      "name": "Пулини",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "romaniv",
+      "name": "Романів",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "brusyliv",
+      "name": "Брусилів",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "luhyny",
+      "name": "Лугини",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "khoroshiv",
+      "name": "Хорошів",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    },
+    {
+      "channel_id": "cherniakhiv",
+      "name": "Черняхів",
+      "telegram_chat_id": null,
+      "active": true,
+      "min_relevance": 0.5,
+      "length_weights": {
+        "short": 0.4,
+        "medium": 0.35,
+        "long": 0.25
+      },
+      "headline_probability": 0.4,
+      "timezone": "Europe/Kyiv"
+    }
+  ],
+  "sources": [
+    {
+      "channel_id": "zhytomyr",
+      "type": "website",
+      "name": "Житомир.info",
+      "handle_or_url": "https://www.zhitomir.info",
+      "active": true,
+      "note": "Один з найстаріших новинних сайтів міста"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "website",
+      "name": "Zhitomir-OnLine",
+      "handle_or_url": "https://zhitomir-online.com",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "website",
+      "name": "ZhitomirNEWS",
+      "handle_or_url": "https://www.zhitomirnews.com",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Житомир.info",
+      "handle_or_url": "@zhytomir_info",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Новини Житомира | pzhytomyr",
+      "handle_or_url": "@pzhytomyr",
+      "active": true,
+      "note": "Оперативний паблік: тривоги/світло/вода/транспорт"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Труха⚡️Житомир",
+      "handle_or_url": "@truexazhitomir",
+      "active": false,
+      "note": "Вузол мультиміської мережі 'Труха' — агрегатор інцидентів, не класична редакція"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Суспільне Житомир",
+      "handle_or_url": "@suspilnezhytomyr",
+      "active": true,
+      "note": "Офіційна регіональна редакція Суспільного"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Житомирська міська рада",
+      "handle_or_url": "@zhtmr",
+      "active": true,
+      "note": "Офіційний канал міськради"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Житомирська ОВА",
+      "handle_or_url": "@zhytomyrmilitaryadministration",
+      "active": true,
+      "note": "Офіційний канал облвійськадміністрації"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "facebook_page",
+      "name": "Житомирська міська рада",
+      "handle_or_url": "facebook.com/miskaradazt",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "facebook_page",
+      "name": "Житомирська обласна рада",
+      "handle_or_url": "facebook.com/zt.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "facebook_page",
+      "name": "Житомирська ОВА (2 кандидати)",
+      "handle_or_url": "facebook.com/zhitomiradmin ; facebook.com/odazt",
+      "active": false,
+      "note": "Незрозуміло, яка сторінка активна зараз"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "facebook_page",
+      "name": "Підслухано Житомир (це Page, не Group)",
+      "handle_or_url": "facebook.com/pidslukhanozt",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "facebook_page",
+      "name": "Житомир.info (FB)",
+      "handle_or_url": "facebook.com/www.zhitomir.info",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "facebook_page",
+      "name": "Новини Житомира 20minut.ua",
+      "handle_or_url": "facebook.com/20minZT",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "facebook_page",
+      "name": "Суспільне Житомир (FB)",
+      "handle_or_url": "facebook.com/suspilne.zhytomyr",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "website",
+      "name": "РІО Бердичів",
+      "handle_or_url": "https://rio-berdychiv.info",
+      "active": true,
+      "note": "Прямий фетч дав 403, активність підтверджена опосередковано"
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "website",
+      "name": "Бердичів.biz",
+      "handle_or_url": "https://www.berdichev.biz",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "telegram",
+      "name": "РІО Бердичів Новини",
+      "handle_or_url": "@rio_berdychiv_informatsiya",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "telegram",
+      "name": "Офіційно в Бердичеві",
+      "handle_or_url": "@officially_in_berdychiv",
+      "active": false,
+      "note": "Назва оманлива — НЕ офіційний канал міськради, незалежний агрегатор"
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "telegram",
+      "name": "Бердичів Підслухано (старий лінк)",
+      "handle_or_url": "t.me/Berdychiv2",
+      "active": false,
+      "note": "Хендл зараз веде на непов'язану заглушку 35 підписників — канал або змінив ім'я, або перейшов новому власнику"
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "facebook_page",
+      "name": "Бердичівська міська рада",
+      "handle_or_url": "facebook.com/Berdychiv.rada",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "facebook_page",
+      "name": "Бердичів BIZ (FB)",
+      "handle_or_url": "facebook.com/berdichevbiz",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "korosten",
+      "type": "website",
+      "name": "Офіційний портал міськради",
+      "handle_or_url": "https://korosten-rada.gov.ua",
+      "active": true,
+      "note": "Адміністративний сайт, не новинний портал у чистому вигляді"
+    },
+    {
+      "channel_id": "korosten",
+      "type": "telegram",
+      "name": "КОРОСТЕНЬ today",
+      "handle_or_url": "@korostentoday",
+      "active": true,
+      "note": "Головне медіа району: 'Коростень, Малин, Овруч, Олевськ та вся Житомирщина'"
+    },
+    {
+      "channel_id": "korosten",
+      "type": "facebook_page",
+      "name": "Коростенська міська рада",
+      "handle_or_url": "facebook.com/p/Коростенська-міська-рада-61550465764313",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "korosten",
+      "type": "facebook_page",
+      "name": "Коростень-Інфо (FB)",
+      "handle_or_url": "facebook.com/KorostenInfo",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "korosten",
+      "type": "facebook_page",
+      "name": "КоростеньТБ",
+      "handle_or_url": "facebook.com/KorostenTV",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "korosten",
+      "type": "facebook_page",
+      "name": "КОРОСТЕНЬ today (FB)",
+      "handle_or_url": "facebook.com/korostentoday",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "website",
+      "name": "Новоград.City",
+      "handle_or_url": "https://novograd.city",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "website",
+      "name": "04141.com.ua",
+      "handle_or_url": "https://www.04141.com.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "telegram",
+      "name": "Новоград.City",
+      "handle_or_url": "@hellonovograd",
+      "active": true,
+      "note": "Офіційний канал сайту novograd.city"
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "telegram",
+      "name": "Звягельська міська рада",
+      "handle_or_url": "@Novograd_miskarada",
+      "active": true,
+      "note": "Офіційний канал міськради"
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "facebook_page",
+      "name": "Звягельська міська рада",
+      "handle_or_url": "facebook.com/p/Звягельська-міська-рада-100069400260681",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "facebook_page",
+      "name": "Novograd City / Новоград Сіті",
+      "handle_or_url": "facebook.com/hello.novograd",
+      "active": true,
+      "note": "Дублікат facebook.com/novogradcity — перевірити активний"
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "facebook_page",
+      "name": "04141.com.ua (FB)",
+      "handle_or_url": "facebook.com/04141web",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "malyn",
+      "type": "website",
+      "name": "Малинська міська рада",
+      "handle_or_url": "https://malyn-rada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "malyn",
+      "type": "website",
+      "name": "MALYN.MEDIA (сайт-супутник)",
+      "handle_or_url": "malyn.media / infomalin.biz",
+      "active": false,
+      "note": ""
+    },
+    {
+      "channel_id": "malyn",
+      "type": "website",
+      "name": "Malyn-Live",
+      "handle_or_url": "https://malyn-live.com",
+      "active": false,
+      "note": "Довідково-новинний портал"
+    },
+    {
+      "channel_id": "malyn",
+      "type": "website",
+      "name": "Polissya.today / Малин",
+      "handle_or_url": "https://polissya.today/malyn",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "malyn",
+      "type": "telegram",
+      "name": "MALYN.MEDIA",
+      "handle_or_url": "@MalynMedia",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "malyn",
+      "type": "telegram",
+      "name": "Малин | Новини Житомирщини",
+      "handle_or_url": "@malyn_inform",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "malyn",
+      "type": "facebook_page",
+      "name": "Малинська міська рада (FB)",
+      "handle_or_url": "facebook.com/MalynCityCouncil",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "malyn",
+      "type": "facebook_page",
+      "name": "ІнфоМалин",
+      "handle_or_url": "facebook.com/infomalin",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "website",
+      "name": "Радомишльська міська громада",
+      "handle_or_url": "https://radmr.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "website",
+      "name": "Radomyshl.city",
+      "handle_or_url": "https://radomyshl.city",
+      "active": false,
+      "note": "DNS-помилка при прямому фетчі"
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "website",
+      "name": "Radomyshl.news",
+      "handle_or_url": "https://radomyshl.news",
+      "active": false,
+      "note": "DNS-помилка при прямому фетчі"
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "website",
+      "name": "Radomyshl.com",
+      "handle_or_url": "https://radomyshl.com",
+      "active": false,
+      "note": "503 при фетчі"
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "website",
+      "name": "Polissya.today / Радомишль",
+      "handle_or_url": "https://polissya.today/radomyshl",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "facebook_page",
+      "name": "Радомишль Оперативно",
+      "handle_or_url": "facebook.com/RadomyshlOperative",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "facebook_page",
+      "name": "Радомишль Сіті",
+      "handle_or_url": "facebook.com/RadomyshylCity",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "facebook_page",
+      "name": "Наш Радомишль",
+      "handle_or_url": "m.facebook.com/.../100071896694198",
+      "active": false,
+      "note": ""
+    },
+    {
+      "channel_id": "korostyshiv",
+      "type": "website",
+      "name": "Коростишівська міська рада",
+      "handle_or_url": "https://korostyshiv-rada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "korostyshiv",
+      "type": "website",
+      "name": "Korostyshiv.misto.online",
+      "handle_or_url": "https://korostyshiv.misto.online",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "korostyshiv",
+      "type": "website",
+      "name": "Polissya.today / Коростишів",
+      "handle_or_url": "https://polissya.today/korostyshiv",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "korostyshiv",
+      "type": "facebook_page",
+      "name": "Коростишівська міська рада (FB)",
+      "handle_or_url": "facebook.com/miskaradakor",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "ovruch",
+      "type": "website",
+      "name": "Овруцька міська громада",
+      "handle_or_url": "https://ovrucka-gromada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "ovruch",
+      "type": "website",
+      "name": "Korosten.today / Овруч",
+      "handle_or_url": "https://korosten.today/rayon/ovruch.html",
+      "active": true,
+      "note": "Регіональний портал з профільним розділом"
+    },
+    {
+      "channel_id": "ovruch",
+      "type": "telegram",
+      "name": "КОРОСТЕНЬ today",
+      "handle_or_url": "@korostentoday",
+      "active": true,
+      "note": "Регіональний, офіційно охоплює Овруч"
+    },
+    {
+      "channel_id": "ovruch",
+      "type": "facebook_page",
+      "name": "Овруцька міська рада (FB)",
+      "handle_or_url": "facebook.com/ovruch.in.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "ovruch",
+      "type": "facebook_page",
+      "name": "ОВРУЧ today (FB)",
+      "handle_or_url": "facebook.com/ovruchtoday",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "olevsk",
+      "type": "website",
+      "name": "Олевська територіальна громада",
+      "handle_or_url": "https://olevsk-gromada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "olevsk",
+      "type": "website",
+      "name": "Korosten.today / Олевськ",
+      "handle_or_url": "https://korosten.today/rayon/olevsk.html",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "olevsk",
+      "type": "website",
+      "name": "Олевський інформаційний портал",
+      "handle_or_url": "olevsk.com.ua",
+      "active": false,
+      "note": "503 при фетчі, але має активні FB/Instagram (@olevsk.news)"
+    },
+    {
+      "channel_id": "olevsk",
+      "type": "telegram",
+      "name": "КОРОСТЕНЬ today",
+      "handle_or_url": "@korostentoday",
+      "active": true,
+      "note": "Регіональний, офіційно охоплює Олевськ"
+    },
+    {
+      "channel_id": "olevsk",
+      "type": "facebook_page",
+      "name": "Олевська міська рада (FB)",
+      "handle_or_url": "facebook.com/OlevskTG",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "olevsk",
+      "type": "facebook_page",
+      "name": "ОЛЕВСЬК today (FB)",
+      "handle_or_url": "facebook.com/olevsktoday",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "olevsk",
+      "type": "facebook_page",
+      "name": "Олевський інформаційний портал (FB)",
+      "handle_or_url": "facebook.com/www.olevsk.com.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "chudniv",
+      "type": "website",
+      "name": "Чуднівська міська рада",
+      "handle_or_url": "https://chudniv-miskrada.gov.ua/news/",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "chudniv",
+      "type": "website",
+      "name": "Polissya.today / Чуднів",
+      "handle_or_url": "https://polissya.today/chudniv",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "chudniv",
+      "type": "website",
+      "name": "ChudnivNews",
+      "handle_or_url": "http://chudnivnews.in.ua",
+      "active": false,
+      "note": "403 при прямому фетчі"
+    },
+    {
+      "channel_id": "chudniv",
+      "type": "website",
+      "name": "Chudniv.news",
+      "handle_or_url": "https://chudniv.news",
+      "active": false,
+      "note": "403 при прямому фетчі"
+    },
+    {
+      "channel_id": "chudniv",
+      "type": "telegram",
+      "name": "Чуднівщина: Ми переможемо",
+      "handle_or_url": "@chudniv",
+      "active": true,
+      "note": "Найрелевантніше джерело для міста"
+    },
+    {
+      "channel_id": "chudniv",
+      "type": "facebook_page",
+      "name": "Чуднівська міська рада (FB)",
+      "handle_or_url": "facebook.com/ChudnivTG",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "chudniv",
+      "type": "facebook_page",
+      "name": "Чуднів NEWS (FB)",
+      "handle_or_url": "facebook.com/chudniv.news",
+      "active": true,
+      "note": "Дублює власний сайт chudniv.news"
+    },
+    {
+      "channel_id": "andrushivka",
+      "type": "website",
+      "name": "Андрушівська міська рада",
+      "handle_or_url": "https://andrushivka.info",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "andrushivka",
+      "type": "website",
+      "name": "Polissya.today / Андрушівка",
+      "handle_or_url": "https://polissya.today/andrushivka",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "andrushivka",
+      "type": "telegram",
+      "name": "Андрушівська міська рада",
+      "handle_or_url": "@andrushivka_info",
+      "active": true,
+      "note": "Офіційний канал ради"
+    },
+    {
+      "channel_id": "andrushivka",
+      "type": "facebook_page",
+      "name": "Андрушівська міська рада (FB)",
+      "handle_or_url": "facebook.com/p/Андрушівська-міська-рада-100065331256150",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "andrushivka",
+      "type": "facebook_page",
+      "name": "Місто Андрушівка (інформаційна, не медіа)",
+      "handle_or_url": "facebook.com/andrushivkaukraine",
+      "active": false,
+      "note": ""
+    },
+    {
+      "channel_id": "ruzhyn",
+      "type": "website",
+      "name": "Ружинська громада",
+      "handle_or_url": "https://ruzhynska-gromada.gov.ua/news/",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "ruzhyn",
+      "type": "website",
+      "name": "Polissya.today / Ружин",
+      "handle_or_url": "https://polissya.today/ruzhyn",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "ruzhyn",
+      "type": "telegram",
+      "name": "Ружинська громада | Офіційно",
+      "handle_or_url": "@ruzhin_gromada",
+      "active": true,
+      "note": "Офіційний канал громади"
+    },
+    {
+      "channel_id": "ruzhyn",
+      "type": "facebook_page",
+      "name": "Ружинська громада (FB)",
+      "handle_or_url": "facebook.com/RuzhynskaHromada",
+      "active": true,
+      "note": "Є дублююча нова сторінка з іншим ID"
+    },
+    {
+      "channel_id": "liubar",
+      "type": "website",
+      "name": "Любарська селищна громада",
+      "handle_or_url": "https://lubarska-gromada.gov.ua/news/",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "liubar",
+      "type": "website",
+      "name": "Polissya.today / Любар",
+      "handle_or_url": "https://polissya.today/lyubar",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "liubar",
+      "type": "website",
+      "name": "Liubar Online",
+      "handle_or_url": "https://liubar.online",
+      "active": false,
+      "note": "403 при фетчі"
+    },
+    {
+      "channel_id": "liubar",
+      "type": "telegram",
+      "name": "Любар | Новини (приватний інвайт)",
+      "handle_or_url": "t.me/+chLrwcLZ70AyYzNi",
+      "active": false,
+      "note": "Закрите інвайт-посилання, публічний handle невідомий"
+    },
+    {
+      "channel_id": "liubar",
+      "type": "facebook_page",
+      "name": "Любарська громада (FB)",
+      "handle_or_url": "facebook.com/liubar.hromada",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "liubar",
+      "type": "facebook_page",
+      "name": "Любар Online (FB)",
+      "handle_or_url": "facebook.com/liubar.online",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "popilnya",
+      "type": "website",
+      "name": "Попільнянська селищна рада",
+      "handle_or_url": "https://popilnyanska-gromada.gov.ua/news/",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "popilnya",
+      "type": "website",
+      "name": "Polissya.today / Попільня",
+      "handle_or_url": "https://polissya.today/popilnya",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "popilnya",
+      "type": "website",
+      "name": "1ua.com.ua / Попільня",
+      "handle_or_url": "https://1ua.com.ua/popilnya",
+      "active": false,
+      "note": "403 при фетчі"
+    },
+    {
+      "channel_id": "popilnya",
+      "type": "facebook_page",
+      "name": "Попільнянська громада (FB)",
+      "handle_or_url": "facebook.com/PopilnyanskaOTG",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "baranivka",
+      "type": "website",
+      "name": "Баранівська міська рада",
+      "handle_or_url": "mrada-baranivka.gov.ua",
+      "active": true,
+      "note": "403 при прямому фетчі, підтверджено іншими джерелами"
+    },
+    {
+      "channel_id": "baranivka",
+      "type": "facebook_page",
+      "name": "Баранівська міська рада (FB)",
+      "handle_or_url": "facebook.com/baranivka.adm",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "baranivka",
+      "type": "facebook_page",
+      "name": "Місто Баранівка (новини)",
+      "handle_or_url": "facebook.com/baranivka.news",
+      "active": false,
+      "note": ""
+    },
+    {
+      "channel_id": "yemilchyne",
+      "type": "website",
+      "name": "Ємільчинська селищна рада",
+      "handle_or_url": "https://emrada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "yemilchyne",
+      "type": "facebook_page",
+      "name": "Ємільчинська селищна рада (FB)",
+      "handle_or_url": "facebook.com/emselrada",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "narodychi",
+      "type": "website",
+      "name": "Народицька селищна рада/ВА",
+      "handle_or_url": "https://narodycka-gromada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "narodychi",
+      "type": "telegram",
+      "name": "Канал/група громади (приватний інвайт)",
+      "handle_or_url": "t.me/+EbXZHBfHXbszY2I6",
+      "active": false,
+      "note": "Лінк на офіційному gov.ua сайті у футері, назва каналу не публічна"
+    },
+    {
+      "channel_id": "narodychi",
+      "type": "facebook_page",
+      "name": "Народицька селищна ВА (виконує функції ради)",
+      "handle_or_url": "facebook.com/Narodychi",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "pulyny",
+      "type": "website",
+      "name": "Пулинська селищна рада",
+      "handle_or_url": "https://pulynska-gromada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "pulyny",
+      "type": "website",
+      "name": "Pulyny.news (медіацентр 'Вісті')",
+      "handle_or_url": "https://pulyny.news",
+      "active": true,
+      "note": "Реальне активне місцеве медіа"
+    },
+    {
+      "channel_id": "pulyny",
+      "type": "website",
+      "name": "Чортоліси",
+      "handle_or_url": "xn--h1afiajie1b6j.zt.ua",
+      "active": false,
+      "note": ""
+    },
+    {
+      "channel_id": "pulyny",
+      "type": "facebook_page",
+      "name": "Газета 'Вісті' (видавець pulyny.news)",
+      "handle_or_url": "facebook.com/profile.php?id=100064174265427",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "romaniv",
+      "type": "website",
+      "name": "Романівська селищна рада",
+      "handle_or_url": "https://romanivska-gromada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "romaniv",
+      "type": "website",
+      "name": "Твій Романів",
+      "handle_or_url": "https://tvijromaniv.in.ua",
+      "active": true,
+      "note": "403 при фетчі, підтверджено через Instagram/Facebook (2262 підп.)"
+    },
+    {
+      "channel_id": "romaniv",
+      "type": "facebook_page",
+      "name": "Твій Романів (FB)",
+      "handle_or_url": "facebook.com/tvijromaniv",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "brusyliv",
+      "type": "website",
+      "name": "Брусилівська громада",
+      "handle_or_url": "https://brusylivska-gromada.gov.ua/news/",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "brusyliv",
+      "type": "website",
+      "name": "Polissya.today / Брусилів",
+      "handle_or_url": "https://polissya.today/kategoriyi/brusyliv",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "brusyliv",
+      "type": "facebook_page",
+      "name": "Брусилівська селищна рада (FB)",
+      "handle_or_url": "facebook.com/brusilovgromada",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "luhyny",
+      "type": "website",
+      "name": "Лугинська громада",
+      "handle_or_url": "https://lugynska-gromada.gov.ua/news/",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "luhyny",
+      "type": "facebook_page",
+      "name": "Лугинська селищна рада (FB)",
+      "handle_or_url": "facebook.com/Lugselrada",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "khoroshiv",
+      "type": "website",
+      "name": "Хорошівська громада",
+      "handle_or_url": "https://horoshihv-rada.gov.ua",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "khoroshiv",
+      "type": "website",
+      "name": "Polissya.today / Хорошів",
+      "handle_or_url": "https://polissya.today/khoroshiv",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "khoroshiv",
+      "type": "telegram",
+      "name": "Хорошівська територіальна громада",
+      "handle_or_url": "@khoroshivgromada",
+      "active": true,
+      "note": "Офіційний канал ради"
+    },
+    {
+      "channel_id": "khoroshiv",
+      "type": "facebook_page",
+      "name": "Хорошівська територіальна громада (FB)",
+      "handle_or_url": "facebook.com/horoshivskaOTG",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "khoroshiv",
+      "type": "facebook_page",
+      "name": "Хорошів Онлайн (медіа)",
+      "handle_or_url": "facebook.com/horoshiv.online",
+      "active": true,
+      "note": "Пов'язаний телеграм t.me/horoshiv_online — окреме джерело нижче"
+    },
+    {
+      "channel_id": "khoroshiv",
+      "type": "telegram",
+      "name": "Хорошів Онлайн",
+      "handle_or_url": "@horoshiv_online",
+      "active": false,
+      "note": "Знайдено через пов'язану FB-сторінку horoshiv.online, окремо не перевірявся прямим фетчем"
+    },
+    {
+      "channel_id": "cherniakhiv",
+      "type": "website",
+      "name": "Черняхівська громада",
+      "handle_or_url": "https://chernyahivska-gromada.gov.ua/news/",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "cherniakhiv",
+      "type": "website",
+      "name": "Polissya.today / Черняхів",
+      "handle_or_url": "https://polissya.today/chernyakhiv",
+      "active": true,
+      "note": ""
+    },
+    {
+      "channel_id": "cherniakhiv",
+      "type": "telegram",
+      "name": "Черняхівська громада 🇺🇦",
+      "handle_or_url": "@chernyakhiv_gromada",
+      "active": true,
+      "note": "Офіційний, найактивніший з малих громад — щоденні пости"
+    },
+    {
+      "channel_id": "cherniakhiv",
+      "type": "facebook_page",
+      "name": "Черняхівська селищна рада (2 URL — потребує звірки)",
+      "handle_or_url": "facebook.com/p/...100066519070516 ; facebook.com/p/...105481268165750",
+      "active": false,
+      "note": "Дві версії посилання, незрозуміло чи це одна сторінка"
+    },
+    {
+      "channel_id": "cherniakhiv",
+      "type": "facebook_page",
+      "name": "Газета 'Нове життя' — Черняхів",
+      "handle_or_url": "facebook.com/NewLife.Chernyahiv",
+      "active": true,
+      "note": ""
+    }
+  ]
+}
