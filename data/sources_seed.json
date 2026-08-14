@@ -3,7 +3,7 @@
     {
       "channel_id": "zhytomyr",
       "name": "Житомир",
-      "telegram_chat_id": null,
+      "telegram_chat_id": "@myzhytomyrnews",
       "active": true,
       "min_relevance": 0.5,
       "length_weights": {
@@ -17,7 +17,7 @@
     {
       "channel_id": "berdychiv",
       "name": "Бердичів",
-      "telegram_chat_id": null,
+      "telegram_chat_id": "@myberdychivnews",
       "active": true,
       "min_relevance": 0.5,
       "length_weights": {
@@ -31,7 +31,7 @@
     {
       "channel_id": "korosten",
       "name": "Коростень",
-      "telegram_chat_id": null,
+      "telegram_chat_id": "@mykorostennews",
       "active": true,
       "min_relevance": 0.5,
       "length_weights": {
@@ -45,7 +45,7 @@
     {
       "channel_id": "zvyahel",
       "name": "Звягель (Новоград-Волинський)",
-      "telegram_chat_id": null,
+      "telegram_chat_id": "@myzvyahelnews",
       "active": true,
       "min_relevance": 0.5,
       "length_weights": {
@@ -59,7 +59,7 @@
     {
       "channel_id": "malyn",
       "name": "Малин",
-      "telegram_chat_id": null,
+      "telegram_chat_id": "@mymalynnews",
       "active": true,
       "min_relevance": 0.5,
       "length_weights": {
@@ -73,7 +73,7 @@
     {
       "channel_id": "radomyshl",
       "name": "Радомишль",
-      "telegram_chat_id": null,
+      "telegram_chat_id": "@myradomyshlnews",
       "active": true,
       "min_relevance": 0.5,
       "length_weights": {
@@ -87,7 +87,7 @@
     {
       "channel_id": "korostyshiv",
       "name": "Коростишів",
-      "telegram_chat_id": null,
+      "telegram_chat_id": "@mykorostyshivnews",
       "active": true,
       "min_relevance": 0.5,
       "length_weights": {

@@ -81,6 +81,15 @@ def test_active_seed_file_has_the_7_channels_in_work():
     _assert_seed_file_is_internally_consistent("data/sources_seed.json", expected_channel_count=7)
 
 
+def test_active_channels_all_have_a_telegram_chat_id():
+    """Реальні канали вже створені й мають @username — жоден не має лишитись
+    з null, інакше pipeline мовчки пропустить публікацію (лише лог-warning)."""
+    channels = LocalJSONConfigSource("data/sources_seed.json").load_channels()
+    for channel in channels:
+        assert channel.telegram_chat_id, f"{channel.channel_id} без telegram_chat_id"
+        assert channel.telegram_chat_id.startswith("@")
+
+
 def test_archived_seed_file_has_the_16_parked_channels():
     """data/sources_archive.json — відкладені райцентри; не завантажується
     конвеєром за замовчуванням, але джерела нікуди не зникли."""
