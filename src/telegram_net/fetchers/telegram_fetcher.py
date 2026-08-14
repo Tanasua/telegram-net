@@ -93,8 +93,19 @@ class TelethonFetcher:
 
     def fetch_new(self, source: SourceConfig, cursor: str | None) -> tuple[list[FetchedItem], str | None]:
         handle = source.handle_or_url.strip().lstrip("@").rstrip("/").rsplit("/", 1)[-1]
-        min_id = int(cursor) if cursor else 0
 
+        if cursor is None:
+            # Перше підключення цього джерела: НЕ заливаємо весь історичний архів
+            # каналу (для активних каналів це можуть бути тисячі старих повідомлень —
+            # вони з'їдять увесь час прогону на класифікацію/генерацію і виглядатимуть
+            # як спам одразу після підключення). Просто фіксуємо поточну позицію;
+            # обробляти будемо тільки те, що з'явиться в каналі після цього моменту.
+            latest = list(self._client.iter_messages(handle, limit=1))
+            if not latest:
+                return [], None
+            return [], str(latest[0].id)
+
+        min_id = int(cursor)
         messages = list(self._client.iter_messages(handle, min_id=min_id, reverse=True))
         if not messages:
             return [], cursor

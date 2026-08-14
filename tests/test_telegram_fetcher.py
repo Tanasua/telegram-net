@@ -75,15 +75,21 @@ class FakeTelethonClient:
         self._messages = messages
         self.iter_messages_calls = []
 
-    def iter_messages(self, handle, min_id=0, reverse=True):
-        self.iter_messages_calls.append((handle, min_id, reverse))
+    def iter_messages(self, handle, min_id=0, reverse=True, limit=None):
+        self.iter_messages_calls.append((handle, min_id, reverse, limit))
+        if limit is not None:
+            # Telethon без reverse віддає найновіші першими — саме так пікаємо "останнє".
+            return sorted(self._messages, key=lambda m: m.id, reverse=True)[:limit]
         return [m for m in self._messages if m.id > min_id]
 
 
-def test_telethon_fetcher_returns_new_cursor_as_max_message_id():
+def test_telethon_fetcher_first_run_establishes_baseline_without_backfill():
+    """Перший запуск для щойно доданого джерела НЕ повинен заливати весь
+    історичний архів каналу — лише зафіксувати позицію (регресія: раніше це
+    призводило до обробки тисяч старих повідомлень активних каналів за раз)."""
     messages = [
-        FakeMessage(id=1, date=dt.datetime(2026, 8, 14), message="перше"),
-        FakeMessage(id=2, date=dt.datetime(2026, 8, 14), message="друге"),
+        FakeMessage(id=1, date=dt.datetime(2026, 8, 14), message="старе"),
+        FakeMessage(id=2, date=dt.datetime(2026, 8, 14), message="ще старіше... ні, новіше"),
     ]
     client = FakeTelethonClient(messages)
     fetcher = TelethonFetcher(client)
@@ -92,9 +98,39 @@ def test_telethon_fetcher_returns_new_cursor_as_max_message_id():
         source=type("S", (), {"handle_or_url": "@some_channel"})(), cursor=None
     )
 
-    assert len(items) == 2
+    assert items == []
     assert cursor == "2"
-    assert client.iter_messages_calls == [("some_channel", 0, True)]
+    assert client.iter_messages_calls == [("some_channel", 0, True, 1)]
+
+
+def test_telethon_fetcher_first_run_on_empty_channel_keeps_cursor_none():
+    client = FakeTelethonClient([])
+    fetcher = TelethonFetcher(client)
+
+    items, cursor = fetcher.fetch_new(
+        source=type("S", (), {"handle_or_url": "@some_channel"})(), cursor=None
+    )
+
+    assert items == []
+    assert cursor is None
+
+
+def test_telethon_fetcher_subsequent_run_returns_only_new_messages():
+    messages = [
+        FakeMessage(id=1, date=dt.datetime(2026, 8, 14), message="перше"),
+        FakeMessage(id=2, date=dt.datetime(2026, 8, 14), message="друге"),
+        FakeMessage(id=3, date=dt.datetime(2026, 8, 14), message="третє"),
+    ]
+    client = FakeTelethonClient(messages)
+    fetcher = TelethonFetcher(client)
+
+    items, cursor = fetcher.fetch_new(
+        source=type("S", (), {"handle_or_url": "@some_channel"})(), cursor="1"
+    )
+
+    assert len(items) == 2  # тільки id 2 і 3, не 1 (уже пройдений курсором)
+    assert cursor == "3"
+    assert client.iter_messages_calls == [("some_channel", 1, True, None)]
 
 
 def test_telethon_fetcher_no_new_messages_keeps_cursor():

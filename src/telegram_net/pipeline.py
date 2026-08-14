@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import logging
 from dataclasses import dataclass
 
@@ -38,6 +39,7 @@ class PipelineDeps:
 def run_once(deps: PipelineDeps) -> None:
     channels = {c.channel_id: c for c in deps.config.load_channels()}
     sources = [s for s in deps.config.load_sources() if s.active]
+    published_counts: dict[str, int] = {}  # channel_id -> скільки вже опубліковано за цей прогін
 
     for source in sources:
         channel = channels.get(source.channel_id)
@@ -49,11 +51,16 @@ def run_once(deps: PipelineDeps) -> None:
             continue
 
         with deps.session_factory() as session:
-            _process_source(session, deps, channel, source, fetcher)
+            _process_source(session, deps, channel, source, fetcher, published_counts)
 
 
 def _process_source(
-    session: Session, deps: PipelineDeps, channel: ChannelConfig, source: SourceConfig, fetcher: Fetcher
+    session: Session,
+    deps: PipelineDeps,
+    channel: ChannelConfig,
+    source: SourceConfig,
+    fetcher: Fetcher,
+    published_counts: dict[str, int],
 ) -> None:
     source_row = _get_or_create_source_row(session, source)
 
@@ -68,7 +75,7 @@ def _process_source(
 
     for item in items:
         try:
-            _process_item(session, deps, channel, source_row, item)
+            _process_item(session, deps, channel, source_row, item, published_counts)
         except Exception:
             logger.exception("Помилка обробки елемента %s з джерела %s", item.external_id, source.name)
             session.rollback()
@@ -88,8 +95,16 @@ def _get_or_create_source_row(session: Session, source: SourceConfig) -> SourceR
 
 
 def _process_item(
-    session: Session, deps: PipelineDeps, channel: ChannelConfig, source_row: SourceRow, item: FetchedItem
+    session: Session,
+    deps: PipelineDeps,
+    channel: ChannelConfig,
+    source_row: SourceRow,
+    item: FetchedItem,
+    published_counts: dict[str, int],
 ) -> None:
+    if _is_stale(item, channel.max_age_minutes):
+        return  # застаріла новина (старша за поріг свіжості каналу) — не публікуємо старе як щойно
+
     text_hash = content_hash(item.text or item.url)
 
     already_seen = session.query(RawItem).filter_by(content_hash=text_hash).one_or_none()
@@ -118,6 +133,9 @@ def _process_item(
             )
         )
     session.commit()
+
+    if published_counts.get(channel.channel_id, 0) >= channel.max_posts_per_run:
+        return  # ліміт постів на канал за цей прогін вже вичерпано — новину зафіксовано, але не публікуємо
 
     classification = deps.classifier.classify(item, channel.name)
     session.add(
@@ -160,3 +178,15 @@ def _process_item(
     for message_id in message_ids:
         session.add(PublishLog(generated_post_id=generated.id, telegram_message_id=message_id))
     session.commit()
+
+    published_counts[channel.channel_id] = published_counts.get(channel.channel_id, 0) + 1
+
+
+def _is_stale(item: FetchedItem, max_age_minutes: int) -> bool:
+    if item.published_at is None:
+        return False  # немає дати (напр. знімок сайту без RSS) — не можемо судити, пропускаємо перевірку
+    published_at = item.published_at
+    if published_at.tzinfo is None:
+        published_at = published_at.replace(tzinfo=dt.timezone.utc)
+    age = dt.datetime.now(dt.timezone.utc) - published_at
+    return age > dt.timedelta(minutes=max_age_minutes)

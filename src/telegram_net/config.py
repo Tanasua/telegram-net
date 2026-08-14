@@ -29,6 +29,8 @@ class ChannelConfig:
     telegram_chat_id: str | None
     active: bool = True
     min_relevance: float = 0.5
+    max_posts_per_run: int = 1
+    max_age_minutes: int = 60
     length_weights: dict[str, float] = field(
         default_factory=lambda: {"short": 0.4, "medium": 0.35, "long": 0.25}
     )
@@ -59,6 +61,8 @@ class LocalJSONConfigSource:
                 telegram_chat_id=c.get("telegram_chat_id") or None,
                 active=c.get("active", True),
                 min_relevance=c.get("min_relevance", 0.5),
+                max_posts_per_run=c.get("max_posts_per_run", 1),
+                max_age_minutes=c.get("max_age_minutes", 60),
                 length_weights=c.get(
                     "length_weights", {"short": 0.4, "medium": 0.35, "long": 0.25}
                 ),
@@ -87,7 +91,8 @@ class GoogleSheetsConfigSource:
     """Лист 'Channels' — перелік каналів. Один лист на кожен channel_id — його джерела.
 
     Очікувані заголовки:
-      Channels:     channel_id | Райцентр | telegram_chat_id | Активний | Мін. релевантність
+      Channels:     channel_id | Райцентр | telegram_chat_id | Активний | Мін. релевантність |
+                    Макс. постів за прогін | Макс. вік новини (хв)
       <channel_id>: Тип | Назва | URL/handle | Активне | Примітка
     """
 
@@ -109,6 +114,8 @@ class GoogleSheetsConfigSource:
                 telegram_chat_id=str(r["telegram_chat_id"]) or None,
                 active=str(r.get("Активний", "Так")).strip().lower() == "так",
                 min_relevance=float(r.get("Мін. релевантність") or 0.5),
+                max_posts_per_run=int(r.get("Макс. постів за прогін") or 1),
+                max_age_minutes=int(r.get("Макс. вік новини (хв)") or 60),
             )
             for r in rows
             if r.get("channel_id")
