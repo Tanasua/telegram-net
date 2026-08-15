@@ -396,8 +396,8 @@
       "name": "Малинська міська рада",
       "handle_or_url": "https://malyn-rada.gov.ua",
       "active": true,
-      "note": "Drupal, rss.xml є, але порожній — скрапінг верстки (views-row)",
-      "scrape_item_selector": ".views-row a.uk-display-block",
+      "note": "Drupal, rss.xml є, але порожній — скрапінг верстки (views-row). Селектор звужено до ul.tm-news: та сама views-row верстка використана на сторінці ще й для блоку зовнішніх посилань і для списку файлів-рішень (.zip/.doc) — без цього уточнення вони теж потрапляли в 'новини'",
+      "scrape_item_selector": "ul.tm-news .views-row a.uk-display-block",
       "scrape_title_selector": ".tm-text-semibold .uk-text-middle"
     },
     {

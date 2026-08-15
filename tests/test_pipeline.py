@@ -6,8 +6,9 @@ from sqlalchemy.pool import StaticPool
 from telegram_net.classifier import ClassificationResult
 from telegram_net.config import ChannelConfig, SourceConfig
 from telegram_net.db import GeneratedPost, RawItem, init_db, make_session_factory
+from telegram_net.db import Source as SourceRow
 from telegram_net.fetchers.base import FetchedItem
-from telegram_net.pipeline import PipelineDeps, run_once
+from telegram_net.pipeline import PipelineDeps, _get_or_create_source_row, run_once
 
 
 class FakeConfigSource:
@@ -272,6 +273,60 @@ def test_no_subscribe_cta_appended_when_not_configured():
     run_once(deps)
 
     assert publisher.published == [("-1001", "Готовий пост", [])]
+
+
+def test_source_row_resets_cursor_when_type_changes():
+    """Регресія (продакшн, 15.08.2026): міграція джерела з type="website" на
+    "web_scrape" для того ж handle_or_url успадкувала старий курсор іншого
+    фетчера — новий фетчер бачив курсор не-None, вважав базову лінію вже
+    зафіксованою і одразу опублікував усе поточне на сторінці як "нове" в 4
+    реальні канали (одна з новин була місяць-старою). Зміна типу джерела
+    повинна скидати курсор так само, як і нове джерело."""
+    engine = create_engine(
+        "sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    init_db(engine)
+    session_factory = make_session_factory(engine)
+
+    with session_factory() as session:
+        session.add(
+            SourceRow(
+                channel_id="x",
+                type="website",
+                handle_or_url="https://example.com",
+                last_seen_cursor="stale-cursor-from-old-fetcher",
+            )
+        )
+        session.commit()
+
+    with session_factory() as session:
+        source = SourceConfig(
+            channel_id="x", type="web_scrape", name="t", handle_or_url="https://example.com"
+        )
+        row = _get_or_create_source_row(session, source)
+
+        assert row.type == "web_scrape"
+        assert row.last_seen_cursor is None
+
+
+def test_source_row_keeps_cursor_when_type_is_unchanged():
+    engine = create_engine(
+        "sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    init_db(engine)
+    session_factory = make_session_factory(engine)
+
+    with session_factory() as session:
+        session.add(
+            SourceRow(channel_id="x", type="website", handle_or_url="https://example.com", last_seen_cursor="123")
+        )
+        session.commit()
+
+    with session_factory() as session:
+        source = SourceConfig(channel_id="x", type="website", name="t", handle_or_url="https://example.com")
+        row = _get_or_create_source_row(session, source)
+
+        assert row.last_seen_cursor == "123"
 
 
 def test_per_source_fetch_result_is_logged(caplog):

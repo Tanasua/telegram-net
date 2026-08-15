@@ -104,6 +104,16 @@ def _get_or_create_source_row(session: Session, source: SourceConfig) -> SourceR
         row = SourceRow(channel_id=source.channel_id, type=source.type, handle_or_url=source.handle_or_url)
         session.add(row)
         session.commit()
+    elif row.type != source.type:
+        # Регресія (продакшн, 15.08.2026): міграція джерела з "website" на
+        # "web_scrape" (той самий handle_or_url) успадкувала старий курсор із
+        # часів іншого фетчера — новий фетчер бачив курсор не-None і вважав,
+        # що базова лінія вже зафіксована, тож одразу "знайшов" і опублікував
+        # усе поточне на сторінці як нове. Зміна типу джерела повинна
+        # означати той самий cold-start-без-бекфілу, що й для нового джерела.
+        row.type = source.type
+        row.last_seen_cursor = None
+        session.commit()
     return row
 
 
