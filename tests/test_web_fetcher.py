@@ -76,15 +76,18 @@ def test_rss_extracts_media_from_media_content_and_enclosures(monkeypatch):
 
 
 @respx.mock
-def test_no_feed_falls_back_to_og_tags_single_page(monkeypatch):
+def test_no_feed_means_no_items(monkeypatch):
+    """Регресія: раніше тут був фолбек на OG-теги головної сторінки, який видавав
+    опис сайту/організації ("сайт доступний за адресою X", "громада вітає
+    відвідувачів") за новину. Немає RSS — немає надійного способу відрізнити
+    справжню подію від статичного опису сайту, тож джерело просто мовчить."""
     monkeypatch.setattr(
         "telegram_net.fetchers.web_fetcher.feedparser.parse", lambda url: _fake_parsed([])
     )
     html = """
     <html><head>
-      <meta property="og:title" content="Заголовок новини" />
-      <meta property="og:description" content="Опис новини" />
-      <meta property="og:image" content="https://example.com/cover.jpg" />
+      <meta property="og:title" content="Офіційний сайт громади" />
+      <meta property="og:description" content="Громада вітає відвідувачів" />
     </head><body></body></html>
     """
     respx.get("https://example.com/feed.xml").mock(return_value=httpx.Response(200, text=html))
@@ -93,31 +96,8 @@ def test_no_feed_falls_back_to_og_tags_single_page(monkeypatch):
 
     items, cursor = fetcher.fetch_new(source, cursor=None)
 
-    assert len(items) == 1
-    assert "Заголовок новини" in items[0].text
-    assert items[0].media[0].url == "https://example.com/cover.jpg"
-    assert cursor == items[0].external_id
-
-
-@respx.mock
-def test_unchanged_single_page_returns_no_new_items(monkeypatch):
-    monkeypatch.setattr(
-        "telegram_net.fetchers.web_fetcher.feedparser.parse", lambda url: _fake_parsed([])
-    )
-    html = """
-    <html><head>
-      <meta property="og:title" content="Той самий заголовок" />
-    </head></html>
-    """
-    respx.get("https://example.com/feed.xml").mock(return_value=httpx.Response(200, text=html))
-    source = SourceConfig(channel_id="x", type="website", name="Test", handle_or_url="https://example.com/feed.xml")
-    fetcher = WebFetcher(http_client=httpx.Client())
-
-    _, cursor = fetcher.fetch_new(source, cursor=None)
-    items_second_run, cursor2 = fetcher.fetch_new(source, cursor=cursor)
-
-    assert items_second_run == []
-    assert cursor2 == cursor
+    assert items == []
+    assert cursor is None
 
 
 @respx.mock

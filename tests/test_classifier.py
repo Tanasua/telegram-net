@@ -60,6 +60,22 @@ def test_classify_uses_placeholder_text_for_media_only_items():
     assert "лише медіа" in user_message
 
 
+def test_classifier_flags_generic_institutional_filler_as_low_interest():
+    """Регресія: 'сайт доступний за адресою X', 'громада вітає відвідувачів' —
+    це опис організації, не новина, навіть якщо формально про це місто."""
+    expected = ClassificationResult(
+        is_advertisement=False, relevance_to_region=0.5, local_news_interest=0.5, reason="ok"
+    )
+    client = FakeClient(expected)
+    classifier = Classifier(client=client, model="test-model")
+
+    classifier.classify(_item(), region_name="Житомир")
+
+    system_message = client.chat.completions.last_kwargs["messages"][0]["content"]
+    assert "доступний за адресою" in system_message
+    assert "≤0.1" in system_message
+
+
 def test_classifier_requires_model_env_var_when_not_passed(monkeypatch):
     monkeypatch.delenv("OPENAI_CLASSIFIER_MODEL", raising=False)
     with pytest.raises(RuntimeError, match="OPENAI_CLASSIFIER_MODEL"):

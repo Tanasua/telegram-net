@@ -1,14 +1,19 @@
-"""Джерела-сайти: RSS/Atom, якщо є; інакше — одна знімок-сторінка за OG-тегами.
+"""Джерела-сайти: тільки RSS/Atom.
 
-Автовиявлення фіда і OG-парсинг покривають типовий випадок. Сайти з нетиповою
-розміткою (JS-рендер, кастомна структура без RSS і без OG) потребуватимуть
-окремого per-site скрапера — свідомо не намагаюся вгадати це наперед для всіх
-23 райцентрів, це легше зробити предметно, коли конкретний сайт підключають.
+Свідомо БЕЗ фолбека на "знімок головної сторінки за OG-тегами" — головна
+сторінка урядового/організаційного сайту описує САМУ ОРГАНІЗАЦІЮ ("сайт
+доступний за адресою X", "громада вітає відвідувачів"), а не якусь конкретну
+подію. Такий фолбек раніше існував і на практиці видавав це за "новину" —
+регресія, яку ловить test_web_fetcher.py::test_no_feed_means_no_items.
+Якщо в сайту нема RSS — джерело просто нічого не повертає (лог warning),
+а не публікує сміття. Per-site скрапер для конкретного сайту без RSS —
+окрема, предметна робота, коли до неї дійде черга (див. README).
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from typing import Any
 
 import feedparser
@@ -16,10 +21,11 @@ import httpx
 from bs4 import BeautifulSoup
 
 from telegram_net.config import SourceConfig
-from telegram_net.dedup import content_hash
 from telegram_net.fetchers.base import FetchedItem, FetchedMedia
 
 _MAX_CURSOR_IDS = 200
+
+logger = logging.getLogger(__name__)
 
 
 class WebFetcher:
@@ -45,7 +51,12 @@ class WebFetcher:
             parsed = feedparser.parse(feed_link)
             return self._entries_to_result(parsed.entries, feed_link, cursor)
 
-        return self._single_page_from_soup(soup, url, cursor)
+        logger.warning(
+            "Джерело %s не має RSS/Atom — пропускаю (без нього немає надійного способу "
+            "відрізнити справжню новину від опису сайту на головній сторінці)",
+            url,
+        )
+        return [], cursor
 
     def _entries_to_result(
         self, entries: list[Any], feed_url: str, cursor: str | None
@@ -72,34 +83,11 @@ class WebFetcher:
         capped_cursor = ",".join(list(new_ids)[-_MAX_CURSOR_IDS:])
         return new_items, capped_cursor or cursor
 
-    def _single_page_from_soup(
-        self, soup: BeautifulSoup, url: str, cursor: str | None
-    ) -> tuple[list[FetchedItem], str | None]:
-        title = _meta(soup, "og:title") or (soup.title.string.strip() if soup.title and soup.title.string else "")
-        description = _meta(soup, "og:description") or ""
-        image = _meta(soup, "og:image")
-        text = f"{title}\n\n{description}".strip()
-
-        snapshot_hash = content_hash(text)
-        if snapshot_hash == cursor:
-            return [], cursor
-
-        media = (FetchedMedia(type="photo", url=image),) if image else ()
-        item = FetchedItem(external_id=snapshot_hash, text=text, url=url, published_at=None, media=media)
-        return [item], snapshot_hash
-
 
 def _find_feed_link(soup: BeautifulSoup, base_url: str) -> str | None:
     link = soup.find("link", rel="alternate", type=lambda t: bool(t) and ("rss" in t or "atom" in t))
     if link and link.get("href"):
         return str(httpx.URL(base_url).join(link["href"]))
-    return None
-
-
-def _meta(soup: BeautifulSoup, property_name: str) -> str | None:
-    tag = soup.find("meta", property=property_name)
-    if tag and tag.get("content"):
-        return tag["content"].strip()
     return None
 
 
