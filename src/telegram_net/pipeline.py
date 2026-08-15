@@ -63,12 +63,25 @@ def _process_source(
     published_counts: dict[str, int],
 ) -> None:
     source_row = _get_or_create_source_row(session, source)
+    old_cursor = source_row.last_seen_cursor
 
     try:
-        items, new_cursor = fetcher.fetch_new(source, source_row.last_seen_cursor)
+        items, new_cursor = fetcher.fetch_new(source, old_cursor)
     except Exception:
         logger.exception("Помилка читання джерела %s (%s)", source.name, source.handle_or_url)
         return
+
+    # Без цього логу неможливо відрізнити "перевірив і дійсно нуль нового"
+    # від "тихо не спрацював" — обидва виглядають однаково ззовні (успішний
+    # прогін, нуль публікацій). Явно фіксуємо, скільки знайдено і чи рухався курсор.
+    logger.info(
+        "Джерело %s (%s): знайдено %d нових, курсор %r -> %r",
+        source.name,
+        source.handle_or_url,
+        len(items),
+        old_cursor,
+        new_cursor,
+    )
 
     source_row.last_seen_cursor = new_cursor
     session.commit()

@@ -272,3 +272,17 @@ def test_no_subscribe_cta_appended_when_not_configured():
     run_once(deps)
 
     assert publisher.published == [("-1001", "Готовий пост", [])]
+
+
+def test_per_source_fetch_result_is_logged(caplog):
+    """Без цього логу неможливо на живому прогоні відрізнити 'джерело
+    перевірено, нового справді нема' від 'джерело тихо не спрацювало' —
+    обидва виглядають ззовні як 'успішний прогін, нуль публікацій'."""
+    import logging
+
+    deps, session_factory, publisher = _make_deps([_item()], _RELEVANT)
+
+    with caplog.at_level(logging.INFO, logger="telegram_net.pipeline"):
+        run_once(deps)
+
+    assert any("знайдено 1 нових" in r.message for r in caplog.records)
