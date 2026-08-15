@@ -11,10 +11,13 @@
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from typing import Any, Iterable, Protocol
 
 from telegram_net.config import SourceConfig
 from telegram_net.fetchers.base import FetchedItem, FetchedMedia
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramMessageLike(Protocol):
@@ -117,10 +120,26 @@ class TelethonFetcher:
         # протоптана дорога бібліотеки, той самий виклик, що й для cold-start
         # вище) і самі зупиняємось, щойно дійшли до вже баченого повідомлення.
         new_messages: list[Any] = []
+        messages_seen = 0
+        newest_id_seen: int | None = None
         for msg in self._client.iter_messages(handle, limit=_MAX_MESSAGES_PER_FETCH):
+            messages_seen += 1
+            if newest_id_seen is None:
+                newest_id_seen = msg.id
             if msg.id <= min_id:
                 break
             new_messages.append(msg)
+
+        # Тимчасова діагностика: "0 нових" ззовні виглядає однаково і коли
+        # справді нічого нового не було, і коли iter_messages мовчки не
+        # повертає нічого. Це прямо каже, яке з двох насправді відбувається.
+        logger.info(
+            "Telethon %s: min_id=%s, повідомлень у відповіді=%d, найновіше id=%s",
+            handle,
+            min_id,
+            messages_seen,
+            newest_id_seen,
+        )
 
         if not new_messages:
             return [], cursor
