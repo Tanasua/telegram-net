@@ -160,6 +160,9 @@ def _process_item(
     if published_counts.get(channel.channel_id, 0) >= channel.max_posts_per_run:
         return  # ліміт постів на канал за цей прогін вже вичерпано — новину зафіксовано, але не публікуємо
 
+    if not item.media:
+        return  # рішення користувача: без фото/відео пост не робимо, хай яка релевантна новина
+
     classification = deps.classifier.classify(item, channel.name)
     session.add(
         ClassificationRow(

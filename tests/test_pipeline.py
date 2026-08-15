@@ -7,7 +7,7 @@ from telegram_net.classifier import ClassificationResult
 from telegram_net.config import ChannelConfig, SourceConfig
 from telegram_net.db import GeneratedPost, RawItem, init_db, make_session_factory
 from telegram_net.db import Source as SourceRow
-from telegram_net.fetchers.base import FetchedItem
+from telegram_net.fetchers.base import FetchedItem, FetchedMedia
 from telegram_net.pipeline import PipelineDeps, _get_or_create_source_row, run_once
 
 
@@ -82,9 +82,19 @@ def _make_deps(items, classification, channel_kwargs=None):
     return deps, session_factory, publisher
 
 
-def _item(external_id="1", text="Новина про дорогу", published_at=None):
+def _item(external_id="1", text="Новина про дорогу", published_at=None, media=None):
+    # За замовчуванням — з фото: більшість тестів тут перевіряють дедуп/пороги/
+    # стиль, а не саме правило "без візуального контенту — без поста" (окремі
+    # тести нижче), тож типовий item не повинен випадати з-під публікації через
+    # відсутність media.
+    if media is None:
+        media = (FetchedMedia(type="photo", url=f"https://example.com/{external_id}.jpg"),)
     return FetchedItem(
-        external_id=external_id, text=text, url=f"https://example.com/{external_id}", published_at=published_at
+        external_id=external_id,
+        text=text,
+        url=f"https://example.com/{external_id}",
+        published_at=published_at,
+        media=media,
     )
 
 
@@ -116,7 +126,9 @@ def test_relevant_item_is_classified_generated_and_published():
         post = session.query(GeneratedPost).one()
         assert post.status == "published"
         assert post.text == "Готовий пост"
-    assert publisher.published == [("-1001", "Готовий пост", [])]
+    assert publisher.published == [
+        ("-1001", "Готовий пост", [(FetchedMedia(type="photo", url="https://example.com/1.jpg"),)])
+    ]
 
 
 def test_advertisement_is_classified_but_not_generated_or_published():
@@ -261,7 +273,13 @@ def test_subscribe_cta_appended_after_publish_when_configured():
 
     run_once(deps)
 
-    assert publisher.published == [("-1001", "Готовий пост\n\nПідписуйся на Мій Житомир", [])]
+    assert publisher.published == [
+        (
+            "-1001",
+            "Готовий пост\n\nПідписуйся на Мій Житомир",
+            [(FetchedMedia(type="photo", url="https://example.com/1.jpg"),)],
+        )
+    ]
     with session_factory() as session:
         post = session.query(GeneratedPost).one()
         assert post.text == "Готовий пост\n\nПідписуйся на Мій Житомир"
@@ -272,7 +290,33 @@ def test_no_subscribe_cta_appended_when_not_configured():
 
     run_once(deps)
 
-    assert publisher.published == [("-1001", "Готовий пост", [])]
+    assert publisher.published == [
+        ("-1001", "Готовий пост", [(FetchedMedia(type="photo", url="https://example.com/1.jpg"),)])
+    ]
+
+
+def test_item_without_media_is_not_published():
+    """Правило користувача: немає фото чи відео — не робимо пост, хай яка
+    релевантна й цікава новина. Новину все одно фіксуємо (RawItem), але не
+    витрачаємо виклик класифікатора/генератора на те, що однаково не піде."""
+    item = _item(media=())
+    deps, session_factory, publisher = _make_deps([item], _RELEVANT)
+
+    run_once(deps)
+
+    with session_factory() as session:
+        assert session.query(RawItem).count() == 1
+        assert session.query(GeneratedPost).count() == 0
+    assert publisher.published == []
+
+
+def test_item_with_photo_is_published_normally():
+    item = _item(media=(FetchedMedia(type="photo", url="https://example.com/1.jpg"),))
+    deps, session_factory, publisher = _make_deps([item], _RELEVANT)
+
+    run_once(deps)
+
+    assert len(publisher.published) == 1
 
 
 def test_source_row_resets_cursor_when_type_changes():
