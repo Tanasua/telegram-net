@@ -90,3 +90,18 @@ def test_raises_on_telegram_api_error():
     publisher = TelegramPublisher(TOKEN)
     with pytest.raises(RuntimeError, match="chat not found"):
         publisher.send_text("-100999", "текст")
+
+
+@respx.mock
+def test_error_description_surfaces_even_with_4xx_http_status():
+    """Регресія: Telegram майже завжди повертає 4xx РАЗОМ з інформативним JSON
+    ("chat not found" тощо) — старий код кликав raise_for_status() до парсингу
+    тіла, тож опис губився і лишався лише голий '400 Bad Request'."""
+    respx.post(f"{BASE}/sendMessage").mock(
+        return_value=httpx.Response(
+            400, json={"ok": False, "error_code": 400, "description": "Bad Request: chat not found"}
+        )
+    )
+    publisher = TelegramPublisher(TOKEN)
+    with pytest.raises(RuntimeError, match="chat not found"):
+        publisher.send_text("-100999", "текст")

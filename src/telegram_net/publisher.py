@@ -74,8 +74,20 @@ class TelegramPublisher:
 
     def _post(self, method: str, payload: dict) -> dict:
         resp = self._http.post(f"{self._base_url}/{method}", json=payload)
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            data = resp.json()
+        except ValueError:
+            # Не JSON-відповідь (мережева помилка, проксі тощо) — тут дійсно
+            # більше нема чого сказати, крім статусу.
+            resp.raise_for_status()
+            raise
         if not data.get("ok"):
-            raise RuntimeError(f"Telegram API {method} не виконався: {data}")
+            # Telegram майже завжди повертає 4xx РАЗОМ з інформативним JSON-тілом
+            # ("chat not found", "not enough rights" тощо) — якщо викликати
+            # resp.raise_for_status() раніше за парсинг тіла, цей опис губиться
+            # і лишається лише голий код статусу. Тому тіло парситься першим.
+            raise RuntimeError(
+                f"Telegram API {method} не виконався ({resp.status_code}): "
+                f"{data.get('description', data)}"
+            )
         return data
