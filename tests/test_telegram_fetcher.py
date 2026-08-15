@@ -1,7 +1,11 @@
 import datetime as dt
 from dataclasses import dataclass
 
-from telegram_net.fetchers.telegram_fetcher import TelethonFetcher, group_messages_into_items
+from telegram_net.fetchers.telegram_fetcher import (
+    _MAX_MESSAGES_PER_FETCH,
+    TelethonFetcher,
+    group_messages_into_items,
+)
 
 
 @dataclass
@@ -71,16 +75,20 @@ def test_mixed_singles_and_group_in_one_batch():
 
 
 class FakeTelethonClient:
+    """Імітує єдиний виклик, яким тепер користується TelethonFetcher: без
+    reverse/min_id у запиті (крихка комбінація в Telethon) — лише
+    найновіші-першими, з опційним limit, як робить сам Telethon за замовчуванням."""
+
     def __init__(self, messages):
         self._messages = messages
         self.iter_messages_calls = []
 
-    def iter_messages(self, handle, min_id=0, reverse=True, limit=None):
-        self.iter_messages_calls.append((handle, min_id, reverse, limit))
+    def iter_messages(self, handle, limit=None):
+        self.iter_messages_calls.append((handle, limit))
+        newest_first = sorted(self._messages, key=lambda m: m.id, reverse=True)
         if limit is not None:
-            # Telethon без reverse віддає найновіші першими — саме так пікаємо "останнє".
-            return sorted(self._messages, key=lambda m: m.id, reverse=True)[:limit]
-        return [m for m in self._messages if m.id > min_id]
+            newest_first = newest_first[:limit]
+        return newest_first
 
 
 def test_telethon_fetcher_first_run_establishes_baseline_without_backfill():
@@ -100,7 +108,7 @@ def test_telethon_fetcher_first_run_establishes_baseline_without_backfill():
 
     assert items == []
     assert cursor == "2"
-    assert client.iter_messages_calls == [("some_channel", 0, True, 1)]
+    assert client.iter_messages_calls == [("some_channel", 1)]
 
 
 def test_telethon_fetcher_first_run_on_empty_channel_keeps_cursor_none():
@@ -130,7 +138,7 @@ def test_telethon_fetcher_subsequent_run_returns_only_new_messages():
 
     assert len(items) == 2  # тільки id 2 і 3, не 1 (уже пройдений курсором)
     assert cursor == "3"
-    assert client.iter_messages_calls == [("some_channel", 1, True, None)]
+    assert client.iter_messages_calls == [("some_channel", _MAX_MESSAGES_PER_FETCH)]
 
 
 def test_telethon_fetcher_no_new_messages_keeps_cursor():
@@ -141,3 +149,21 @@ def test_telethon_fetcher_no_new_messages_keeps_cursor():
     )
     assert items == []
     assert cursor == "5"
+
+
+def test_telethon_fetcher_correctly_groups_album_when_messages_come_newest_first():
+    """Фетч тепер читає найновіші-першими (не зростаючий порядок) —
+    переконуємось, що групування альбому все одно працює коректно."""
+    caption = FakeMessage(id=10, date=dt.datetime(2026, 8, 14), message="Галерея", grouped_id=555, photo=object())
+    photo2 = FakeMessage(id=11, date=dt.datetime(2026, 8, 14), grouped_id=555, photo=object())
+    client = FakeTelethonClient([photo2, caption])
+    fetcher = TelethonFetcher(client)
+
+    items, cursor = fetcher.fetch_new(
+        source=type("S", (), {"handle_or_url": "@some_channel"})(), cursor="0"
+    )
+
+    assert len(items) == 1
+    assert items[0].text == "Галерея"
+    assert len(items[0].media) == 2
+    assert cursor == "11"

@@ -87,6 +87,9 @@ def group_messages_into_items(
     return singles + grouped_items
 
 
+_MAX_MESSAGES_PER_FETCH = 200
+
+
 class TelethonFetcher:
     def __init__(self, client: Any):
         self._client = client
@@ -106,10 +109,22 @@ class TelethonFetcher:
             return [], str(latest[0].id)
 
         min_id = int(cursor)
-        messages = list(self._client.iter_messages(handle, min_id=min_id, reverse=True))
-        if not messages:
+
+        # Свідомо НЕ reverse=True + min_id у самому запиті: ця комбінація має
+        # задокументовану історію крихких edge-кейсів у Telethon (issues
+        # LonamiWebs/Telethon #4453, #3847, #4579 — тихо повертає порожньо чи
+        # обривається завчасно). Натомість читаємо найновіші-першими (сама
+        # протоптана дорога бібліотеки, той самий виклик, що й для cold-start
+        # вище) і самі зупиняємось, щойно дійшли до вже баченого повідомлення.
+        new_messages: list[Any] = []
+        for msg in self._client.iter_messages(handle, limit=_MAX_MESSAGES_PER_FETCH):
+            if msg.id <= min_id:
+                break
+            new_messages.append(msg)
+
+        if not new_messages:
             return [], cursor
 
-        items = group_messages_into_items(messages, handle)
-        new_cursor = str(max(m.id for m in messages))
+        items = group_messages_into_items(new_messages, handle)
+        new_cursor = str(max(m.id for m in new_messages))
         return items, new_cursor
