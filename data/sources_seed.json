@@ -230,6 +230,31 @@
       "note": ""
     },
     {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Поліція Житомирської області",
+      "handle_or_url": "@zt_police",
+      "active": true,
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Патрульна поліція Житомирської області",
+      "handle_or_url": "@patrol_police_zt",
+      "active": true,
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "zhytomyr",
+      "type": "web_scrape",
+      "name": "ГУНП в Житомирській області (сайт)",
+      "handle_or_url": "https://zt.npu.gov.ua",
+      "active": true,
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "scrape_item_selector": "div.main-item_content a.title-16"
+    },
+    {
       "channel_id": "berdychiv",
       "type": "website",
       "name": "РІО Бердичів",
@@ -286,6 +311,31 @@
       "note": ""
     },
     {
+      "channel_id": "berdychiv",
+      "type": "telegram",
+      "name": "Поліція Житомирської області",
+      "handle_or_url": "@zt_police",
+      "active": true,
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "telegram",
+      "name": "Патрульна поліція Житомирської області",
+      "handle_or_url": "@patrol_police_zt",
+      "active": true,
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "berdychiv",
+      "type": "web_scrape",
+      "name": "ГУНП в Житомирській області (сайт)",
+      "handle_or_url": "https://zt.npu.gov.ua",
+      "active": true,
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "scrape_item_selector": "div.main-item_content a.title-16"
+    },
+    {
       "channel_id": "korosten",
       "type": "website",
       "name": "Офіційний портал міськради",
@@ -332,6 +382,31 @@
       "handle_or_url": "facebook.com/korostentoday",
       "active": true,
       "note": ""
+    },
+    {
+      "channel_id": "korosten",
+      "type": "telegram",
+      "name": "Поліція Житомирської області",
+      "handle_or_url": "@zt_police",
+      "active": true,
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "korosten",
+      "type": "telegram",
+      "name": "Патрульна поліція Житомирської області",
+      "handle_or_url": "@patrol_police_zt",
+      "active": true,
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "korosten",
+      "type": "web_scrape",
+      "name": "ГУНП в Житомирській області (сайт)",
+      "handle_or_url": "https://zt.npu.gov.ua",
+      "active": true,
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "scrape_item_selector": "div.main-item_content a.title-16"
     },
     {
       "channel_id": "zvyahel",
@@ -389,6 +464,31 @@
       "handle_or_url": "facebook.com/04141web",
       "active": true,
       "note": ""
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "telegram",
+      "name": "Поліція Житомирської області",
+      "handle_or_url": "@zt_police",
+      "active": true,
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "telegram",
+      "name": "Патрульна поліція Житомирської області",
+      "handle_or_url": "@patrol_police_zt",
+      "active": true,
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "zvyahel",
+      "type": "web_scrape",
+      "name": "ГУНП в Житомирській області (сайт)",
+      "handle_or_url": "https://zt.npu.gov.ua",
+      "active": true,
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "scrape_item_selector": "div.main-item_content a.title-16"
     },
     {
       "channel_id": "malyn",
@@ -458,6 +558,31 @@
       "note": ""
     },
     {
+      "channel_id": "malyn",
+      "type": "telegram",
+      "name": "Поліція Житомирської області",
+      "handle_or_url": "@zt_police",
+      "active": true,
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "malyn",
+      "type": "telegram",
+      "name": "Патрульна поліція Житомирської області",
+      "handle_or_url": "@patrol_police_zt",
+      "active": true,
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "malyn",
+      "type": "web_scrape",
+      "name": "ГУНП в Житомирській області (сайт)",
+      "handle_or_url": "https://zt.npu.gov.ua",
+      "active": true,
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "scrape_item_selector": "div.main-item_content a.title-16"
+    },
+    {
       "channel_id": "radomyshl",
       "type": "website",
       "name": "Радомишльська міська громада",
@@ -523,6 +648,31 @@
       "note": ""
     },
     {
+      "channel_id": "radomyshl",
+      "type": "telegram",
+      "name": "Поліція Житомирської області",
+      "handle_or_url": "@zt_police",
+      "active": true,
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "telegram",
+      "name": "Патрульна поліція Житомирської області",
+      "handle_or_url": "@patrol_police_zt",
+      "active": true,
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "radomyshl",
+      "type": "web_scrape",
+      "name": "ГУНП в Житомирській області (сайт)",
+      "handle_or_url": "https://zt.npu.gov.ua",
+      "active": true,
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "scrape_item_selector": "div.main-item_content a.title-16"
+    },
+    {
       "channel_id": "korostyshiv",
       "type": "website",
       "name": "Коростишівська міська рада",
@@ -554,6 +704,31 @@
       "handle_or_url": "facebook.com/miskaradakor",
       "active": true,
       "note": ""
+    },
+    {
+      "channel_id": "korostyshiv",
+      "type": "telegram",
+      "name": "Поліція Житомирської області",
+      "handle_or_url": "@zt_police",
+      "active": true,
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "korostyshiv",
+      "type": "telegram",
+      "name": "Патрульна поліція Житомирської області",
+      "handle_or_url": "@patrol_police_zt",
+      "active": true,
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+    },
+    {
+      "channel_id": "korostyshiv",
+      "type": "web_scrape",
+      "name": "ГУНП в Житомирській області (сайт)",
+      "handle_or_url": "https://zt.npu.gov.ua",
+      "active": true,
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "scrape_item_selector": "div.main-item_content a.title-16"
     }
   ]
 }
