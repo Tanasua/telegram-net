@@ -52,6 +52,30 @@ def test_load_channels(seed_path):
     assert channel.headline_probability == 0.3
 
 
+def test_subscribe_cta_defaults_to_channel_name_when_not_specified(seed_path):
+    channel = LocalJSONConfigSource(seed_path).load_channels()[0]
+    assert channel.subscribe_cta == "Підписуйся на Житомир"
+
+
+def test_subscribe_cta_explicit_value_is_respected(tmp_path):
+    data = {
+        "channels": [
+            {
+                "channel_id": "zhytomyr",
+                "name": "Житомир",
+                "telegram_chat_id": None,
+                "subscribe_cta": "Підписуйся на Мій Житомир",
+            }
+        ],
+        "sources": [],
+    }
+    path = tmp_path / "seed.json"
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+    channel = LocalJSONConfigSource(path).load_channels()[0]
+    assert channel.subscribe_cta == "Підписуйся на Мій Житомир"
+
+
 def test_load_sources(seed_path):
     sources = LocalJSONConfigSource(seed_path).load_sources()
     assert len(sources) == 2

@@ -36,6 +36,7 @@ class ChannelConfig:
     )
     headline_probability: float = 0.4
     timezone: str = "Europe/Kyiv"
+    subscribe_cta: str | None = None  # додається кодом після генерації, не LLM — див. pipeline.py
 
 
 class ConfigSource(Protocol):
@@ -68,6 +69,7 @@ class LocalJSONConfigSource:
                 ),
                 headline_probability=c.get("headline_probability", 0.4),
                 timezone=c.get("timezone", "Europe/Kyiv"),
+                subscribe_cta=c.get("subscribe_cta") or f"Підписуйся на {c['name']}",
             )
             for c in data["channels"]
         ]
@@ -92,7 +94,7 @@ class GoogleSheetsConfigSource:
 
     Очікувані заголовки:
       Channels:     channel_id | Райцентр | telegram_chat_id | Активний | Мін. релевантність |
-                    Макс. постів за прогін | Макс. вік новини (хв)
+                    Макс. постів за прогін | Макс. вік новини (хв) | Заклик підписатись
       <channel_id>: Тип | Назва | URL/handle | Активне | Примітка
     """
 
@@ -116,6 +118,8 @@ class GoogleSheetsConfigSource:
                 min_relevance=float(r.get("Мін. релевантність") or 0.5),
                 max_posts_per_run=int(r.get("Макс. постів за прогін") or 1),
                 max_age_minutes=int(r.get("Макс. вік новини (хв)") or 60),
+                subscribe_cta=str(r.get("Заклик підписатись") or "").strip()
+                or f"Підписуйся на {r['Райцентр']}",
             )
             for r in rows
             if r.get("channel_id")

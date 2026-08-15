@@ -155,6 +155,10 @@ def _process_item(
 
     style = pick_style(channel.length_weights, channel.headline_probability)
     post_text = deps.generator.generate(item, style, channel.name)
+    if channel.subscribe_cta:
+        # Приписка додається кодом, а не LLM — гарантія, що назва каналу в
+        # заклику завжди правильна й не спотворена генерацією.
+        post_text = f"{post_text}\n\n{channel.subscribe_cta}"
 
     generated = GeneratedPost(
         raw_item_id=raw_item.id,

@@ -28,6 +28,17 @@ def test_build_prompt_handles_empty_source_text():
     assert "лише фото/відео" in messages[1]["content"]
 
 
+def test_build_prompt_requires_exactly_one_mood_emoji():
+    messages = build_prompt(_item(), PostStyle(length="short", with_headline=True), "Житомир")
+    assert "РІВНО З ОДНОГО емодзі" in messages[0]["content"]
+    assert "НІ ОДНОГО емодзі" in messages[0]["content"]
+
+
+def test_build_prompt_forbids_inventing_quotes():
+    messages = build_prompt(_item(), PostStyle(length="long", with_headline=True), "Житомир")
+    assert "НІКОЛИ не вигадуй" in messages[0]["content"]
+
+
 class FakeCompletions:
     def __init__(self, content):
         self._content = content

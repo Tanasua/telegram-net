@@ -229,3 +229,24 @@ def test_custom_max_age_minutes_is_respected():
     run_once(deps)
 
     assert publisher.published == []
+
+
+def test_subscribe_cta_appended_after_publish_when_configured():
+    deps, session_factory, publisher = _make_deps(
+        [_item()], _RELEVANT, channel_kwargs={"subscribe_cta": "Підписуйся на Мій Житомир"}
+    )
+
+    run_once(deps)
+
+    assert publisher.published == [("-1001", "Готовий пост\n\nПідписуйся на Мій Житомир", [])]
+    with session_factory() as session:
+        post = session.query(GeneratedPost).one()
+        assert post.text == "Готовий пост\n\nПідписуйся на Мій Житомир"
+
+
+def test_no_subscribe_cta_appended_when_not_configured():
+    deps, session_factory, publisher = _make_deps([_item()], _RELEVANT)
+
+    run_once(deps)
+
+    assert publisher.published == [("-1001", "Готовий пост", [])]
