@@ -150,8 +150,12 @@ def _process_item(
     )
     session.commit()
 
-    if classification.is_advertisement or classification.relevance_to_region < channel.min_relevance:
-        return
+    if (
+        classification.is_advertisement
+        or classification.relevance_to_region < channel.min_relevance
+        or classification.local_news_interest < channel.min_interest
+    ):
+        return  # реклама, або не про це місто, або сам класифікатор оцінив як нецікаву (не подія)
 
     style = pick_style(channel.length_weights, channel.headline_probability)
     post_text = deps.generator.generate(item, style, channel.name)

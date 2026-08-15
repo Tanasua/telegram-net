@@ -29,6 +29,7 @@ class ChannelConfig:
     telegram_chat_id: str | None
     active: bool = True
     min_relevance: float = 0.5
+    min_interest: float = 0.5
     max_posts_per_run: int = 1
     max_age_minutes: int = 60
     length_weights: dict[str, float] = field(
@@ -62,6 +63,7 @@ class LocalJSONConfigSource:
                 telegram_chat_id=c.get("telegram_chat_id") or None,
                 active=c.get("active", True),
                 min_relevance=c.get("min_relevance", 0.5),
+                min_interest=c.get("min_interest", 0.5),
                 max_posts_per_run=c.get("max_posts_per_run", 1),
                 max_age_minutes=c.get("max_age_minutes", 60),
                 length_weights=c.get(
@@ -94,7 +96,7 @@ class GoogleSheetsConfigSource:
 
     Очікувані заголовки:
       Channels:     channel_id | Райцентр | telegram_chat_id | Активний | Мін. релевантність |
-                    Макс. постів за прогін | Макс. вік новини (хв) | Заклик підписатись
+                    Мін. цікавість | Макс. постів за прогін | Макс. вік новини (хв) | Заклик підписатись
       <channel_id>: Тип | Назва | URL/handle | Активне | Примітка
     """
 
@@ -116,6 +118,7 @@ class GoogleSheetsConfigSource:
                 telegram_chat_id=str(r["telegram_chat_id"]) or None,
                 active=str(r.get("Активний", "Так")).strip().lower() == "так",
                 min_relevance=float(r.get("Мін. релевантність") or 0.5),
+                min_interest=float(r.get("Мін. цікавість") or 0.5),
                 max_posts_per_run=int(r.get("Макс. постів за прогін") or 1),
                 max_age_minutes=int(r.get("Макс. вік новини (хв)") or 60),
                 subscribe_cta=str(r.get("Заклик підписатись") or "").strip()

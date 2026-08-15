@@ -96,6 +96,12 @@ _AD = ClassificationResult(
 _IRRELEVANT = ClassificationResult(
     is_advertisement=False, relevance_to_region=0.1, local_news_interest=0.5, reason="не про це місто"
 )
+_BORING_INSTITUTIONAL_FILLER = ClassificationResult(
+    is_advertisement=False,
+    relevance_to_region=0.9,  # формально про це місто...
+    local_news_interest=0.05,  # ...але не подія, а опис організації
+    reason="опис сайту громади, не новина",
+)
 
 
 def test_relevant_item_is_classified_generated_and_published():
@@ -131,6 +137,22 @@ def test_below_min_relevance_is_not_published():
     run_once(deps)
 
     with session_factory() as session:
+        assert session.query(GeneratedPost).count() == 0
+    assert publisher.published == []
+
+
+def test_below_min_interest_is_not_published():
+    """Регресія: класифікатор оцінював local_news_interest, але pipeline ніде
+    не звіряв цю оцінку з порогом — 'нецікаве' формально-релевантне сміття
+    (опис сайту громади) все одно публікувалось."""
+    deps, session_factory, publisher = _make_deps(
+        [_item()], _BORING_INSTITUTIONAL_FILLER, channel_kwargs={"min_interest": 0.5}
+    )
+
+    run_once(deps)
+
+    with session_factory() as session:
+        assert session.query(RawItem).count() == 1  # зафіксовано, але не опубліковано
         assert session.query(GeneratedPost).count() == 0
     assert publisher.published == []
 
