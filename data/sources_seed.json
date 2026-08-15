@@ -118,11 +118,12 @@
     },
     {
       "channel_id": "zhytomyr",
-      "type": "website",
+      "type": "web_scrape",
       "name": "ZhitomirNEWS",
       "handle_or_url": "https://www.zhitomirnews.com",
       "active": true,
-      "note": ""
+      "note": "Без RSS — скрапінг верстки",
+      "scrape_item_selector": "section.zhitomirToday-item a"
     },
     {
       "channel_id": "zhytomyr",
@@ -334,11 +335,12 @@
     },
     {
       "channel_id": "zvyahel",
-      "type": "website",
+      "type": "web_scrape",
       "name": "Новоград.City",
       "handle_or_url": "https://novograd.city",
       "active": true,
-      "note": ""
+      "note": "Без RSS — скрапінг верстки",
+      "scrape_item_selector": "div.info a.title"
     },
     {
       "channel_id": "zvyahel",
@@ -390,11 +392,13 @@
     },
     {
       "channel_id": "malyn",
-      "type": "website",
+      "type": "web_scrape",
       "name": "Малинська міська рада",
       "handle_or_url": "https://malyn-rada.gov.ua",
       "active": true,
-      "note": ""
+      "note": "Drupal, rss.xml є, але порожній — скрапінг верстки (views-row)",
+      "scrape_item_selector": ".views-row a.uk-display-block",
+      "scrape_title_selector": ".tm-text-semibold .uk-text-middle"
     },
     {
       "channel_id": "malyn",
@@ -414,11 +418,12 @@
     },
     {
       "channel_id": "malyn",
-      "type": "website",
+      "type": "web_scrape",
       "name": "Polissya.today / Малин",
       "handle_or_url": "https://polissya.today/malyn",
       "active": true,
-      "note": ""
+      "note": "Без RSS — скрапінг верстки",
+      "scrape_item_selector": "article.masonry-item h2 a"
     },
     {
       "channel_id": "malyn",
@@ -486,11 +491,12 @@
     },
     {
       "channel_id": "radomyshl",
-      "type": "website",
+      "type": "web_scrape",
       "name": "Polissya.today / Радомишль",
       "handle_or_url": "https://polissya.today/radomyshl",
       "active": true,
-      "note": ""
+      "note": "Без RSS — скрапінг верстки",
+      "scrape_item_selector": "article.masonry-item h2 a"
     },
     {
       "channel_id": "radomyshl",
@@ -534,11 +540,12 @@
     },
     {
       "channel_id": "korostyshiv",
-      "type": "website",
+      "type": "web_scrape",
       "name": "Polissya.today / Коростишів",
       "handle_or_url": "https://polissya.today/korostyshiv",
       "active": true,
-      "note": ""
+      "note": "Без RSS — скрапінг верстки",
+      "scrape_item_selector": "article.masonry-item h2 a"
     },
     {
       "channel_id": "korostyshiv",

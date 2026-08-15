@@ -17,6 +17,7 @@ from telethon.sync import TelegramClient
 from telegram_net.classifier import Classifier
 from telegram_net.config import GoogleSheetsConfigSource, LocalJSONConfigSource
 from telegram_net.db import init_db, make_engine, make_session_factory
+from telegram_net.fetchers.scrape_fetcher import HtmlListFetcher
 from telegram_net.fetchers.telegram_fetcher import TelethonFetcher
 from telegram_net.fetchers.web_fetcher import WebFetcher
 from telegram_net.generator import Generator
@@ -58,6 +59,7 @@ def build_deps() -> PipelineDeps:
         fetchers={
             "telegram": TelethonFetcher(telethon_client),
             "website": WebFetcher(),
+            "web_scrape": HtmlListFetcher(),
         },
         classifier=Classifier(),
         generator=Generator(),

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, Protocol
 
-SourceType = Literal["telegram", "website", "facebook_page"]
+SourceType = Literal["telegram", "website", "web_scrape", "facebook_page"]
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,13 @@ class SourceConfig:
     handle_or_url: str
     active: bool = True
     note: str = ""
+    # Тільки для type="web_scrape" — сайт без RSS/Atom. Дає скрапери
+    # спільний код (fetchers/scrape_fetcher.py) замість окремого Python-парсера
+    # на кожен сайт: scrape_item_selector знаходить кожну картку новини на
+    # сторінці, scrape_title_selector (опційно) — заголовок усередині картки;
+    # без нього береться весь текст картки (як title+summary у RSS-записі).
+    scrape_item_selector: str | None = None
+    scrape_title_selector: str | None = None
 
 
 @dataclass(frozen=True)
@@ -86,6 +93,8 @@ class LocalJSONConfigSource:
                 handle_or_url=s["handle_or_url"],
                 active=s.get("active", True),
                 note=s.get("note", ""),
+                scrape_item_selector=s.get("scrape_item_selector") or None,
+                scrape_title_selector=s.get("scrape_title_selector") or None,
             )
             for s in data["sources"]
         ]
@@ -97,7 +106,12 @@ class GoogleSheetsConfigSource:
     Очікувані заголовки:
       Channels:     channel_id | Райцентр | telegram_chat_id | Активний | Мін. релевантність |
                     Мін. цікавість | Макс. постів за прогін | Макс. вік новини (хв) | Заклик підписатись
-      <channel_id>: Тип | Назва | URL/handle | Активне | Примітка
+      <channel_id>: Тип | Назва | URL/handle | Активне | Примітка |
+                    CSS: картка новини | CSS: заголовок
+
+    Останні дві колонки — тільки для Тип="сайт (скрапінг)" (сайт без RSS):
+    CSS-селектор картки новини на сторінці й, опційно, заголовка всередині неї
+    (без нього береться весь текст картки). Див. fetchers/scrape_fetcher.py.
     """
 
     CHANNELS_SHEET = "Channels"
@@ -129,7 +143,12 @@ class GoogleSheetsConfigSource:
         ]
 
     def load_sources(self) -> list[SourceConfig]:
-        type_map = {"сайт": "website", "телеграм": "telegram", "facebook сторінка": "facebook_page"}
+        type_map = {
+            "сайт": "website",
+            "сайт (скрапінг)": "web_scrape",
+            "телеграм": "telegram",
+            "facebook сторінка": "facebook_page",
+        }
         sources: list[SourceConfig] = []
         for channel in self.load_channels():
             ws = self._sheet.worksheet(channel.channel_id)
@@ -146,6 +165,8 @@ class GoogleSheetsConfigSource:
                         handle_or_url=str(r["URL/handle"]),
                         active=str(r.get("Активне", "Так")).strip().lower() == "так",
                         note=str(r.get("Примітка", "")),
+                        scrape_item_selector=str(r.get("CSS: картка новини", "")).strip() or None,
+                        scrape_title_selector=str(r.get("CSS: заголовок", "")).strip() or None,
                     )
                 )
         return sources

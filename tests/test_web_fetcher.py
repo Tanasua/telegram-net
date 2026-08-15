@@ -101,6 +101,30 @@ def test_no_feed_means_no_items(monkeypatch):
 
 
 @respx.mock
+def test_falls_back_to_well_known_feed_path_when_not_advertised(monkeypatch):
+    """Регресія: korosten-rada.gov.ua у продакшні реально віддає робочий /feed/,
+    але не рекламує його через <link rel="alternate"> на головній — без цього
+    фолбека джерело мовчало б назавжди, хоча RSS насправді є."""
+    call_log = []
+
+    def fake_parse(url):
+        call_log.append(url)
+        if url.endswith("/feed/"):
+            return _fake_parsed([{"id": "1", "title": "Новина", "summary": "", "link": "https://example.com/1"}])
+        return _fake_parsed([])
+
+    monkeypatch.setattr("telegram_net.fetchers.web_fetcher.feedparser.parse", fake_parse)
+    respx.get("https://example.com/").mock(return_value=httpx.Response(200, text="<html><head></head></html>"))
+    source = SourceConfig(channel_id="x", type="website", name="Test", handle_or_url="https://example.com/")
+    fetcher = WebFetcher(http_client=httpx.Client())
+
+    items, _ = fetcher.fetch_new(source, cursor=None)
+
+    assert len(items) == 1
+    assert "https://example.com/feed/" in call_log
+
+
+@respx.mock
 def test_autodiscovers_feed_link_in_html_head(monkeypatch):
     call_log = []
 

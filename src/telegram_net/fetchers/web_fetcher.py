@@ -25,12 +25,30 @@ from telegram_net.fetchers.base import FetchedItem, FetchedMedia
 
 _MAX_CURSOR_IDS = 200
 
+# Деякі сайти віддають 403 на запити без "браузерного" User-Agent (навіть коли
+# самé RSS-джерело — публічне і без жодного захисту) — не бот-захист по суті,
+# а фільтр за заголовками. Приклад з продакшна: berdichev.biz, rio-berdychiv.info.
+_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "uk-UA,uk;q=0.9,en;q=0.8",
+}
+
+# WordPress/Joomla майже завжди мають фід за одним із цих шляхів, навіть якщо
+# головна сторінка з якоїсь причини не рекламує його через <link rel="alternate">
+# (приклад: korosten-rada.gov.ua — /feed/ реально працює, в HTML посилання нема).
+_WELL_KNOWN_FEED_PATHS = ("feed/", "feed", "?format=feed&type=rss")
+
 logger = logging.getLogger(__name__)
 
 
 class WebFetcher:
     def __init__(self, http_client: httpx.Client | None = None):
-        self._http = http_client or httpx.Client(timeout=15, follow_redirects=True)
+        self._http = http_client or httpx.Client(
+            timeout=15, follow_redirects=True, headers=_BROWSER_HEADERS
+        )
 
     def fetch_new(self, source: SourceConfig, cursor: str | None) -> tuple[list[FetchedItem], str | None]:
         url = source.handle_or_url
@@ -50,6 +68,11 @@ class WebFetcher:
         if feed_link:
             parsed = feedparser.parse(feed_link)
             return self._entries_to_result(parsed.entries, feed_link, cursor)
+
+        for guessed in _guess_feed_urls(url):
+            parsed = feedparser.parse(guessed)
+            if parsed.entries:
+                return self._entries_to_result(parsed.entries, guessed, cursor)
 
         logger.warning(
             "Джерело %s не має RSS/Atom — пропускаю (без нього немає надійного способу "
@@ -89,6 +112,11 @@ def _find_feed_link(soup: BeautifulSoup, base_url: str) -> str | None:
     if link and link.get("href"):
         return str(httpx.URL(base_url).join(link["href"]))
     return None
+
+
+def _guess_feed_urls(base_url: str) -> list[str]:
+    stripped = base_url.rstrip("/")
+    return [f"{stripped}/{path}" for path in _WELL_KNOWN_FEED_PATHS]
 
 
 def _entry_text(entry: Any) -> str:

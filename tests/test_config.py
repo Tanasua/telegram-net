@@ -96,8 +96,10 @@ def _assert_seed_file_is_internally_consistent(path, expected_channel_count):
 
     for s in sources:
         assert s.channel_id in channel_ids
-        assert s.type in ("telegram", "website", "facebook_page")
+        assert s.type in ("telegram", "website", "web_scrape", "facebook_page")
         assert s.handle_or_url
+        if s.type == "web_scrape":
+            assert s.scrape_item_selector, f"{s.handle_or_url}: web_scrape без scrape_item_selector"
 
 
 def test_active_seed_file_has_the_7_channels_in_work():
