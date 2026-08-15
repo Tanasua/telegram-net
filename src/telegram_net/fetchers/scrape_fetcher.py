@@ -11,17 +11,28 @@ Python-парсера на кожен — селектори підбирают�
 Сторінки такого типу майже ніколи не дають надійну дату публікації в розмітці
 (на відміну від RSS-записів). Тому, як і для Telethon-фетчера: перше
 підключення джерела лише фіксує поточний список посилань як базову лінію,
-не публікуючи "заднім числом" усе, що вже висіло на сайті до підключення."""
+не публікуючи "заднім числом" усе, що вже висіло на сайті до підключення.
+
+Фото: беремо не з картки в списку (там воно є не завжди й часто низької
+якості), а з og:image самої статті — один додатковий GET на кожен НОВИЙ
+елемент (не на весь список), тож вартість обмежена реальною кількістю нових
+новин за прогін. Якщо og:image повторюється в кількох різних статей з того ж
+джерела за один прогін — це логотип/заглушка сайту, а не фото конкретної
+новини (підтверджено на практиці для zhitomirnews.com — там завжди та сама
+картинка-логотип), і такий "фолбек" відкидається: без цього правило "немає
+фото — немає посту" (pipeline.py) публікувало б логотип замість новини."""
 
 from __future__ import annotations
 
 import logging
+from collections import Counter
+from typing import Iterable
 
 import httpx
 from bs4 import BeautifulSoup, Tag
 
 from telegram_net.config import SourceConfig
-from telegram_net.fetchers.base import FetchedItem
+from telegram_net.fetchers.base import FetchedItem, FetchedMedia
 
 logger = logging.getLogger(__name__)
 
@@ -68,12 +79,40 @@ class HtmlListFetcher:
         if not new_entries:
             return [], cursor
 
-        items = [
-            FetchedItem(external_id=url, text=title, url=url, published_at=None)
-            for url, title in new_entries
-        ]
+        images = self._fetch_article_images(url for url, _ in new_entries)
+        image_counts = Counter(images.values())
+
+        items = []
+        for url, title in new_entries:
+            image_url = images.get(url)
+            if image_url and image_counts[image_url] > 1:
+                # Той самий og:image у кількох різних статей за один прогін —
+                # це логотип/заглушка сайту, а не фото цієї конкретної новини.
+                logger.info(
+                    "Джерело %s: og:image %s повторюється для кількох статей — не фото новини, ігнорую",
+                    url,
+                    image_url,
+                )
+                image_url = None
+            media = (FetchedMedia(type="photo", url=image_url),) if image_url else ()
+            items.append(FetchedItem(external_id=url, text=title, url=url, published_at=None, media=media))
+
         new_cursor = _encode_cursor([*seen, *(url for url, _ in new_entries)])
         return items, new_cursor
+
+    def _fetch_article_images(self, urls: Iterable[str]) -> dict[str, str]:
+        images: dict[str, str] = {}
+        for url in urls:
+            try:
+                resp = self._http.get(url)
+                resp.raise_for_status()
+            except httpx.HTTPError:
+                continue
+            article_soup = BeautifulSoup(resp.text, "lxml")
+            og_image = article_soup.find("meta", property="og:image")
+            if og_image and og_image.get("content"):
+                images[url] = str(httpx.URL(url).join(og_image["content"]))
+        return images
 
 
 def _extract_entries(soup: BeautifulSoup, source: SourceConfig) -> list[tuple[str, str]]:
