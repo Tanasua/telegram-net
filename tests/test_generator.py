@@ -39,6 +39,12 @@ def test_build_prompt_forbids_inventing_quotes():
     assert "НІКОЛИ не вигадуй" in messages[0]["content"]
 
 
+def test_build_prompt_forbids_digest_style_multi_topic_posts():
+    messages = build_prompt(_item(), PostStyle(length="medium", with_headline=True), "Житомир")
+    assert "ПРО ОДНУ новину" in messages[0]["content"]
+    assert "збірну солянку" in messages[0]["content"]
+
+
 class FakeCompletions:
     def __init__(self, content):
         self._content = content
