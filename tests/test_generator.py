@@ -20,7 +20,7 @@ def test_build_prompt_with_headline_instruction():
 
 def test_build_prompt_without_headline_instruction():
     messages = build_prompt(_item(), PostStyle(length="long", with_headline=False), "Житомир")
-    assert "без заголовка" in messages[0]["content"]
+    assert "без окремого заголовка-факту" in messages[0]["content"]
 
 
 def test_build_prompt_handles_empty_source_text():
@@ -28,10 +28,22 @@ def test_build_prompt_handles_empty_source_text():
     assert "лише фото/відео" in messages[1]["content"]
 
 
-def test_build_prompt_requires_exactly_one_mood_emoji():
+def test_build_prompt_forbids_emoji():
+    """Стиль УНІАН (перевірено на реальних постах t.me/uniannet, 2026-08-15):
+    7 з 8 останніх постів — без жодного емодзі. На відміну від раніше змодельованого
+    Главреда, тут емодзі — не частина формату каналу взагалі."""
     messages = build_prompt(_item(), PostStyle(length="short", with_headline=True), "Житомир")
-    assert "РІВНО З ОДНОГО емодзі" in messages[0]["content"]
-    assert "НІ ОДНОГО емодзі" in messages[0]["content"]
+    assert "БЕЗ ЖОДНОГО емодзі" in messages[0]["content"]
+
+
+def test_build_prompt_requires_short_declarative_sentences():
+    messages = build_prompt(_item(), PostStyle(length="medium", with_headline=True), "Житомир")
+    assert "короткі й декларативні" in messages[0]["content"]
+
+
+def test_build_prompt_forbids_hashtags():
+    messages = build_prompt(_item(), PostStyle(length="long", with_headline=False), "Житомир")
+    assert "Без хештегів" in messages[0]["content"]
 
 
 def test_build_prompt_forbids_inventing_quotes():
