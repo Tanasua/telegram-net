@@ -1,8 +1,11 @@
 name: Hourly news pipeline
 
 on:
-  schedule:
-    - cron: "0 * * * *"
+  # Розклад зупинено 2026-10-01 на прохання користувача ("зупини пайплайн").
+  # workflow_dispatch лишається — запустити вручну можна, автоматично більше не піде.
+  # Щоб відновити щогодинний запуск: розкоментувати блок schedule нижче.
+  # schedule:
+  #   - cron: "0 * * * *"
   workflow_dispatch: {}
 
 concurrency:
