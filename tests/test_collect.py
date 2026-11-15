@@ -262,7 +262,7 @@ def test_text_brief_is_compact_and_points_to_full_text(tmp_path):
     brief, state, _ = _run(tmp_path, [src("А")], {"@А": [item(1, long_text, media=["https://cdn/very/long/url/photo.jpg"])]}, state=state)
     text = brief_text(brief)
     cid = brief["candidates"][0]["id"]
-    assert f"[{cid}] local→malyn · А · 30 хв · фото 1" in text
+    assert f"[{cid}] local→malyn · медіа · А · 30 хв · фото 1" in text
     assert f"повний текст: show {cid}" in text and "https://cdn" not in text
     assert "вже було" in text and len(text) < 1800
     assert state.pool[cid]["text"].count("Деталь") > 40  # повний текст лишився в пулі
@@ -274,3 +274,30 @@ def test_nothing_to_do_when_no_candidates_and_no_rubrics(tmp_path):
     assert nothing_to_do(brief)  # 15:00, субота: рубрик немає
     morning = build_brief(make_config([]), State(tmp_path), dt.datetime(2026, 11, 14, 6, 0, tzinfo=dt.timezone.utc))
     assert not nothing_to_do(morning)  # 08:00 — час ранкової рубрики
+
+
+def test_press_releases_from_official_sources_are_dropped_but_incidents_kept(tmp_path):
+    police = src("Поліція", scope="oblast", handle="@zt_police", kind="official")
+    public = src("Паблік", handle="@public", kind="public")
+    pr = [
+        "⚠️ Сапери ДСНС: підозрілу знахідку не чіпайте — телефонуйте 101. Сапери продовжують пошук вибухонебезпечних предметів.",
+        "🩸 Донорство крові — важливий внесок у порятунок життів. Ми спільно з поліцією охорони завітали до центру крові.",
+        "Мобільний клас безпеки: поліцейські навчають ліцеїстів важливих правил безпеки.",
+    ]
+    incident = "У Коростені поліцейські затримали чоловіка, який викрав велосипед біля магазину. Йому повідомлено про підозру."
+    items_police = [item(i, t) for i, t in enumerate(pr)] + [item(9, incident)]
+    # Та сама «нудятина» в пабліку — не фільтр коду, а смак редактора.
+    brief, _, _ = _run(tmp_path, [police, public], {"@zt_police": items_police, "@public": [item(20, pr[0] + " (паблік)")]})
+    texts = [c["text"] for c in brief["candidates"]]
+    assert incident in texts and not any("Донорство" in t or "Мобільний клас" in t for t in texts)
+    assert brief["stats"]["press_release"] + brief["stats"]["capped"] == 3  # найстаріше відсік ліміт офіційних
+    # Паблики — першими в брифі.
+    assert brief["candidates"][0]["kind"] == "public"
+    assert "· паблік ·" in brief_text(brief)
+
+
+def test_official_sources_are_capped_to_freshest(tmp_path):
+    rada = src("Рада", kind="official")
+    items = [item(i, f"Рішення виконкому номер {i} про ремонт дороги на вулиці", minutes_ago=100 - i) for i in range(1, 8)]
+    brief, _, _ = _run(tmp_path, [rada], {"@Рада": items})
+    assert len(brief["candidates"]) == 3 and brief["stats"]["capped"] == 4

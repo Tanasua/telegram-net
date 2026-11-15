@@ -18,6 +18,11 @@ from typing import Literal
 
 SourceType = Literal["telegram", "website", "web_scrape", "facebook_page"]
 Scope = Literal["local", "oblast", "national"]
+# Тип джерела — для пріоритету в брифі: живі паблики цікавіші за пресслужби.
+#   public   — місцеві телеграм-паблики (події, люди, «що сталося»);
+#   media    — редакції й сайти новин;
+#   official — пресслужби: ради, поліція, ДСНС, ОВА, комунальники.
+SourceKind = Literal["public", "media", "official"]
 
 
 @dataclass(frozen=True)
@@ -29,6 +34,7 @@ class SourceConfig:
     active: bool = True
     note: str = ""
     scope: Scope = "local"
+    kind: SourceKind = "media"
     # Тільки для type="web_scrape" (сайт без RSS): CSS-селектор картки новини
     # і, опційно, заголовка всередині неї. Див. fetchers/scrape_fetcher.py.
     scrape_item_selector: str | None = None
@@ -136,6 +142,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> Config:
                 active=s.get("active", True),
                 note=s.get("note", ""),
                 scope=scope,
+                kind=s.get("kind", "media"),
                 scrape_item_selector=s.get("scrape_item_selector") or None,
                 scrape_title_selector=s.get("scrape_title_selector") or None,
             )
