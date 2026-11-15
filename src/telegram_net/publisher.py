@@ -77,6 +77,21 @@ class TelegramPublisher:
         resp = self._http.post(f"{self._base_url}/sendPhoto", data=data, files={"photo": (filename, image, "image/png")})
         return self._parse("sendPhoto", resp)["result"]["message_id"]
 
+    def send_photo_group_bytes(self, chat_id: str, images: Sequence[bytes], caption: str | None = None) -> list[int]:
+        """Альбом із фото, згенерованих у коді (скріншоти мап); підпис — до першого."""
+        media, files = [], {}
+        for i, image in enumerate(images):
+            entry: dict = {"type": "photo", "media": f"attach://file{i}"}
+            if i == 0 and caption:
+                entry["caption"] = caption
+                entry["parse_mode"] = "HTML"
+            media.append(entry)
+            files[f"file{i}"] = (f"map{i}.png", image, "image/png")
+        resp = self._http.post(
+            f"{self._base_url}/sendMediaGroup", data={"chat_id": chat_id, "media": json.dumps(media)}, files=files
+        )
+        return [r["message_id"] for r in self._parse("sendMediaGroup", resp)["result"]]
+
     def send_media_group(
         self, chat_id: str, media_batch: Sequence[FetchedMedia], caption: str | None = None
     ) -> list[int]:

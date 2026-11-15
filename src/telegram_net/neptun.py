@@ -39,6 +39,7 @@ class MapView:
     lon: float
     radius_km: float = DEFAULT_RADIUS_KM
     place_genitive: str = ""  # «Бердичева» — для «на північ від Бердичева»
+    wide_radius_km: float | None = None  # другий, широкий кадр (сусідні області); None — лише один знімок
 
 
 @dataclass(frozen=True)
@@ -209,7 +210,7 @@ def _overlay_js() -> str:
     # Наводить мапу на район і ставить підпис міста. Мапу (екземпляр maplibre)
     # знаходимо через React-fiber: сайт не віддає її у window.
     return """
-    async ({lat, lon, radius}) => {
+    async ({lat, lon, radius, pad}) => {
       const el = document.querySelector('.maplibregl-map');
       const key = Object.keys(el).find(k => k.startsWith('__reactFiber'));
       const isMap = o => o && typeof o === 'object' && typeof o.fitBounds === 'function' && typeof o.getCenter === 'function';
@@ -224,12 +225,14 @@ def _overlay_js() -> str:
         scan(f.memoizedState, 0); scan(f.memoizedProps, 0); scan(f.ref, 0);
       }
       if (!map) throw new Error('map instance not found');
-      const fit = radius * 1.2;  // трохи ширше за радіус опису, щоб цілі на межі не ховались під краєм
+      const fit = radius * pad;  // трохи ширше за радіус опису, щоб цілі на межі не ховались під краєм
       const dLat = fit / 111.0, dLon = fit / (111.0 * Math.cos(lat * Math.PI / 180));
       map.fitBounds([[lon - dLon, lat - dLat], [lon + dLon, lat + dLat]], {duration: 0, padding: 10});
       await new Promise(r => { let done = false; const fin = () => { if (!done) { done = true; r(); } }; map.once('idle', fin); setTimeout(fin, 6000); });
       const p = map.project([lon, lat]);
+      document.querySelectorAll('.neptun-mark').forEach(e => e.remove());
       const mark = document.createElement('div');
+      mark.className = 'neptun-mark';
       mark.style.cssText = `position:fixed;left:${p.x}px;top:${p.y}px;z-index:99999;transform:translate(-50%,-50%);pointer-events:none;`;
       mark.innerHTML = '<div style="width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #1a73e8;box-shadow:0 0 0 4px rgba(26,115,232,.35)"></div>';
       document.body.appendChild(mark);
@@ -237,12 +240,17 @@ def _overlay_js() -> str:
     """
 
 
-def capture(view: MapView, settle_sec: float = 4.0, timeout_ms: int = 60000) -> tuple[bytes, ThreatBook]:
-    """Відкриває Нептун, наводить мапу на view і повертає (PNG, цілі з потоку).
+def capture(view: MapView, settle_sec: float = 4.0, timeout_ms: int = 60000) -> tuple[list[bytes], ThreatBook]:
+    """Відкриває Нептун і повертає (знімки, цілі з потоку): крупний кадр на район
+    і, якщо задано wide_radius_km, широкий — з сусідніми областями.
     Потребує playwright і Chromium; шлях до власного Chromium — у NEPTUN_CHROMIUM."""
     from playwright.sync_api import sync_playwright
 
     book = ThreatBook()
+    shots: list[bytes] = []
+    frames = [(view.radius_km, 1.2)]  # крупний кадр трохи ширший за радіус опису
+    if view.wide_radius_km:
+        frames.append((view.wide_radius_km, 1.0))
     with sync_playwright() as pw:
         kwargs = {"args": ["--no-sandbox"]}
         if os.environ.get("NEPTUN_CHROMIUM"):
@@ -254,17 +262,18 @@ def capture(view: MapView, settle_sec: float = 4.0, timeout_ms: int = 60000) -> 
             page.goto(NEPTUN_URL, wait_until="networkidle", timeout=timeout_ms)
             page.wait_for_selector(".maplibregl-map", timeout=timeout_ms)
             page.wait_for_timeout(int(settle_sec * 1000))
-            page.evaluate(_overlay_js(), {"lat": view.lat, "lon": view.lon, "radius": view.radius_km})
-            page.wait_for_timeout(1500)
-            png = page.screenshot(type="png")
+            for radius, pad in frames:
+                page.evaluate(_overlay_js(), {"lat": view.lat, "lon": view.lon, "radius": radius, "pad": pad})
+                page.wait_for_timeout(1500)
+                shots.append(page.screenshot(type="png"))
         finally:
             browser.close()
-    return png, book
+    return shots, book
 
 
-Capturer = Callable[[MapView], tuple[bytes, list[Threat]]]
+Capturer = Callable[[MapView], tuple[list[bytes], list[Threat]]]
 
 
-def default_capturer(view: MapView) -> tuple[bytes, list[Threat]]:
-    png, book = capture(view)
-    return png, book.threats()
+def default_capturer(view: MapView) -> tuple[list[bytes], list[Threat]]:
+    shots, book = capture(view)
+    return shots, book.threats()

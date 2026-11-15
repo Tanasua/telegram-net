@@ -107,6 +107,8 @@ class TextSender(Protocol):
 
     def send_photo_bytes(self, chat_id: str, image: bytes, caption: str | None = None, filename: str = "image.png") -> int: ...
 
+    def send_photo_group_bytes(self, chat_id: str, images: list[bytes], caption: str | None = None) -> list[int]: ...
+
 
 class AlertRelay:
     def __init__(
@@ -198,23 +200,28 @@ class AlertRelay:
             lat=cfg["lat"],
             lon=cfg["lon"],
             radius_km=cfg.get("radius_km", 120),
+            wide_radius_km=cfg.get("wide_radius_km"),
             place_genitive=ch.name_genitive or "",
         )
         try:
-            png, threats = self._capturer(view)
+            shots, threats = self._capturer(view)
             found = nearby(threats, view, now)
             if not found:
                 logger.info("Нептун: поблизу %s цілей немає — знімок не надсилаю", ch.channel_id)
                 return
             caption = f"{render_caption(found, view, now.astimezone(_kyiv()), self._max_caption - 200)}\n\n{signature_html(ch)}"
             if self._map_dir:
-                path = Path(self._map_dir) / f"neptun_{ch.channel_id}.png"
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(png)
-                logger.info("[пробний] Нептун %s: %s", path, caption.replace("\n", " | "))
+                for i, shot in enumerate(shots):
+                    path = Path(self._map_dir) / f"neptun_{ch.channel_id}_{i + 1}.png"
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(shot)
+                logger.info("[пробний] Нептун %s: %s", ch.channel_id, caption.replace("\n", " | "))
             self.sent.append((ch.telegram_chat_id, caption))
             if self._sender is not None:
-                self._sender.send_photo_bytes(ch.telegram_chat_id, png, caption=caption, filename="neptun.png")
+                if len(shots) > 1:
+                    self._sender.send_photo_group_bytes(ch.telegram_chat_id, shots, caption=caption)
+                else:
+                    self._sender.send_photo_bytes(ch.telegram_chat_id, shots[0], caption=caption, filename="neptun.png")
         except Exception:
             logger.exception("Не вдалося зробити знімок Нептуна для %s", ch.channel_id)
 
