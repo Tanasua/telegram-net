@@ -90,13 +90,12 @@
       "channel_id": "korostyshiv",
       "name": "Коростишів",
       "telegram_chat_id": "@mykorostyshivnews",
-      "active": false,
+      "active": true,
       "alert_district": "Житомирський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Коростишів»",
-      "note": "Вимкнено 15.11.2026: Telegram не знаходить канал @mykorostyshivnews (chat not found). Виправ telegram_chat_id і постав active: true."
+      "subscribe_cta": "Підписатися на «Мій Коростишів»"
     }
   ],
   "sources": [

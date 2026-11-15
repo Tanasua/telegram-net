@@ -1,0 +1,12 @@
+{
+  "run_id": "check-korostyshiv",
+  "dry_run": true,
+  "posts": [
+    {
+      "channel_id": "korostyshiv",
+      "kind": "morning",
+      "text": "Пробний пост — нічого не публікується."
+    }
+  ],
+  "keep": []
+}
