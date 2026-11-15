@@ -113,6 +113,20 @@ Telethon і ключ OpenAI, які використовувала попере�
 PYTHONPATH=src .venv/bin/python -m telegram_net.cli attack --force --dry-run --out work/
 ```
 
+## Курс валют і пальне о 19:00
+
+Щовечора о 19:00 у кожен канал — картинка «Курс валют і пальне»: долар, євро й
+злотий (офіційний курс НБУ зі зміною за день, купівля й продаж готівкою в
+ПриватБанку), середні ціни на А-95+, А-95, А-92, дизель і газ по Житомирщині
+зі зміною за день і найдешевші мережі АЗС на А-95 і дизель.
+
+Без моделей і токенів (`markets.py`, `.github/workflows/markets.yml`). Джерела
+безкоштовні й без ключів: НБУ, ПриватБанк, index.minfin.com.ua.
+
+```bash
+PYTHONPATH=src .venv/bin/python -m telegram_net.cli markets --force --dry-run --out work/
+```
+
 ## Сигнали тривоги й відбою
 
 Окремий цикл без моделей (`alerts.py`, `.github/workflows/alerts.yml`): раз на
