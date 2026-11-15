@@ -105,3 +105,21 @@ def test_loop_survives_fetch_errors_and_stops_by_runtime():
     sleeps = []
     run_loop(relay, fetch, interval_sec=30, max_runtime_min=0, sleep=sleeps.append)
     assert len(calls) == 1 and sleeps == []
+
+
+def test_state_survives_restart_and_catches_signals_from_the_gap():
+    """GitHub Actions перезапускає цикл кожні ~5 год. Сигнал, що прийшов під час
+    перезапуску, має вийти, а вже надіслані — не повторитись."""
+    first = AlertRelay(make_config(), Sender())
+    first.process([item(1, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=20)], NOW)
+    first.process([item(1, "x", 20), item(2, "🟡 Житомирський район — повітряна тривога, жовтий рівень", minutes_ago=5)], NOW)
+    saved = first.dump_state()
+    assert saved["cursor"] == 2 and set(saved["active"]) == {"Коростенський", "Житомирський"}
+
+    sender = Sender()
+    second = AlertRelay(make_config(), sender)
+    second.load_state(saved)
+    history = [item(1, "x", 20), item(2, "x", 5), item(3, "🟢 Коростенський район — відбій повітряної тривоги", minutes_ago=1)]
+    second.process(history, NOW)
+    assert [chat for chat, _ in sender.sent] == ["@mymalyn"]  # лише відбій із «розриву», без повтору тривог
+    assert "Тривога тривала 19 хв." in sender.sent[0][1]

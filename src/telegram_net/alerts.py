@@ -112,6 +112,16 @@ class AlertRelay:
         self.active: dict[str, dt.datetime] = {}  # район -> коли почалась тривога
         self.sent: list[tuple[str, str]] = []  # (chat_id, текст) — для логу й тестів
 
+    # --- стан між перезапусками (GitHub Actions перезапускає цикл кожні ~5 год) ---
+    def dump_state(self) -> dict:
+        return {"cursor": self.cursor, "active": {d: t.isoformat() for d, t in self.active.items()}}
+
+    def load_state(self, data: dict) -> None:
+        """Продовжити з місця, де зупинився попередній запуск: сигнали, що прийшли
+        під час перезапуску (новіші за курсор і не старші за 10 хв), буде надіслано."""
+        self.cursor = data.get("cursor")
+        self.active = {d: dt.datetime.fromisoformat(t) for d, t in (data.get("active") or {}).items()}
+
     def process(self, items: list[FetchedItem], now: dt.datetime) -> None:
         """items — повідомлення джерела від старішого до новішого."""
         bootstrap = self.cursor is None
@@ -153,6 +163,7 @@ def run_loop(
     interval_sec: float = 30,
     max_runtime_min: float | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    after_tick: Callable[[], None] | None = None,
 ) -> None:
     started = time.monotonic()
     while True:
@@ -160,6 +171,8 @@ def run_loop(
             relay.process(fetch(), dt.datetime.now(dt.timezone.utc))
         except Exception:
             logger.exception("Не вдалося прочитати джерело сигналів — спробую ще раз")
+        if after_tick is not None:
+            after_tick()
         if max_runtime_min is not None and (time.monotonic() - started) / 60 >= max_runtime_min:
             return
         sleep(interval_sec)

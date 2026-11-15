@@ -229,8 +229,25 @@ def cmd_alerts(args) -> int:
         resp.raise_for_status()
         return [item for _, item in parse_channel_page(resp.text)]
 
+    state_file = Path(args.state_file) if args.state_file else None
+    if state_file and state_file.exists():
+        relay.load_state(json.loads(state_file.read_text(encoding="utf-8")))
+        logger.info("Продовжую з курсора %s", relay.cursor)
+
+    saved = {"value": None}
+
+    def save_state() -> None:
+        if state_file is None:
+            return
+        current = relay.dump_state()
+        if current != saved["value"]:
+            state_file.parent.mkdir(parents=True, exist_ok=True)
+            state_file.write_text(json.dumps(current, ensure_ascii=False), encoding="utf-8")
+            saved["value"] = current
+
     logger.info("Слухаю сигнали тривоги з %s кожні %s с", url, args.interval)
-    run_loop(relay, fetch, interval_sec=args.interval, max_runtime_min=args.max_minutes)
+    run_loop(relay, fetch, interval_sec=args.interval, max_runtime_min=args.max_minutes, after_tick=save_state)
+    save_state()
     return 0
 
 
@@ -279,6 +296,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--interval", type=float, default=30)
     p.add_argument("--max-minutes", type=float, default=None)
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--state-file", default=None, help="де зберігати курсор між перезапусками")
     p.set_defaults(func=cmd_alerts)
 
     args = parser.parse_args(argv)
