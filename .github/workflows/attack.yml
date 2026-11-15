@@ -1,0 +1,57 @@
+name: Night attack summary
+
+# Щоранку — інфографіка «Нічна атака» в кожен канал (src/telegram_net/attack.py):
+# цифри з ранкового зведення Повітряних сил ЗСУ і карта областей за кількістю
+# згадок у нічних повідомленнях про шахеди й ракети. Без моделей і токенів.
+#
+# Зведення виходить близько 08:00 за Києвом, тому запуски о 05:35, 06:35 і
+# 07:35 UTC (з урахуванням літнього часу це 07:35–10:35 за Києвом). Код
+# публікує лише з 08:30 до 11:00, лише коли зведення вже є, і лише раз на добу.
+on:
+  schedule:
+    - cron: "35 5,6,7 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Опублікувати зараз, не чекаючи 08:30"
+        type: boolean
+        default: false
+
+concurrency:
+  group: telegram-net-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  attack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet "httpx>=0.27" "pillow>=10.0" "beautifulsoup4>=4.12" "lxml>=5.2"
+
+      - name: Publish night attack summary
+        id: attack
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: PYTHONPATH=src python -m telegram_net.cli attack $FORCE
+
+      - name: Save state
+        if: always() && steps.attack.outputs.save_state == 'true'
+        run: |
+          git config user.name "telegram-net-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state
+          git diff --cached --quiet || git commit -m "Night attack summary"
+          git push

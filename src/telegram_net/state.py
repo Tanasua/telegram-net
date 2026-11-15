@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 SEEN_TTL_DAYS = 14
-SERVICE_KINDS = ("alert", "weather")  # службові пости: не входять у ліміти, ротації й «вже було»
+SERVICE_KINDS = ("alert", "weather", "attack")  # службові пости: не входять у ліміти, ротації й «вже було»
 PUBLISHED_TTL_DAYS = 30
 
 
