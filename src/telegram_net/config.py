@@ -70,6 +70,9 @@ class Settings:
     max_age_hours: float = 12  # старіші новини в кандидати не потрапляють
     pool_ttl_hours: float = 10  # скільки невикористаний кандидат чекає в пулі
     national_daily_limit: int = 4  # всеукраїнських постів на канал за добу
+    # Гарантована рубрика «Україна»: з кожної години зі списку (за Києвом) редактор
+    # зобов'язаний випустити по одній всеукраїнській новині на канал, якщо вона є.
+    national_slot_hours: tuple[int, ...] = (12, 17)
     max_caption_chars: int = 1024  # ліміт Telegram на підпис до фото (разом з підписом каналу)
     max_text_chars: int = 3500
     post_spacing_minutes: int = 40  # мінімальний інтервал між постами одного каналу
@@ -113,6 +116,8 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> Config:
     raw_settings = dict(data.get("settings", {}))
     if "addresses" in raw_settings:
         raw_settings["addresses"] = tuple(raw_settings["addresses"])
+    if "national_slot_hours" in raw_settings:
+        raw_settings["national_slot_hours"] = tuple(raw_settings["national_slot_hours"])
     settings = Settings(**raw_settings)
     channels = [
         ChannelConfig(

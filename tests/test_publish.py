@@ -111,9 +111,11 @@ def test_daily_per_run_and_national_limits(tmp_path):
         state.log_post({"channel_id": "malyn", "published_at": iso(NOW), "kind": "national", "text": "т", "candidate_ids": []})
     assert "всеукраїнських" in _errors(tmp_path, _post(kind="national", candidate_ids=["n1"]), state=state)
 
-    for _ in range(8):
+    for _ in range(12):
         state.log_post({"channel_id": "malyn", "published_at": iso(NOW), "kind": "local", "text": "т", "candidate_ids": []})
     assert "добовий ліміт каналу" in _errors(tmp_path, _post(), state=state)
+    # всеукраїнські поза квотою каналу (свій ліміт 4 уже вичерпано, тому перевіряємо іншим каналом)
+    assert _errors(tmp_path, _post(kind="national", candidate_ids=["n1"], channel_id="zhytomyr"), state=state) == ""
     # Сигнали тривоги в добовий ліміт не входять, інший канал — окремий лічильник.
     assert _errors(tmp_path, _post(channel_id="zhytomyr"), state=state) == ""
 
@@ -297,3 +299,14 @@ def test_urgent_post_skips_spacing(tmp_path):
     publisher = FakePublisher()
     publish_run(_run([_post(candidate_ids=["c1"], urgent=True)]), config, state, publisher, night)
     assert len(publisher.sent) == 1 and state.queue == []
+
+
+def test_national_has_own_run_slot_beyond_local_limit(tmp_path):
+    config = make_config()
+    state = _state(tmp_path, ("c1", "local"), ("c2", "local"), ("c3", "local"), ("n1", "national"), ("n2", "national"))
+    posts = [_post(candidate_ids=[c]) for c in ("c1", "c2", "c3")] + [_post(kind="national", candidate_ids=["n1"])]
+    prepared, errors = prepare(_run(posts), config, state, NOW)
+    assert errors == [] and len(prepared) == 4
+    # але не більше однієї всеукраїнської за прогін на канал
+    _, errors = prepare(_run([_post(kind="national", candidate_ids=["n1"]), _post(kind="national", candidate_ids=["n2"])]), config, state, NOW)
+    assert len(errors) == 1 and "не більше однієї всеукраїнської" in errors[0]
