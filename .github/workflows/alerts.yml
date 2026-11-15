@@ -1,0 +1,44 @@
+name: Air raid alerts
+
+# Сигнали тривоги й відбою: цикл, що раз на 30 с читає канал Житомирської ОВА
+# і за шаблоном публікує сигнали в канали відповідного району (src/telegram_net/alerts.py).
+#
+# УВАГА — розклад вимкнено навмисно. Цикл має працювати цілодобово, а це ~43 000
+# хвилин GitHub Actions на місяць. У ПРИВАТНОМУ репозиторії безкоштовних хвилин
+# 2 000 на місяць — їх вистачить менш ніж на дві доби, після чого зупиниться й
+# публікація новин. Увімкнути розклад (розкоментувати schedule) варто лише якщо:
+#   - репозиторій зроблено публічним (тоді хвилини не лімітуються), або
+#   - оплачено додаткові хвилини.
+# Інший варіант — запустити той самий цикл на будь-якому сервері:
+#   TELEGRAM_BOT_TOKEN=... PYTHONPATH=src python -m telegram_net.cli alerts
+on:
+  # schedule:
+  #   - cron: "7 0,5,10,15,20 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: telegram-net-alerts
+  cancel-in-progress: false
+
+jobs:
+  alerts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet "httpx>=0.27" "beautifulsoup4>=4.12" "lxml>=5.2"
+
+      - name: Relay alerts
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        # Наступний запуск за розкладом стає в чергу (concurrency) і стартує,
+        # щойно цей завершиться, — тому пауза між ними мінімальна.
+        run: PYTHONPATH=src python -m telegram_net.cli alerts --interval 30 --max-minutes 320

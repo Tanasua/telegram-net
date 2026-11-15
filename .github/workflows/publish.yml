@@ -1,0 +1,62 @@
+name: Publish editor decisions
+
+# Редактор (Claude) пушить файл рішень outbox/<run_id>.json у свою гілку claude/**.
+# Цей workflow перевіряє рішення, публікує пости ботом (токен — у GitHub Secrets,
+# у сесію Claude він не потрапляє) і зберігає стан у гілку за замовчуванням,
+# звідки його візьме наступний прогін.
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["outbox/*.json"]
+
+concurrency:
+  group: telegram-net-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet "httpx>=0.27"
+
+      - name: Publish
+        id: publish
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(outbox/*.json)
+          if [ ${#files[@]} -eq 0 ]; then echo "Немає файлів рішень"; exit 0; fi
+          PYTHONPATH=src python -m telegram_net.cli publish "${files[@]}"
+
+      - name: Save state to the default branch
+        if: always() && steps.publish.outputs.save_state == 'true'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          mkdir -p /tmp/state && cp state/*.json /tmp/state/
+          git config user.name "telegram-net-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch --depth=1 origin "$DEFAULT_BRANCH"
+          git checkout -f -B _state FETCH_HEAD
+          mkdir -p state && cp /tmp/state/*.json state/
+          git add state
+          git diff --cached --quiet || git commit -m "Update pipeline state"
+          git push origin "HEAD:$DEFAULT_BRANCH"
+
+      - name: Delete the run branch
+        if: always() && steps.publish.outputs.cleanup_branch == 'true' && github.ref_name != github.event.repository.default_branch
+        run: git push origin --delete "$GITHUB_REF_NAME" || true
