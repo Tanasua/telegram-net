@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol, Sequence
 
-from telegram_net.collect import is_quiet, start_of_local_day
+from telegram_net.clock import is_quiet, start_of_local_day
 from telegram_net.config import ChannelConfig, Config
 from telegram_net.fetchers.base import FetchedMedia
 from telegram_net.media import MAX_MEDIA_GROUP_SIZE, build_media_batches

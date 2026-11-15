@@ -13,8 +13,8 @@ import hashlib
 import logging
 import re
 from typing import Callable, Protocol
-from zoneinfo import ZoneInfo
 
+from telegram_net.clock import is_quiet, local_now, start_of_local_day
 from telegram_net.config import ChannelConfig, Config, SourceConfig
 from telegram_net.dedup import content_hash
 from telegram_net.fetchers.article import Article, looks_like_logo
@@ -48,20 +48,6 @@ def is_alert_signal(text: str) -> bool:
 
 def candidate_id(source: SourceConfig, external_id: str) -> str:
     return hashlib.sha256(f"{source.key}|{external_id}".encode("utf-8")).hexdigest()[:8]
-
-
-def _local_now(config: Config, now: dt.datetime) -> dt.datetime:
-    return now.astimezone(ZoneInfo(config.settings.timezone))
-
-
-def is_quiet(config: Config, now: dt.datetime) -> bool:
-    hour = _local_now(config, now).hour
-    start, end = config.settings.quiet_from_hour, config.settings.quiet_to_hour
-    return hour >= start or hour < end if start > end else start <= hour < end
-
-
-def start_of_local_day(config: Config, now: dt.datetime) -> dt.datetime:
-    return _local_now(config, now).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def collect(
@@ -236,7 +222,7 @@ def _expire_pool(config: Config, state: State, now: dt.datetime) -> None:
 
 
 def rubrics_due(config: Config, state: State, channel: ChannelConfig, now: dt.datetime) -> list[str]:
-    local = _local_now(config, now)
+    local = local_now(config, now)
     day_start = start_of_local_day(config, now)
     today = state.posts_since(channel.channel_id, day_start)
     kinds = {p.get("kind") for p in today}
@@ -282,7 +268,7 @@ def build_brief(
     прочитані з t.me/s. Вони точніші за наш журнал: у каналі можуть бути й пости,
     опубліковані вручну, а редактор має бачити все, щоб не повторюватись."""
     live_posts = live_posts or {}
-    local = _local_now(config, now)
+    local = local_now(config, now)
     day_start = start_of_local_day(config, now)
     recent_from = now - dt.timedelta(hours=RECENT_POSTS_HOURS)
     channels = []

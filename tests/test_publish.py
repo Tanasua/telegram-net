@@ -203,3 +203,28 @@ def test_media_comes_from_first_candidate_that_has_it(tmp_path):
     state.pool["c1"]["media"] = []
     (p,), _ = prepare(_run([_post(candidate_ids=["c1", "c2"])]), make_config(), state, NOW)
     assert [m.url for m in p.media] == ["https://cdn/c2-1.jpg", "https://cdn/c2-2.jpg"]
+
+
+def test_publish_step_needs_only_httpx():
+    """publish.yml ставить лише httpx. Якщо крок публікації потягне bs4, lxml чи
+    feedparser (через імпорт модулів збору), workflow впаде ще до першого посту."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys\n"
+        "class Block:\n"
+        "    def find_spec(self, name, path=None, target=None):\n"
+        "        if name.split('.')[0] in ('bs4', 'lxml', 'feedparser'):\n"
+        "            raise ImportError('заборонено в кроці публікації: ' + name)\n"
+        "sys.meta_path.insert(0, Block())\n"
+        "import telegram_net.publish, telegram_net.publisher, telegram_net.cli\n"
+        "telegram_net.cli.main(['check', sys.argv[1]])\n"
+    )
+    import json
+    import tempfile
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as fh:
+        json.dump({"run_id": "x", "posts": []}, fh)
+    result = subprocess.run([sys.executable, "-c", code, fh.name], capture_output=True, text=True, env={"PYTHONPATH": "src"})
+    assert result.returncode == 0, result.stderr
