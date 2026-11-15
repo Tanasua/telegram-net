@@ -413,8 +413,10 @@ def render(f: DayForecast, channel_title: str) -> bytes:
     od.rounded_rectangle((cx - total / 2 - 36, 890, cx + total / 2 + 36, 972), radius=41, fill=(255, 255, 255, 235))
     od.text((cx - total / 2 + tip_icon.width + 16, 931), f.tip, font=tip_font, fill=INK, anchor="lm")
 
-    od.text((cx, 1020), channel_title, font=_font(28, "SemiBold"), fill=(255, 255, 255, 170), anchor="mm")
     img.alpha_composite(overlay)
+    from telegram_net.heart import draw_title_with_heart
+
+    draw_title_with_heart(img, ImageDraw.Draw(img), (cx, 1020), channel_title, _font(28, "SemiBold"), (255, 255, 255, 200))
 
     # іконки — поверх, щоб не пригасали під напівпрозорими шарами
     _paste_center(img, _icon(f.hero_icon, 300), 320, 395)

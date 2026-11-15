@@ -319,7 +319,9 @@ def render(m: Markets, channel_title: str, day: dt.date) -> bytes:
         else:
             d.polygon([(left - 18, y - 8), (left, y - 8), (left - 9, y + 9)], fill=color)
     d.text((W // 2, 1262), "Курс — НБУ, готівка — ПриватБанк · пальне — index.minfin.com.ua", font=_font(22, "SemiBold"), fill=FAINT, anchor="mm")
-    d.text((W // 2, 1302), channel_title, font=_font(24, "SemiBold"), fill=FAINT, anchor="mm")
+    from telegram_net.heart import draw_title_with_heart
+
+    draw_title_with_heart(img, d, (W // 2, 1302), channel_title, _font(26, "SemiBold"), SOFT)
 
     out = io.BytesIO()
     img.convert("RGB").save(out, format="PNG", optimize=True)
