@@ -46,6 +46,7 @@ class Hour:
     temp: float
     sky: str  # нормалізований тип погоди, див. _SKY
     wind: float  # м/с
+    wind_dir: float | None = None  # звідки дме, градуси (0 — з півночі)
 
 
 @dataclass(frozen=True)
@@ -124,6 +125,7 @@ def fetch_met(lat: float, lon: float, tz: ZoneInfo, http: httpx.Client) -> list[
                 temp=float(details["air_temperature"]),
                 sky=met_sky(nxt["summary"]["symbol_code"]),
                 wind=float(details.get("wind_speed", 0)),
+                wind_dir=details.get("wind_from_direction"),
             )
         )
     return hours
@@ -135,7 +137,7 @@ def fetch_open_meteo(lat: float, lon: float, tz: ZoneInfo, http: httpx.Client) -
         params={
             "latitude": lat,
             "longitude": lon,
-            "hourly": "temperature_2m,weather_code,wind_speed_10m",
+            "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m",
             "wind_speed_unit": "ms",
             "timezone": "UTC",
             "forecast_days": 2,
@@ -149,8 +151,11 @@ def fetch_open_meteo(lat: float, lon: float, tz: ZoneInfo, http: httpx.Client) -
             temp=float(temp),
             sky=wmo_sky(int(code)),
             wind=float(wind or 0),
+            wind_dir=wdir,
         )
-        for t, temp, code, wind in zip(h["time"], h["temperature_2m"], h["weather_code"], h["wind_speed_10m"])
+        for t, temp, code, wind, wdir in zip(
+            h["time"], h["temperature_2m"], h["weather_code"], h["wind_speed_10m"], h["wind_direction_10m"]
+        )
     ]
 
 
@@ -181,6 +186,7 @@ class DayForecast:
     parts: tuple[Part, ...]
     tip_icon: str
     tip: str
+    wind: str = ""  # «вітер південно-західний, 4 м/с»
 
 
 def _dominant(hours: list[Hour]) -> str:
@@ -227,6 +233,7 @@ def summarize(hours: list[Hour], day: dt.date, city_loc: str) -> DayForecast:
     night_part = next((p for p in parts if p.name == "Ніч"), parts[-1])
     morning = next((p for p in parts if p.name == "Ранок"), parts[0])
     max_wind = max((h.wind for h in daytime), default=0)
+    wind = describe_wind(daytime or hours[:12])
 
     if sky == "thunder":
         tip_icon, tip = "lightning-bolt", "Можлива гроза — бережіть себе"
@@ -255,7 +262,31 @@ def summarize(hours: list[Hour], day: dt.date, city_loc: str) -> DayForecast:
         parts=tuple(parts),
         tip_icon=tip_icon,
         tip=tip,
+        wind=wind,
     )
+
+
+_DIRECTIONS = ("північний", "північно-східний", "східний", "південно-східний", "південний", "південно-західний", "західний", "північно-західний")
+
+
+def describe_wind(hours: list[Hour]) -> str:
+    """«Вітер південно-західний, 4 м/с»: денна швидкість (округлене середнє, але не
+    менше 1) і переважний напрямок. Штиль — без напрямку."""
+    if not hours:
+        return ""
+    speed = max(1, round(sum(h.wind for h in hours) / len(hours)))
+    if speed <= 1 and max(h.wind for h in hours) < 2:
+        return "Майже без вітру"
+    dirs = [h.wind_dir for h in hours if h.wind_dir is not None]
+    if not dirs:
+        return f"Вітер {speed} м/с"
+    import math
+
+    # середній напрямок — через вектори, щоб 350° і 10° дали північ, а не південь
+    x = sum(math.cos(math.radians(d)) for d in dirs)
+    y = sum(math.sin(math.radians(d)) for d in dirs)
+    angle = math.degrees(math.atan2(y, x)) % 360
+    return f"Вітер {_DIRECTIONS[round(angle / 45) % 8]}, {speed} м/с"
 
 
 def fmt_temp(t: int) -> str:
@@ -268,7 +299,8 @@ def fmt_temp(t: int) -> str:
 
 def caption(f: DayForecast) -> str:
     phrase = f.phrase[:1].upper() + f.phrase[1:]
-    return f"{phrase}, вдень до {fmt_temp(f.day_max)}, уночі {fmt_temp(f.night_min)}. {f.tip}"
+    wind = f" {f.wind[:1].upper()}{f.wind[1:]}." if f.wind else ""
+    return f"{phrase}, вдень до {fmt_temp(f.day_max)}, уночі {fmt_temp(f.night_min)}.{wind} {f.tip}"
 
 
 # --- малювання ---------------------------------------------------------------
@@ -350,8 +382,15 @@ def render(f: DayForecast, channel_title: str) -> bytes:
     od.text((cx, 180), date_line, font=_font(38, "SemiBold"), fill=SOFT, anchor="mm")
 
     # головний блок
-    od.text((650, 380), fmt_temp(f.day_max), font=_font(190), fill=WHITE, anchor="mm")
-    od.text((650, 500), f.phrase, font=_font(46, "Bold"), fill=SOFT, anchor="mm")
+    od.text((650, 360), fmt_temp(f.day_max), font=_font(190), fill=WHITE, anchor="mm")
+    od.text((650, 470), f.phrase, font=_font(46, "Bold"), fill=SOFT, anchor="mm")
+    wind_icon = None
+    if f.wind:
+        wind_font = _font(32, "SemiBold")
+        wind_icon = _icon("wind-white", 46)
+        wind_w = wind_icon.width + 8 + od.textlength(f.wind, font=wind_font)
+        wind_x = min(650 - wind_w / 2, SIZE - 70 - wind_w)
+        od.text((wind_x + wind_icon.width + 8, 532), f.wind, font=wind_font, fill=SOFT, anchor="lm")
 
     # частини доби — «скляні» плитки
     n = len(f.parts)
@@ -379,6 +418,8 @@ def render(f: DayForecast, channel_title: str) -> bytes:
 
     # іконки — поверх, щоб не пригасали під напівпрозорими шарами
     _paste_center(img, _icon(f.hero_icon, 300), 320, 395)
+    if wind_icon is not None:
+        _paste_center(img, wind_icon, round(wind_x + wind_icon.width / 2), 532)
     for i, part in enumerate(f.parts):
         mid = left + i * (width + gap) + width / 2
         _paste_center(img, _icon(part.icon, 112), round(mid), y0 + 128)

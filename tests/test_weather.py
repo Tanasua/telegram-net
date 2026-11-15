@@ -151,7 +151,23 @@ def test_failed_fetch_is_reported_not_raised(tmp_path):
 def test_every_icon_used_by_the_code_exists():
     from telegram_net.weather import _SKY, ASSETS
 
-    tips = {"lightning-bolt", "snowflake", "umbrella", "wind", "thermometer-colder", "thermometer-warmer", "sunrise"}
+    tips = {"wind-white", "lightning-bolt", "snowflake", "umbrella", "wind", "thermometer-colder", "thermometer-warmer", "sunrise"}
     names = {c.icon for c in _SKY.values()} | {c.night_icon for c in _SKY.values()} | tips
     missing = [n for n in names if not (ASSETS / "icons" / f"{n}.png").exists()]
     assert missing == []
+
+
+def test_wind_is_described_in_words_with_one_number():
+    from telegram_net.weather import describe_wind
+
+    start = dt.datetime(2026, 11, 16, 9, tzinfo=KYIV)
+    sw = [Hour(start + dt.timedelta(hours=i), 5, "cloudy", 4.4, 225) for i in range(6)]
+    assert describe_wind(sw) == "Вітер південно-західний, 4 м/с"
+    # 350° і 10° — це північ, а не південь (середнє через вектори)
+    north = [Hour(start, 5, "cloudy", 3, 350), Hour(start, 5, "cloudy", 3, 10)]
+    assert describe_wind(north) == "Вітер північний, 3 м/с"
+    calm = [Hour(start, 5, "clear", 0.5, 90)] * 3
+    assert describe_wind(calm) == "Майже без вітру"
+    f = summarize(_hours(wind=4.0), DAY, "Малині")
+    assert f.wind == "Вітер 4 м/с"  # у тестових годинах напрямку немає
+    assert "Вітер 4 м/с." in caption(f)
