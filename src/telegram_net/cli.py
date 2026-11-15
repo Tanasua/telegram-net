@@ -237,7 +237,17 @@ def cmd_alerts(args) -> int:
 
     config = load_config(args.config)
     sender = None if args.dry_run else _publisher(required=True)
-    relay = AlertRelay(config, sender)
+    capturer = None
+    if not args.no_neptun:
+        try:
+            import playwright.sync_api  # noqa: F401
+        except ImportError:
+            logger.warning("playwright не встановлено — скріншотів Нептуна не буде")
+        else:
+            from telegram_net.neptun import default_capturer
+
+            capturer = default_capturer
+    relay = AlertRelay(config, sender, capturer=capturer, map_dir="work" if args.dry_run else None)
     http = httpx.Client(timeout=15)
     url = f"https://t.me/s/{config.settings.alerts_source}"
 
@@ -320,6 +330,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-minutes", type=float, default=None)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--state-file", default=None, help="де зберігати курсор між перезапусками")
+    p.add_argument("--no-neptun", action="store_true", help="не робити скріншоти мапи Нептуна")
     p.set_defaults(func=cmd_alerts)
 
     args = parser.parse_args(argv)

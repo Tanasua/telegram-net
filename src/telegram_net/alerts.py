@@ -20,10 +20,14 @@ import datetime as dt
 import logging
 import re
 import time
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Callable, Protocol
 
+from concurrent.futures import ThreadPoolExecutor
+
 from telegram_net.config import ChannelConfig, Config
+from telegram_net.neptun import Capturer, MapView, nearby, render_caption
 from telegram_net.signature import signature_html
 from telegram_net.fetchers.base import FetchedItem
 
@@ -31,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 DISTRICTS = ("Житомирський", "Бердичівський", "Коростенський", "Звягельський")
 MAX_EVENT_AGE = dt.timedelta(minutes=10)  # після простою не публікуємо застарілі сигнали
+NEPTUN_COOLDOWN = dt.timedelta(minutes=20)  # не частіше одного скріншота мапи на канал
 
 _LEVEL_SUFFIX_RE = re.compile(r"\s*\((?:жовтий|червоний) рівень\)\s*", re.IGNORECASE)
 
@@ -100,10 +105,25 @@ def render_alert(event: AlertEvent, district: str, started_at: dt.datetime | Non
 class TextSender(Protocol):
     def send_text(self, chat_id: str, text: str) -> int: ...
 
+    def send_photo_bytes(self, chat_id: str, image: bytes, caption: str | None = None, filename: str = "image.png") -> int: ...
+
 
 class AlertRelay:
-    def __init__(self, config: Config, sender: TextSender | None):
+    def __init__(
+        self,
+        config: Config,
+        sender: TextSender | None,
+        capturer: Capturer | None = None,
+        map_dir: str | None = None,
+        max_caption_chars: int | None = None,
+    ):
         self._sender = sender
+        self._capturer = capturer  # None — скріншоти мапи вимкнено
+        self._map_dir = map_dir  # куди класти знімки в пробному прогоні
+        self._max_caption = max_caption_chars or config.settings.max_caption_chars
+        self._maps = ThreadPoolExecutor(max_workers=1, thread_name_prefix="neptun")  # браузер не блокує цикл тривог
+        self._map_last: dict[str, dt.datetime] = {}
+        self.map_futures: list = []
         self._channels_by_district: dict[str, list[ChannelConfig]] = {}
         for ch in config.active_channels:
             if ch.alert_district:
@@ -141,6 +161,8 @@ class AlertRelay:
                         self.active.pop(district, None)
                     if fresh:
                         self._announce(render_alert(event, district, started, at), district)
+                        if event.kind == "alert" and started is None:  # лише на початку тривоги, не при зміні рівня
+                            self._schedule_map(district, now)
             self.cursor = msg_id if self.cursor is None else max(self.cursor, msg_id)
 
     def _announce(self, base: str, district: str) -> None:
@@ -155,6 +177,52 @@ class AlertRelay:
                 self._sender.send_text(chat_id, text)
             except Exception:
                 logger.exception("Не вдалося надіслати сигнал у %s", chat_id)
+
+
+    def _schedule_map(self, district: str, now: dt.datetime) -> None:
+        if self._capturer is None:
+            return
+        for ch in self._channels_by_district.get(district, []):
+            if not ch.neptun:
+                continue
+            last = self._map_last.get(ch.telegram_chat_id)
+            if last is not None and now - last < NEPTUN_COOLDOWN:
+                continue
+            self._map_last[ch.telegram_chat_id] = now
+            self.map_futures.append(self._maps.submit(self._send_map, ch, now))
+
+    def _send_map(self, ch: ChannelConfig, now: dt.datetime) -> None:
+        """Скріншот Нептуна з описом цілей поблизу. Помилка тут не має впливати на сигнали."""
+        cfg = ch.neptun or {}
+        view = MapView(
+            lat=cfg["lat"],
+            lon=cfg["lon"],
+            radius_km=cfg.get("radius_km", 120),
+            place_genitive=ch.name_genitive or "",
+        )
+        try:
+            png, threats = self._capturer(view)
+            found = nearby(threats, view, now)
+            if not found:
+                logger.info("Нептун: поблизу %s цілей немає — знімок не надсилаю", ch.channel_id)
+                return
+            caption = f"{render_caption(found, view, now.astimezone(_kyiv()), self._max_caption - 200)}\n\n{signature_html(ch)}"
+            if self._map_dir:
+                path = Path(self._map_dir) / f"neptun_{ch.channel_id}.png"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(png)
+                logger.info("[пробний] Нептун %s: %s", path, caption.replace("\n", " | "))
+            self.sent.append((ch.telegram_chat_id, caption))
+            if self._sender is not None:
+                self._sender.send_photo_bytes(ch.telegram_chat_id, png, caption=caption, filename="neptun.png")
+        except Exception:
+            logger.exception("Не вдалося зробити знімок Нептуна для %s", ch.channel_id)
+
+
+def _kyiv() -> dt.tzinfo:
+    from zoneinfo import ZoneInfo
+
+    return ZoneInfo("Europe/Kyiv")
 
 
 def run_loop(
