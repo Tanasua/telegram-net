@@ -16,13 +16,14 @@ def make_config(sources=(), **settings):
     return Config(settings=Settings(**settings), channels=channels, sources=list(sources))
 
 
-def src(name="Джерело", channel_id="malyn", scope="local", type="telegram", handle=None):
+def src(name="Джерело", channel_id="malyn", scope="local", type="telegram", handle=None, kind="media"):
     return SourceConfig(
         channel_id=channel_id if scope == "local" else None,
         type=type,
         name=name,
         handle_or_url=handle or f"@{name}",
         scope=scope,
+        kind=kind,
     )
 
 

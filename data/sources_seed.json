@@ -142,7 +142,8 @@
       "name": "Житомир.info",
       "handle_or_url": "https://www.zhitomir.info",
       "active": true,
-      "note": "Один з найстаріших новинних сайтів міста"
+      "note": "Один з найстаріших новинних сайтів міста",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -151,7 +152,8 @@
       "name": "Zhitomir-OnLine",
       "handle_or_url": "https://zhitomir-online.com",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -161,7 +163,8 @@
       "handle_or_url": "https://www.zhitomirnews.com",
       "active": true,
       "note": "Без RSS — скрапінг верстки",
-      "scrape_item_selector": "section.zhitomirToday-item a"
+      "scrape_item_selector": "section.zhitomirToday-item a",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -170,7 +173,8 @@
       "name": "Житомир.info",
       "handle_or_url": "@zhytomir_info",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -179,7 +183,8 @@
       "name": "Новини Житомира | pzhytomyr",
       "handle_or_url": "@pzhytomyr",
       "active": true,
-      "note": "Оперативний паблік: тривоги/світло/вода/транспорт"
+      "note": "Оперативний паблік: тривоги/світло/вода/транспорт",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -188,7 +193,8 @@
       "name": "Труха⚡️Житомир",
       "handle_or_url": "@truexazhitomir",
       "active": false,
-      "note": "Вузол мультиміської мережі 'Труха' — агрегатор інцидентів, не класична редакція"
+      "note": "Вузол мультиміської мережі 'Труха' — агрегатор інцидентів, не класична редакція",
+      "kind": "media"
     },
     {
       "scope": "oblast",
@@ -196,7 +202,8 @@
       "name": "Суспільне Житомир",
       "handle_or_url": "@suspilnezhytomyr",
       "active": true,
-      "note": "Офіційна регіональна редакція Суспільного Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
+      "note": "Офіційна регіональна редакція Суспільного Обласне джерело: читається один раз, редактор розподіляє новини між каналами.",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -205,7 +212,8 @@
       "name": "Житомирська міська рада",
       "handle_or_url": "@zhtmr",
       "active": true,
-      "note": "Офіційний канал міськради"
+      "note": "Офіційний канал міськради",
+      "kind": "official"
     },
     {
       "scope": "oblast",
@@ -213,7 +221,8 @@
       "name": "Житомирська ОВА",
       "handle_or_url": "@zhytomyrmilitaryadministration",
       "active": true,
-      "note": "Офіційний канал облвійськадміністрації Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
+      "note": "Офіційний канал облвійськадміністрації Обласне джерело: читається один раз, редактор розподіляє новини між каналами.",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -222,7 +231,8 @@
       "name": "Житомирська міська рада",
       "handle_or_url": "facebook.com/miskaradazt",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -231,7 +241,8 @@
       "name": "Житомирська обласна рада",
       "handle_or_url": "facebook.com/zt.gov.ua",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -240,7 +251,8 @@
       "name": "Житомирська ОВА (2 кандидати)",
       "handle_or_url": "facebook.com/zhitomiradmin ; facebook.com/odazt",
       "active": false,
-      "note": "Незрозуміло, яка сторінка активна зараз"
+      "note": "Незрозуміло, яка сторінка активна зараз",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -249,7 +261,8 @@
       "name": "Підслухано Житомир (це Page, не Group)",
       "handle_or_url": "facebook.com/pidslukhanozt",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -258,7 +271,8 @@
       "name": "Житомир.info (FB)",
       "handle_or_url": "facebook.com/www.zhitomir.info",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -267,7 +281,8 @@
       "name": "Новини Житомира 20minut.ua",
       "handle_or_url": "facebook.com/20minZT",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -276,7 +291,8 @@
       "name": "Суспільне Житомир (FB)",
       "handle_or_url": "facebook.com/suspilne.zhytomyr",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "oblast",
@@ -284,7 +300,8 @@
       "name": "Поліція Житомирської області",
       "handle_or_url": "@zt_police",
       "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами.",
+      "kind": "official"
     },
     {
       "scope": "oblast",
@@ -292,7 +309,8 @@
       "name": "Патрульна поліція Житомирської області",
       "handle_or_url": "@patrol_police_zt",
       "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами.",
+      "kind": "official"
     },
     {
       "scope": "oblast",
@@ -301,7 +319,8 @@
       "handle_or_url": "https://zt.npu.gov.ua",
       "active": true,
       "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами.",
-      "scrape_item_selector": "div.main-item_content a.title-16"
+      "scrape_item_selector": "div.main-item_content a.title-16",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -310,7 +329,8 @@
       "name": "РІО Бердичів",
       "handle_or_url": "https://rio-berdychiv.info",
       "active": true,
-      "note": "Прямий фетч дав 403, активність підтверджена опосередковано"
+      "note": "Прямий фетч дав 403, активність підтверджена опосередковано",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -319,7 +339,8 @@
       "name": "Бердичів.biz",
       "handle_or_url": "https://www.berdichev.biz",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -328,7 +349,8 @@
       "name": "РІО Бердичів Новини",
       "handle_or_url": "@rio_berdychiv_informatsiya",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -337,7 +359,8 @@
       "name": "Офіційно в Бердичеві",
       "handle_or_url": "@officially_in_berdychiv",
       "active": true,
-      "note": "Назва оманлива — НЕ офіційний канал міськради, незалежний агрегатор. Увімкнено 15.11.2026: канал живий, 23,5 тис. підписників, ~13 постів на добу."
+      "note": "Назва оманлива — НЕ офіційний канал міськради, незалежний агрегатор. Увімкнено 15.11.2026: канал живий, 23,5 тис. підписників, ~13 постів на добу.",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -346,7 +369,8 @@
       "name": "Бердичів Підслухано (старий лінк)",
       "handle_or_url": "t.me/Berdychiv2",
       "active": false,
-      "note": "Хендл зараз веде на непов'язану заглушку 35 підписників — канал або змінив ім'я, або перейшов новому власнику"
+      "note": "Хендл зараз веде на непов'язану заглушку 35 підписників — канал або змінив ім'я, або перейшов новому власнику",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -355,7 +379,8 @@
       "name": "Бердичівська міська рада",
       "handle_or_url": "facebook.com/Berdychiv.rada",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -364,7 +389,8 @@
       "name": "Бердичів BIZ (FB)",
       "handle_or_url": "facebook.com/berdichevbiz",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -373,7 +399,8 @@
       "name": "Офіційний портал міськради",
       "handle_or_url": "https://korosten-rada.gov.ua",
       "active": true,
-      "note": "Адміністративний сайт, не новинний портал у чистому вигляді"
+      "note": "Адміністративний сайт, не новинний портал у чистому вигляді",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -382,7 +409,8 @@
       "name": "КОРОСТЕНЬ today",
       "handle_or_url": "@korostentoday",
       "active": true,
-      "note": "Головне медіа району: 'Коростень, Малин, Овруч, Олевськ та вся Житомирщина'"
+      "note": "Головне медіа району: 'Коростень, Малин, Овруч, Олевськ та вся Житомирщина'",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -391,7 +419,8 @@
       "name": "Коростенська міська рада",
       "handle_or_url": "facebook.com/p/Коростенська-міська-рада-61550465764313",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -400,7 +429,8 @@
       "name": "Коростень-Інфо (FB)",
       "handle_or_url": "facebook.com/KorostenInfo",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -409,7 +439,8 @@
       "name": "КоростеньТБ",
       "handle_or_url": "facebook.com/KorostenTV",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -418,7 +449,8 @@
       "name": "КОРОСТЕНЬ today (FB)",
       "handle_or_url": "facebook.com/korostentoday",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -428,7 +460,8 @@
       "handle_or_url": "https://novograd.city",
       "active": true,
       "note": "Без RSS — скрапінг верстки",
-      "scrape_item_selector": "div.info a.title"
+      "scrape_item_selector": "div.info a.title",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -437,7 +470,8 @@
       "name": "04141.com.ua",
       "handle_or_url": "https://www.04141.com.ua",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -446,7 +480,8 @@
       "name": "Новоград.City",
       "handle_or_url": "@hellonovograd",
       "active": true,
-      "note": "Офіційний канал сайту novograd.city"
+      "note": "Офіційний канал сайту novograd.city",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -455,7 +490,8 @@
       "name": "Звягельська міська рада",
       "handle_or_url": "@Novograd_miskarada",
       "active": false,
-      "note": "Канал не оновлюється з жовтня 2024 року (перевірено 15.11.2026)"
+      "note": "Канал не оновлюється з жовтня 2024 року (перевірено 15.11.2026)",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -464,7 +500,8 @@
       "name": "Звягельська міська рада",
       "handle_or_url": "facebook.com/p/Звягельська-міська-рада-100069400260681",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -473,7 +510,8 @@
       "name": "Novograd City / Новоград Сіті",
       "handle_or_url": "facebook.com/hello.novograd",
       "active": true,
-      "note": "Дублікат facebook.com/novogradcity — перевірити активний"
+      "note": "Дублікат facebook.com/novogradcity — перевірити активний",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -482,7 +520,8 @@
       "name": "04141.com.ua (FB)",
       "handle_or_url": "facebook.com/04141web",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -493,7 +532,8 @@
       "active": true,
       "note": "Drupal, rss.xml є, але порожній — скрапінг верстки (views-row). Селектор звужено до ul.tm-news: та сама views-row верстка використана на сторінці ще й для блоку зовнішніх посилань і для списку файлів-рішень (.zip/.doc) — без цього уточнення вони теж потрапляли в 'новини'",
       "scrape_item_selector": "ul.tm-news .views-row a.uk-display-block",
-      "scrape_title_selector": ".tm-text-semibold .uk-text-middle"
+      "scrape_title_selector": ".tm-text-semibold .uk-text-middle",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -502,7 +542,8 @@
       "name": "MALYN.MEDIA (сайт-супутник)",
       "handle_or_url": "malyn.media / infomalin.biz",
       "active": false,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -511,7 +552,8 @@
       "name": "Malyn-Live",
       "handle_or_url": "https://malyn-live.com",
       "active": false,
-      "note": "Довідково-новинний портал"
+      "note": "Довідково-новинний портал",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -521,7 +563,8 @@
       "handle_or_url": "https://polissya.today/malyn",
       "active": true,
       "note": "Без RSS — скрапінг верстки",
-      "scrape_item_selector": "article.masonry-item h2 a"
+      "scrape_item_selector": "article.masonry-item h2 a",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -530,7 +573,8 @@
       "name": "MALYN.MEDIA",
       "handle_or_url": "@MalynMedia",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -539,7 +583,8 @@
       "name": "Малин | Новини Житомирщини",
       "handle_or_url": "@malyn_inform",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -548,7 +593,8 @@
       "name": "Малинська міська рада (FB)",
       "handle_or_url": "facebook.com/MalynCityCouncil",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -557,7 +603,8 @@
       "name": "ІнфоМалин",
       "handle_or_url": "facebook.com/infomalin",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -566,7 +613,8 @@
       "name": "Радомишльська міська громада",
       "handle_or_url": "https://radmr.gov.ua",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -575,7 +623,8 @@
       "name": "Radomyshl.city",
       "handle_or_url": "https://radomyshl.city",
       "active": false,
-      "note": "DNS-помилка при прямому фетчі"
+      "note": "DNS-помилка при прямому фетчі",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -584,7 +633,8 @@
       "name": "Radomyshl.news",
       "handle_or_url": "https://radomyshl.news",
       "active": false,
-      "note": "DNS-помилка при прямому фетчі"
+      "note": "DNS-помилка при прямому фетчі",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -593,7 +643,8 @@
       "name": "Radomyshl.com",
       "handle_or_url": "https://radomyshl.com",
       "active": false,
-      "note": "503 при фетчі"
+      "note": "503 при фетчі",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -603,7 +654,8 @@
       "handle_or_url": "https://polissya.today/radomyshl",
       "active": true,
       "note": "Без RSS — скрапінг верстки",
-      "scrape_item_selector": "article.masonry-item h2 a"
+      "scrape_item_selector": "article.masonry-item h2 a",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -612,7 +664,8 @@
       "name": "Радомишль Оперативно",
       "handle_or_url": "facebook.com/RadomyshlOperative",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -621,7 +674,8 @@
       "name": "Радомишль Сіті",
       "handle_or_url": "facebook.com/RadomyshylCity",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -630,7 +684,8 @@
       "name": "Наш Радомишль",
       "handle_or_url": "m.facebook.com/.../100071896694198",
       "active": false,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -639,7 +694,8 @@
       "name": "Коростишівська міська рада",
       "handle_or_url": "https://korostyshiv-rada.gov.ua",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -648,7 +704,8 @@
       "name": "Korostyshiv.misto.online",
       "handle_or_url": "https://korostyshiv.misto.online",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -658,7 +715,8 @@
       "handle_or_url": "https://polissya.today/korostyshiv",
       "active": true,
       "note": "Без RSS — скрапінг верстки",
-      "scrape_item_selector": "article.masonry-item h2 a"
+      "scrape_item_selector": "article.masonry-item h2 a",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -667,7 +725,8 @@
       "name": "Коростишівська міська рада (FB)",
       "handle_or_url": "facebook.com/miskaradakor",
       "active": true,
-      "note": ""
+      "note": "",
+      "kind": "media"
     },
     {
       "scope": "national",
@@ -675,7 +734,8 @@
       "name": "Суспільне Новини",
       "handle_or_url": "@suspilnenews",
       "active": true,
-      "note": "Загальнонаціональні новини"
+      "note": "Загальнонаціональні новини",
+      "kind": "media"
     },
     {
       "scope": "national",
@@ -683,7 +743,8 @@
       "name": "Укрінформ",
       "handle_or_url": "@ukrinform_news",
       "active": true,
-      "note": "Державне інформагентство"
+      "note": "Державне інформагентство",
+      "kind": "media"
     },
     {
       "scope": "national",
@@ -691,7 +752,8 @@
       "name": "Укренерго",
       "handle_or_url": "@Ukrenergo",
       "active": true,
-      "note": "Графіки відключень, стан енергосистеми"
+      "note": "Графіки відключень, стан енергосистеми",
+      "kind": "official"
     },
     {
       "scope": "national",
@@ -699,7 +761,8 @@
       "name": "ДСНС України",
       "handle_or_url": "@dsns_telegram",
       "active": true,
-      "note": "Надзвичайні події, попередження"
+      "note": "Надзвичайні події, попередження",
+      "kind": "official"
     },
     {
       "scope": "oblast",
@@ -707,7 +770,8 @@
       "name": "ДСНС Житомирщини",
       "handle_or_url": "@dsns_zhytomyr",
       "active": true,
-      "note": "Офіційний канал ГУ ДСНС в області: пожежі, ДТП, попередження"
+      "note": "Офіційний канал ГУ ДСНС в області: пожежі, ДТП, попередження",
+      "kind": "official"
     },
     {
       "scope": "oblast",
@@ -715,7 +779,8 @@
       "name": "Житомиробленерго",
       "handle_or_url": "@ztoe_ua",
       "active": true,
-      "note": "Офіційний канал: графіки відключень, аварії в мережах"
+      "note": "Офіційний канал: графіки відключень, аварії в мережах",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -724,7 +789,8 @@
       "name": "Житомирводоканал",
       "handle_or_url": "@zhytomyrvodokanal",
       "active": true,
-      "note": "Офіційний канал КП: відключення води, аварії"
+      "note": "Офіційний канал КП: відключення води, аварії",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -733,7 +799,8 @@
       "name": "«20 хвилин» Житомир",
       "handle_or_url": "@zt20minut",
       "active": true,
-      "note": "Міське видання"
+      "note": "Міське видання",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -742,7 +809,8 @@
       "name": "Перший Житомирський",
       "handle_or_url": "@firstzt",
       "active": true,
-      "note": "Канал сайту 1.zt.ua"
+      "note": "Канал сайту 1.zt.ua",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -751,7 +819,8 @@
       "name": "Житомир Інфо | Новини",
       "handle_or_url": "@zhitomir_info",
       "active": false,
-      "note": "Близько 70 постів на добу, переважно передруки — вимкнено, щоб не засмічувати добірку"
+      "note": "Близько 70 постів на добу, переважно передруки — вимкнено, щоб не засмічувати добірку",
+      "kind": "media"
     },
     {
       "scope": "local",
@@ -760,7 +829,8 @@
       "name": "Коростенська міська рада",
       "handle_or_url": "@korostenskamiskarada",
       "active": true,
-      "note": "Офіційний канал міськради"
+      "note": "Офіційний канал міськради",
+      "kind": "official"
     },
     {
       "scope": "local",
@@ -769,7 +839,8 @@
       "name": "Zvyahel news",
       "handle_or_url": "@zvyagel_news",
       "active": true,
-      "note": "Міський новинний канал"
+      "note": "Міський новинний канал",
+      "kind": "public"
     },
     {
       "scope": "local",
@@ -778,7 +849,8 @@
       "name": "Радомишль/Radomyshl",
       "handle_or_url": "@radomyshl_city",
       "active": true,
-      "note": "Єдиний живий телеграм-канал міста; багато моніторингу тривог — редактор відсіює"
+      "note": "Єдиний живий телеграм-канал міста; багато моніторингу тривог — редактор відсіює",
+      "kind": "public"
     }
   ]
 }

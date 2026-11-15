@@ -25,7 +25,10 @@ from telegram_net.stoplist import find_stop_topic
 logger = logging.getLogger(__name__)
 
 MAX_CANDIDATE_CHARS = 2500
-MAX_NATIONAL_PER_SOURCE = 4  # всеукраїнські стрічки дуже щільні — беремо лише найсвіжіше
+MAX_NATIONAL_PER_SOURCE = 4
+MAX_OFFICIAL_PER_SOURCE = 3  # пресслужби пишуть багато й нудно — лише найсвіжіше
+KIND_PRIORITY = {"public": 0, "media": 1, "official": 2}
+KIND_LABEL = {"public": "паблік", "media": "медіа", "official": "офіційне"}  # всеукраїнські стрічки дуже щільні — беремо лише найсвіжіше
 MAX_ARTICLES_PER_SOURCE = 8
 MIN_TEXT_CHARS = 20
 RECENT_POSTS_HOURS = 36
@@ -57,6 +60,30 @@ _FOOTER_LINE_RE = re.compile(
     r"facebook\s*\||\|\s*youtube|карта загроз|джерело: за даними|телеграм канал|дивитись відео|^деталі\.?$",
     re.IGNORECASE,
 )
+
+
+# Пресслужбова «нудятина»: нагадування, заклики, наради, привітання, звіти,
+# профілактика, донорство, загальні поради з безпеки. Відсікається лише в
+# офіційних джерелах і лише якщо в тексті немає справжньої події.
+_PR_RE = re.compile(
+    r"нагаду\w*|заклика\w*|просимо\s+бути|будьте\s+(?:обережн|пильн|уважн)|профілактичн|роз.яснювальн|"
+    r"робоч\w*\s+(?:зустріч|нарад|поїздк)|нарад[аиі]|семінар|засідан|тренінг|навчанн|"
+    r"вітаємо|вітає|привітал|урочист|нагородил|нагороджен|подяк|відзначил|"
+    r"донор\w*|звітує|звіт\s+про|підсумки\s+роботи|за\s+тиждень|упродовж\s+тижня|"
+    r"правил\w*\s+безпеки|пам.ятк|не\s+чіпайте|підозріл\w*\s+(?:знахідк|предмет)|вибухонебезпечн|"
+    r"телефонуйте\s+10[12]|акці\w*\s+[«\"]|відкрит\w*\s+урок|мобільн\w*\s+клас|зустрі\w+\s+з\s+(?:учн|школяр|студент)",
+    re.IGNORECASE,
+)
+_INCIDENT_RE = re.compile(
+    r"загину|загибл|постраждал|травм|госпіталіз|дтп|зіткнен|пожеж|загорі|затрима|викра|крадіжк|пограбу|"
+    r"зник|розшук|вибух(?!онебезпечн)|аварі|відключен|без\s+(?:світла|води|газу|тепла)|перекрит|обмеженн\w*\s+руху|"
+    r"влучанн|пошкоджен|обстріл|атак|ремонт\s+(?:дорог|мост)|повідомлено\s+про\s+підозр",
+    re.IGNORECASE,
+)
+
+
+def is_press_release(text: str) -> bool:
+    return bool(_PR_RE.search(text)) and not _INCIDENT_RE.search(text)
 
 
 def is_noise(text: str) -> bool:
@@ -93,7 +120,7 @@ def collect(
 ) -> dict:
     now = now or now_utc()
     active_channels = {c.channel_id for c in config.active_channels}
-    stats = {"sources_ok": 0, "sources_failed": 0, "new": 0, "stale": 0, "duplicate": 0, "stop_topic": 0, "alert": 0, "noise": 0, "empty": 0, "capped": 0}
+    stats = {"sources_ok": 0, "sources_failed": 0, "new": 0, "stale": 0, "duplicate": 0, "stop_topic": 0, "alert": 0, "noise": 0, "press_release": 0, "empty": 0, "capped": 0}
 
     for source in config.sources:
         if not source.active or source.type not in fetchers:
@@ -116,9 +143,10 @@ def collect(
             health["last_item"] = iso(now)
         logger.info("Джерело %s (%s): %d нових", source.name, source.handle_or_url, len(items))
 
-        if source.scope == "national" and len(items) > MAX_NATIONAL_PER_SOURCE:
-            stats["capped"] += len(items) - MAX_NATIONAL_PER_SOURCE
-            items = items[-MAX_NATIONAL_PER_SOURCE:]  # фетчери віддають від старішого до новішого
+        cap = MAX_NATIONAL_PER_SOURCE if source.scope == "national" else MAX_OFFICIAL_PER_SOURCE if source.kind == "official" else None
+        if cap is not None and len(items) > cap:
+            stats["capped"] += len(items) - cap
+            items = items[-cap:]  # фетчери віддають від старішого до новішого
 
         enriched = 0
         for item in items:
@@ -153,6 +181,8 @@ def _consider(
     text = strip_footer(_clean_text(item.text))
     if is_noise(text):
         return {"result": "noise"}
+    if source.kind == "official" and is_press_release(text):
+        return {"result": "press_release"}
     if source.type == "telegram" and len(text) < MIN_SOCIAL_CHARS:
         return {"result": "empty"}
     published_at = item.published_at
@@ -196,6 +226,7 @@ def _consider(
         "scope": source.scope,
         "channel_id": source.channel_id,
         "source": source.name,
+        "kind": source.kind,
         "url": item.url,
         "published_at": iso(_aware(published_at)) if published_at else None,
         "added_at": iso(now),
@@ -366,7 +397,10 @@ def build_brief(
 
     candidates = [
         {**{k: v for k, v in c.items() if k != "added_at"}, "age_minutes": _age_min(c)}
-        for c in sorted(state.pool.values(), key=lambda c: c.get("published_at") or c["added_at"], reverse=True)
+        for c in sorted(
+            sorted(state.pool.values(), key=lambda c: c.get("published_at") or c["added_at"], reverse=True),
+            key=lambda c: KIND_PRIORITY.get(c.get("kind", "media"), 1),
+        )
     ]
     return {
         "generated_at": iso(now),
@@ -443,7 +477,8 @@ def brief_text(brief: dict) -> str:
             tail = f" …(+{len(text) - BRIEF_TEXT_CHARS} симв., повний текст: show {c['id']})"
             text = text[:BRIEF_TEXT_CHARS]
         lines.append("")
-        lines.append(f"[{c['id']}] {c['scope']}→{target} · {c['source']} · {age} · {media_note}")
+        kind = KIND_LABEL.get(c.get("kind", "media"), "медіа")
+        lines.append(f"[{c['id']}] {c['scope']}→{target} · {kind} · {c['source']} · {age} · {media_note}")
         lines.append(text + tail)
     return "\n".join(lines) + "\n"
 
