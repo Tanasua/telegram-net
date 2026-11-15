@@ -32,11 +32,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol, Sequence
 
-from telegram_net.clock import is_quiet, start_of_local_day
+from telegram_net.clock import is_quiet, local_now, start_of_local_day
 from telegram_net.config import ChannelConfig, Config
 from telegram_net.fetchers.base import FetchedMedia
 from telegram_net.media import MAX_MEDIA_GROUP_SIZE, build_media_batches
-from telegram_net.state import State, iso, now_utc
+from telegram_net.state import State, iso, now_utc, parse_iso, post_time
 from telegram_net.stoplist import find_stop_topic
 
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 NEWS_KINDS = ("local", "oblast", "national")
 RUBRIC_KINDS = ("morning", "evening", "afisha")
 MAX_PROCESSED_RUNS = 300
+MAX_SEND_ATTEMPTS = 3
 
 
 class Publisher(Protocol):
@@ -62,6 +63,8 @@ class PreparedPost:
     candidate_ids: list[str]
     source_urls: list[str]
     with_cta: bool
+    urgent: bool = False
+    run_id: str | None = None
 
 
 @dataclass
@@ -192,7 +195,7 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
             media = media[:1] if media_mode == "first" else media[:MAX_MEDIA_GROUP_SIZE]
 
         # Заклик підписатись — у кожному N-му пості каналу, а не в кожному.
-        news_count = len([p for p in state.published if p["channel_id"] == channel.channel_id and p.get("kind") != "alert"])
+        news_count = state.channel_post_count(channel.channel_id)
         with_cta = channel.cta_every > 0 and (news_count + len(this_run) + 1) % channel.cta_every == 0
         plain, html_text = _render(headline, text, channel, with_cta)
 
@@ -212,6 +215,8 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
             candidate_ids=candidate_ids,
             source_urls=[state.pool[c]["url"] for c in candidate_ids],
             with_cta=with_cta,
+            urgent=bool(post.get("urgent")),
+            run_id=str(decisions.get("run_id")),
         )
         prepared.append(item)
         in_run.setdefault(channel.channel_id, []).append(item)
@@ -256,40 +261,126 @@ def publish_run(
             )
         return report
 
-    sent: list[PreparedPost] = []
-    for p in prepared:
-        try:
-            message_ids = publisher.publish(p.channel.telegram_chat_id, p.html_text, build_media_batches(p.media))
-        except Exception as exc:
-            logger.exception("Не вдалося опублікувати пост №%d у %s", p.index + 1, p.channel.channel_id)
-            report.errors.append(f"пост №{p.index + 1} ({p.channel.channel_id}): помилка Telegram — {exc}")
-            continue
-        state.log_post(
-            {
-                "channel_id": p.channel.channel_id,
-                "published_at": iso(now),
-                "kind": p.kind,
-                "text": p.plain_text,
-                "candidate_ids": p.candidate_ids,
-                "source_urls": p.source_urls,
-                "message_ids": message_ids,
-                "run_id": run_id,
-            }
-        )
-        sent.append(p)
-        report.published.append(f"{p.channel.channel_id} · {p.kind} · повідомлення {message_ids}")
+    # Пости не відправляються підряд: кожен отримує час виходу в черзі з
+    # інтервалом post_spacing_minutes від попереднього посту того ж каналу.
+    # Те, чий час уже настав (зазвичай перший пост каналу), надсилає drain()
+    # одразу; решту — запуски drain.yml двічі на годину.
+    for p in schedule(prepared, config, state, now):
+        state.queue.append(p)
+        due = local_now(config, parse_iso(p["due_at"])).strftime("%H:%M")
+        report.published.append(f"{p['channel_id']} · {p['kind']} · заплановано на {due}")
 
     # Після прогону в пулі лишається тільки те, що редактор явно попросив
-    # притримати ("keep") і що не було опубліковано. Так пул не розростається,
+    # притримати ("keep") і що не було поставлено в чергу. Так пул не розростається,
     # а редактор не перечитує щогодини ті самі відхилені новини.
-    sent_ids = {c for p in sent for c in p.candidate_ids}
-    keep = {str(c) for c in decisions["keep"]} - sent_ids
-    failed_ids = {c for p in prepared if p not in sent for c in p.candidate_ids}  # Telegram підвів — спробуємо ще
-    state.pool = {cid: cand for cid, cand in state.pool.items() if cid in keep | failed_ids}
+    queued_ids = {c for p in prepared for c in p.candidate_ids}
+    keep = {str(c) for c in decisions["keep"]} - queued_ids
+    state.pool = {cid: cand for cid, cand in state.pool.items() if cid in keep}
+
+    sent_lines, send_errors = drain(config, state, publisher, now)
+    report.published.extend(sent_lines)
+    report.errors.extend(send_errors)
 
     processed.append(run_id)
     del processed[:-MAX_PROCESSED_RUNS]
     return report
+
+
+def _next_open_time(config: Config, when: dt.datetime) -> dt.datetime:
+    """Найближчий момент поза нічною тишею, не раніше `when`."""
+    if not is_quiet(config, when):
+        return when
+    local = local_now(config, when)
+    opening = local.replace(hour=config.settings.quiet_to_hour, minute=0, second=0, microsecond=0)
+    if opening <= local:
+        opening += dt.timedelta(days=1)
+    return opening.astimezone(dt.timezone.utc)
+
+
+def schedule(prepared: list[PreparedPost], config: Config, state: State, now: dt.datetime) -> list[dict]:
+    """Призначає кожному посту час виходу. Порядок постів каналу в файлі рішень —
+    порядок виходу; невідкладні (urgent) йдуть одразу, без інтервалу й черги."""
+    spacing = dt.timedelta(minutes=config.settings.post_spacing_minutes)
+    last: dict[str, dt.datetime] = {}
+    for entry in state.published + state.queue:
+        if entry.get("kind") == "alert":
+            continue
+        t = post_time(entry)
+        if entry["channel_id"] not in last or t > last[entry["channel_id"]]:
+            last[entry["channel_id"]] = t
+
+    entries = []
+    for p in sorted(prepared, key=lambda x: (not x.urgent, x.index)):
+        cid = p.channel.channel_id
+        if p.urgent:
+            due = now
+        else:
+            due = max(now, last[cid] + spacing) if cid in last else now
+            due = _next_open_time(config, due)
+        last[cid] = max(last.get(cid, due), due)
+        entries.append(
+            {
+                "channel_id": cid,
+                "due_at": iso(due),
+                "kind": p.kind,
+                "text": p.plain_text,
+                "html": p.html_text,
+                "media": [
+                    {"type": m.type, "url": m.url, **({"duration_sec": m.duration_sec} if m.duration_sec else {})}
+                    for m in p.media
+                ],
+                "candidate_ids": p.candidate_ids,
+                "source_urls": p.source_urls,
+                "run_id": p.run_id,
+                "urgent": p.urgent,
+                "attempts": 0,
+            }
+        )
+    return entries
+
+
+def drain(config: Config, state: State, publisher: Publisher, now: dt.datetime | None = None) -> tuple[list[str], list[str]]:
+    """Надсилає з черги все, чий час настав. Повертає (надіслане, помилки)."""
+    now = now or now_utc()
+    sent_lines: list[str] = []
+    errors: list[str] = []
+    quiet = is_quiet(config, now)
+    remaining: list[dict] = []
+    for entry in sorted(state.queue, key=post_time):
+        if parse_iso(entry["due_at"]) > now or (quiet and not entry.get("urgent")):
+            remaining.append(entry)
+            continue
+        channel = config.channel(entry["channel_id"])
+        if channel is None or not channel.active or not channel.telegram_chat_id:
+            errors.append(f"{entry['channel_id']}: канал вимкнено — пост із черги прибрано")
+            continue
+        media = tuple(FetchedMedia(type=m["type"], url=m["url"], duration_sec=m.get("duration_sec")) for m in entry["media"])
+        try:
+            message_ids = publisher.publish(channel.telegram_chat_id, entry["html"], build_media_batches(media))
+        except Exception as exc:
+            entry["attempts"] = entry.get("attempts", 0) + 1
+            logger.exception("Не вдалося надіслати пост із черги в %s", entry["channel_id"])
+            if entry["attempts"] < MAX_SEND_ATTEMPTS:
+                remaining.append(entry)
+                errors.append(f"{entry['channel_id']}: помилка Telegram, спробую ще — {exc}")
+            else:
+                errors.append(f"{entry['channel_id']}: пост прибрано після {MAX_SEND_ATTEMPTS} невдалих спроб — {exc}")
+            continue
+        state.log_post(
+            {
+                "channel_id": entry["channel_id"],
+                "published_at": iso(now),
+                "kind": entry["kind"],
+                "text": entry["text"],
+                "candidate_ids": entry["candidate_ids"],
+                "source_urls": entry["source_urls"],
+                "message_ids": message_ids,
+                "run_id": entry.get("run_id"),
+            }
+        )
+        sent_lines.append(f"{entry['channel_id']} · {entry['kind']} · надіслано, повідомлення {message_ids}")
+    state.queue = remaining
+    return sent_lines, errors
 
 
 def format_report(report: Report) -> str:

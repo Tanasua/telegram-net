@@ -4,6 +4,7 @@
     show    <id…>      повний текст кандидатів
     check   <файл>     перевірити файл рішень редактора, нічого не надсилаючи
     publish <файл…>    опублікувати рішення (потрібен TELEGRAM_BOT_TOKEN)
+    drain              надіслати з черги пости, чий час настав
     report             стан мережі: пости за добу, проблемні джерела
     alerts             цикл сигналів тривоги/відбою (потрібен TELEGRAM_BOT_TOKEN)
 """
@@ -117,6 +118,30 @@ def cmd_publish(args) -> int:
     return 1 if failed else 0
 
 
+def cmd_drain(args) -> int:
+    from telegram_net.publish import drain
+
+    config = load_config(args.config)
+    state = State(args.state)
+    if not state.queue:
+        print("Черга порожня")
+        _github_output(save_state=False)
+        return 0
+    publisher = _publisher(required=True)
+    before = len(state.queue)
+    sent, errors = drain(config, state, publisher)
+    for line in sent:
+        print(f"  + {line}")
+    for line in errors:
+        print(f"  ! {line}")
+    print(f"У черзі лишилось: {len(state.queue)}")
+    changed = len(state.queue) != before or bool(errors)
+    if changed:
+        state.save()
+    _github_output(save_state=changed)
+    return 1 if errors and not sent else 0
+
+
 def _github_output(**values: bool) -> None:
     """Сигнали наступним крокам workflow (publish.yml): чи зберігати стан, чи видаляти гілку."""
     path = os.environ.get("GITHUB_OUTPUT")
@@ -147,6 +172,9 @@ def cmd_report(args) -> int:
     for problem in problems:
         print(f"  {problem}")
     print(f"Кандидатів у пулі: {len(state.pool)}")
+    print(f"Заплановано в черзі: {len(state.queue)}")
+    for q in sorted(state.queue, key=lambda q: q["due_at"]):
+        print(f"  {q['due_at']} {q['channel_id']}: {q['text'][:70]!r}")
     return 0
 
 
@@ -194,6 +222,9 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("publish")
     p.add_argument("files", nargs="+")
     p.set_defaults(func=cmd_publish)
+
+    p = sub.add_parser("drain")
+    p.set_defaults(func=cmd_drain)
 
     p = sub.add_parser("report")
     p.set_defaults(func=cmd_report)

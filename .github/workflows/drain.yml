@@ -1,0 +1,64 @@
+name: Send queued posts
+
+# Двічі на годину надсилає з черги (state/queue.json) пости, чий час настав.
+# Пости одного каналу стоять у черзі з інтервалом post_spacing_minutes
+# (40 хв), тож у каналі вони виходять не підряд, а протягом двох годин між
+# прогонами редактора.
+#
+# Розклад у UTC (GitHub не знає часових поясів): 04:15–21:45 UTC покриває
+# 07:00–23:00 за Києвом і взимку (UTC+2), і влітку (UTC+3). Нічну тишу
+# все одно перевіряє код. Порожня черга — запуск закінчується за секунди,
+# але кожен запуск рахується як 1 хвилина Actions: ~36 запусків на добу,
+# близько 1100 хвилин на місяць.
+on:
+  schedule:
+    - cron: "15,45 4-21 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: telegram-net-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  drain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check the queue
+        id: queue
+        run: |
+          if [ -s state/queue.json ] && [ "$(tr -d ' \n' < state/queue.json)" != "[]" ]; then
+            echo "pending=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Черга порожня"
+          fi
+
+      - name: Set up Python
+        if: steps.queue.outputs.pending == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Send due posts
+        if: steps.queue.outputs.pending == 'true'
+        id: drain
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          pip install --quiet "httpx>=0.27"
+          PYTHONPATH=src python -m telegram_net.cli drain
+
+      - name: Save state
+        if: always() && steps.drain.outputs.save_state == 'true'
+        run: |
+          git config user.name "telegram-net-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state
+          git diff --cached --quiet || git commit -m "Send queued posts"
+          git push

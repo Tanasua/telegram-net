@@ -2,7 +2,7 @@ import datetime as dt
 
 from helpers import NOW, make_config
 
-from telegram_net.publish import format_report, prepare, publish_run
+from telegram_net.publish import drain, format_report, prepare, publish_run
 from telegram_net.state import State, iso
 
 
@@ -165,7 +165,7 @@ def test_same_run_is_not_published_twice(tmp_path):
     assert "уже оброблено" in format_report(again)
 
 
-def test_telegram_failure_is_reported_and_candidate_stays_for_retry(tmp_path):
+def test_telegram_failure_keeps_post_in_queue_for_retry_then_drops_it(tmp_path):
     config = make_config()
     state = _state(tmp_path, ("c1", "local"), ("c2", "local"))
     publisher = FakePublisher(fail_for={"@mymalyn"})
@@ -174,7 +174,10 @@ def test_telegram_failure_is_reported_and_candidate_stays_for_retry(tmp_path):
     )
     assert not report.ok and "помилка Telegram" in report.errors[0]
     assert [p["channel_id"] for p in state.published] == ["zhytomyr"]
-    assert list(state.pool) == ["c1"]
+    assert [q["channel_id"] for q in state.queue] == ["malyn"] and state.queue[0]["attempts"] == 1
+    for _ in range(2):
+        drain(config, state, publisher, NOW)
+    assert state.queue == []  # після трьох невдалих спроб пост прибрано, черга не забивається
 
 
 def test_invalid_post_does_not_block_valid_ones(tmp_path):
@@ -228,3 +231,70 @@ def test_publish_step_needs_only_httpx():
         json.dump({"run_id": "x", "posts": []}, fh)
     result = subprocess.run([sys.executable, "-c", code, fh.name], capture_output=True, text=True, env={"PYTHONPATH": "src"})
     assert result.returncode == 0, result.stderr
+
+
+def test_posts_of_one_channel_are_spaced_and_sent_by_drain(tmp_path):
+    config = make_config()
+    state = _state(tmp_path, ("c1", "local"), ("c2", "local"), ("c3", "local"), ("o1", "oblast"))
+    publisher = FakePublisher()
+    posts = [
+        _post(candidate_ids=["c1"]),
+        _post(candidate_ids=["c2"]),
+        _post(kind="oblast", candidate_ids=["o1"], channel_id="zhytomyr"),
+        _post(candidate_ids=["c3"]),
+    ]
+    report = publish_run(_run(posts), config, state, publisher, NOW)
+    assert report.ok
+    # Одразу — лише перший пост кожного каналу; решта Малина — через 40 і 80 хв.
+    assert [chat for chat, _, _ in publisher.sent] == ["@mymalyn", "@myzhytomyr"]
+    due = sorted((q["due_at"], q["text"]) for q in state.queue)
+    assert [d for d, _ in due] == [iso(NOW + dt.timedelta(minutes=40)), iso(NOW + dt.timedelta(minutes=80))]
+    assert "заплановано на 15:40" in format_report(report)
+
+    drain(config, state, publisher, NOW + dt.timedelta(minutes=30))
+    assert len(publisher.sent) == 2  # ще рано
+    drain(config, state, publisher, NOW + dt.timedelta(minutes=45))
+    assert len(publisher.sent) == 3 and len(state.queue) == 1
+    drain(config, state, publisher, NOW + dt.timedelta(minutes=90))
+    assert len(publisher.sent) == 4 and state.queue == []
+    assert [p["channel_id"] for p in state.published] == ["malyn", "zhytomyr", "malyn", "malyn"]
+
+
+def test_spacing_continues_from_previous_post_and_queue(tmp_path):
+    config = make_config()
+    state = _state(tmp_path, ("c1", "local"))
+    state.log_post({"channel_id": "malyn", "published_at": iso(NOW - dt.timedelta(minutes=10)), "kind": "local", "text": "т", "candidate_ids": []})
+    publisher = FakePublisher()
+    publish_run(_run([_post()]), config, state, publisher, NOW)
+    assert publisher.sent == [] and state.queue[0]["due_at"] == iso(NOW + dt.timedelta(minutes=30))
+
+
+def test_queued_posts_count_toward_limits_and_are_not_repeated(tmp_path):
+    config = make_config()
+    state = _state(tmp_path, ("c1", "local"), ("c2", "local"))
+    publish_run(_run([_post(candidate_ids=["c1"]), _post(candidate_ids=["c2"])]), config, state, FakePublisher(), NOW)
+    assert len(state.queue) == 1
+    # Наступний прогін бачить заплановане: той самий кандидат удруге не піде.
+    state.pool["c2"] = {**state.pool.get("c2", {}), "id": "c2", "url": "https://src/c2", "media": [], "added_at": iso(NOW), "published_at": iso(NOW), "text": "т", "scope": "local", "channel_id": "malyn", "source": "Д"}
+    _, errors = prepare({"run_id": "r2", "posts": [_post(candidate_ids=["c2"])], "keep": []}, config, state, NOW + dt.timedelta(minutes=5))
+    assert errors and "вже виходила" in errors[0]
+
+
+def test_post_scheduled_into_quiet_hours_waits_for_morning(tmp_path):
+    config = make_config()
+    evening = dt.datetime(2026, 11, 14, 20, 50, tzinfo=dt.timezone.utc)  # 22:50 за Києвом
+    state = _state(tmp_path, ("c1", "local"), ("c2", "local"))
+    publisher = FakePublisher()
+    publish_run(_run([_post(candidate_ids=["c1"]), _post(candidate_ids=["c2"])]), config, state, publisher, evening)
+    assert len(publisher.sent) == 1
+    assert state.queue[0]["due_at"] == "2026-11-15T05:00:00+00:00"  # 07:00 за Києвом, а не 23:30
+
+
+def test_urgent_post_skips_spacing(tmp_path):
+    config = make_config()
+    night = dt.datetime(2026, 11, 14, 23, 30, tzinfo=dt.timezone.utc)
+    state = _state(tmp_path, ("c1", "local"), ("c2", "local"))
+    state.log_post({"channel_id": "malyn", "published_at": iso(night - dt.timedelta(minutes=5)), "kind": "local", "text": "т", "candidate_ids": []})
+    publisher = FakePublisher()
+    publish_run(_run([_post(candidate_ids=["c1"], urgent=True)]), config, state, publisher, night)
+    assert len(publisher.sent) == 1 and state.queue == []

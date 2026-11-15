@@ -1,4 +1,4 @@
-"""Стан між прогонами — два невеликі JSON-файли в state/ (комітяться в репозиторій).
+"""Стан між прогонами — три невеликі JSON-файли в state/ (комітяться в репозиторій).
 
 Раніше тут була SQLite-база: бінарний файл на 2,5 МБ, що переписувався цілком
 щогодини й роздував історію git. JSON дає звичайні текстові дифи, і його можна
@@ -6,7 +6,12 @@
 
 - state.json      — курсори джерел, їхнє «здоров'я», пул кандидатів, бачені хеші;
 - published.json  — журнал опублікованого за останні 30 днів (для дедупу за
-                    змістом, добових лімітів, рубрик і звітів).
+                    змістом, добових лімітів, рубрик і звітів);
+- queue.json      — черга запланованих постів (publish.py): щоб пости одного
+                    каналу не виходили підряд, вони розносяться в часі.
+
+state.json пише лише збір і редактор; published.json і queue.json — лише крок
+публікації в GitHub Actions. Тому редактор і черга не перетирають стан одне одного.
 
 Сигнали тривоги (alerts.py) стану на диску не мають — відновлюють його з
 останніх повідомлень джерела під час старту.
@@ -36,6 +41,10 @@ def parse_iso(value: str) -> dt.datetime:
     return ts if ts.tzinfo else ts.replace(tzinfo=dt.timezone.utc)
 
 
+def post_time(entry: dict) -> dt.datetime:
+    return parse_iso(entry.get("published_at") or entry["due_at"])
+
+
 def _read(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
@@ -57,6 +66,7 @@ class State:
         self.pool: dict[str, dict] = data.get("pool", {})  # id кандидата -> кандидат
         self.runs: list[str] = data.get("runs", [])  # run_id уже оброблених файлів рішень
         self.published: list[dict] = _read(self.dir / "published.json", [])
+        self.queue: list[dict] = _read(self.dir / "queue.json", [])
 
     # --- джерела ---
     def source(self, key: str) -> dict:
@@ -64,13 +74,18 @@ class State:
 
     # --- журнал публікацій ---
     def posts_since(self, channel_id: str, since: dt.datetime, kind: str | None = None) -> list[dict]:
+        """Опубліковане й заплановане в каналі від `since` (заплановане — за часом виходу)."""
         return [
             p
-            for p in self.published
+            for p in self.published + self.queue
             if p["channel_id"] == channel_id
-            and parse_iso(p["published_at"]) >= since
+            and post_time(p) >= since
             and (kind is None or p.get("kind") == kind)
         ]
+
+    def channel_post_count(self, channel_id: str) -> int:
+        """Скільки новинних постів каналу вийшло або чекає в черзі (без сигналів тривоги)."""
+        return len([p for p in self.published + self.queue if p["channel_id"] == channel_id and p.get("kind") != "alert"])
 
     def log_post(self, entry: dict) -> None:
         self.published.append(entry)
@@ -92,3 +107,4 @@ class State:
             {"sources": self.sources, "seen": self.seen, "media_seen": self.media_seen, "pool": self.pool, "runs": self.runs},
         )
         _write(self.dir / "published.json", self.published)
+        _write(self.dir / "queue.json", self.queue)
