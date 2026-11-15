@@ -1,1 +1,25 @@
-[]
+[
+ {
+  "attempts": 0,
+  "candidate_ids": [
+   "78eef3f7"
+  ],
+  "channel_id": "zhytomyr",
+  "due_at": "2026-11-15T18:29:08+00:00",
+  "html": "<b>🛣 Північний обхід Житомира вже наполовину готовий</b>\n\nПісля кількох років перерви будівництво відновили, і готовність проєкту перевищує 50%. На трасі М-06 Київ — Чоп триває укладання цементобетонного покриття.\n\nПісля завершення робіт обхід забезпечить швидший транзит повз Житомир і розвантажить рух містом.\n\n<b>❤️ Мій Житомир | Новини Житомира 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/myzhytomyrnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
+  "kind": "local",
+  "media": [
+   {
+    "duration_sec": 44.0,
+    "type": "video",
+    "url": "https://cdn4.telesco.pe/file/d05f19ebc8.mp4?token=MxpzN2PD2cgp1W07oDjhCm1vFshHS2_JHQ4Q9JHnhcLFtTTBmVHaCThMf1ohTw_coP2oNQFa3cprBGzBXbELTr5baRHyGbPNKXk5NB5eJ2LYfQ7IWK11fI_6V5P5SVOY8O_CeE1Lk3mTRnheIgym1bx5R2Qh9Tg8Cln73Xz3jT0bVUNzURCYqBWZFPN5aNzuWScfPzplmARTwm1LMGjc6BAxYSi6HkM__gLZGjnwhNwJ5gp9VNXDszvTP-Kkwo9MmfAxatSJIlddw0aKFOE1Sl1JGhAPGokdBI-JqvnjBtCbWFGWPWWvdtlN1ee9pkN3k878-NLBRR3asGa03U-9XQs22l3-GAEBc0CE13POQGeQmgOwelnPHIryEyHshLKGGr8woXmURPK3iFjC6ScgiY41Wppyexc2fqOsGS1hAltR8EwMPhkvEa481T_drts0f5EmYyabGZ4d44SVW3GEE2tjkEtIbosgJMs1Ok6tngzx6oc1QdskXvTdMBpJD30LSzGXU80TrXHLOHwvgUl4uia1eWOVhrECYDOxHV-igxBx-3RBnQIGQohW81ClDcrK_WYB65fiDHe2XpjhotH86Dv-9T0c9DJv_UwaC_v38H1TkmlO3KrWeK5gltrYoAJKUe_LUzP7S5VyPBtNYaSOhJl0ObYt4EM3mATqEjO__gQ"
+   }
+  ],
+  "run_id": "2026-11-15T19-47",
+  "source_urls": [
+   "https://t.me/zhytomyr/45276"
+  ],
+  "text": "🛣 Північний обхід Житомира вже наполовину готовий\n\nПісля кількох років перерви будівництво відновили, і готовність проєкту перевищує 50%. На трасі М-06 Київ — Чоп триває укладання цементобетонного покриття.\n\nПісля завершення робіт обхід забезпечить швидший транзит повз Житомир і розвантажить рух містом.",
+  "urgent": false
+ }
+]
