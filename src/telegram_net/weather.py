@@ -1,8 +1,9 @@
 """Ранкова інфографіка погоди для кожного каналу — без жодної моделі, лише код.
 
 Дані: MET Norway (api.met.no, безкоштовно, без ключа), запасне джерело —
-Open-Meteo. Картинку малює Pillow: шрифт Nunito (assets/fonts, OFL) і кольорові
-емодзі Noto (assets/emoji, OFL), тож у GitHub Actions нічого не треба доставляти.
+Open-Meteo. Картинку малює Pillow: шрифт Nunito (assets/fonts, OFL) і іконки погоди
+Meteocons (assets/icons, MIT, PNG 512×512), тож у GitHub Actions нічого не
+треба доставляти.
 
 На картинці лише головне: заголовок «Погода у Радомишлі сьогодні», велика
 іконка з температурою вдень, чотири частини доби (ранок, день, вечір, ніч) з
@@ -58,16 +59,16 @@ class Condition:
 
 # Тип погоди → іконка, фраза, «вага» (для вибору головної погоди частини доби).
 _SKY = {
-    "clear": Condition("sun", "moon", "ясно", 0),
-    "fair": Condition("sun_small_cloud", "moon", "переважно ясно", 1),
-    "partly": Condition("partly", "cloud", "мінлива хмарність", 2),
-    "cloudy": Condition("cloud", "cloud", "хмарно", 3),
+    "clear": Condition("clear-day", "clear-night", "ясно", 0),
+    "fair": Condition("partly-cloudy-day", "partly-cloudy-night", "переважно ясно", 1),
+    "partly": Condition("overcast-day", "overcast-night", "мінлива хмарність", 2),
+    "cloudy": Condition("cloudy", "cloudy", "хмарно", 3),
     "fog": Condition("fog", "fog", "туман", 4),
-    "showers": Condition("sun_rain", "rain", "короткочасний дощ", 5, wet=True),
+    "showers": Condition("partly-cloudy-day-rain", "partly-cloudy-night-rain", "короткочасний дощ", 5, wet=True),
     "rain": Condition("rain", "rain", "дощ", 6, wet=True),
-    "sleet": Condition("snow_cloud", "snow_cloud", "мокрий сніг", 7, wet=True),
-    "snow": Condition("snow_cloud", "snow_cloud", "сніг", 8, wet=True),
-    "thunder": Condition("thunder", "thunder", "гроза", 9, wet=True),
+    "sleet": Condition("sleet", "sleet", "мокрий сніг", 7, wet=True),
+    "snow": Condition("snow", "snow", "сніг", 8, wet=True),
+    "thunder": Condition("thunderstorms-rain", "thunderstorms-rain", "гроза", 9, wet=True),
 }
 
 
@@ -228,21 +229,21 @@ def summarize(hours: list[Hour], day: dt.date, city_loc: str) -> DayForecast:
     max_wind = max((h.wind for h in daytime), default=0)
 
     if sky == "thunder":
-        tip_icon, tip = "thunder", "Можлива гроза — бережіть себе"
+        tip_icon, tip = "lightning-bolt", "Можлива гроза — бережіть себе"
     elif sky in ("snow", "sleet"):
-        tip_icon, tip = "gloves", "Сніжно — вдягайтеся тепліше"
+        tip_icon, tip = "snowflake", "Сніжно — вдягайтеся тепліше"
     elif cond.wet:
         tip_icon, tip = "umbrella", "Візьміть парасольку"
     elif max_wind >= 10:
         tip_icon, tip = "wind", "Сильний вітер — тримайте капелюхи"
     elif day_max <= 0:
-        tip_icon, tip = "scarf", "Морозно — вдягайтеся тепло"
+        tip_icon, tip = "thermometer-colder", "Морозно — вдягайтеся тепло"
     elif morning.temp <= 3:
-        tip_icon, tip = "scarf", "Зранку холодно — вдягніться тепліше"
+        tip_icon, tip = "thermometer-colder", "Зранку холодно — вдягніться тепліше"
     elif sky in ("clear", "fair") and day_max >= 22:
-        tip_icon, tip = "sunglasses", "Сонячно — гарного дня!"
+        tip_icon, tip = "thermometer-warmer", "Сонячно — гарного дня!"
     else:
-        tip_icon, tip = "heart", "Гарного дня!"
+        tip_icon, tip = "sunrise", "Гарного дня!"
 
     return DayForecast(
         city_loc=city_loc,
@@ -272,21 +273,24 @@ def caption(f: DayForecast) -> str:
 
 # --- малювання ---------------------------------------------------------------
 
+# Насичений градієнт неба під тип погоди (верх → низ): білий текст і білі хмари
+# на ньому читаються краще, ніж на білій картці.
 _BACKGROUNDS = {
-    "sun": ((126, 200, 250), (225, 244, 255)),
-    "sun_small_cloud": ((126, 200, 250), (225, 244, 255)),
-    "partly": ((150, 190, 230), (230, 240, 250)),
-    "cloud": ((170, 186, 205), (236, 241, 246)),
-    "fog": ((185, 192, 200), (240, 242, 245)),
-    "sun_rain": ((120, 160, 210), (220, 232, 246)),
-    "rain": ((110, 140, 190), (214, 226, 242)),
-    "thunder": ((95, 105, 150), (205, 210, 232)),
-    "snow_cloud": ((180, 210, 240), (246, 250, 255)),
+    "clear-day": ((33, 118, 230), (96, 196, 245)),
+    "partly-cloudy-day": ((44, 120, 214), (118, 186, 238)),
+    "overcast-day": ((60, 112, 180), (132, 170, 214)),
+    "cloudy": ((70, 96, 134), (140, 162, 192)),
+    "overcast": ((70, 96, 134), (140, 162, 192)),
+    "fog": ((96, 110, 132), (162, 176, 194)),
+    "partly-cloudy-day-rain": ((50, 88, 150), (112, 148, 200)),
+    "rain": ((46, 70, 120), (100, 128, 176)),
+    "sleet": ((70, 104, 160), (150, 182, 222)),
+    "snow": ((82, 124, 186), (168, 200, 238)),
+    "thunderstorms-rain": ((36, 38, 72), (88, 92, 140)),
 }
+WHITE = (255, 255, 255)
 INK = (31, 42, 68)
-MUTED = (107, 122, 144)
-CARD = (255, 255, 255)
-TILE = (243, 247, 252)
+SOFT = (255, 255, 255, 215)  # напівпрозорий білий для другорядного тексту
 
 
 def _font(size: int, weight: str = "ExtraBold"):
@@ -300,11 +304,17 @@ def _font(size: int, weight: str = "ExtraBold"):
     return font
 
 
-def _emoji(name: str, size: int):
+# Суцільний місяць візуально «важчий» за сонце з променями — трохи менший.
+_ICON_SCALE = {"clear-night": 0.8}
+
+
+def _icon(name: str, size: int):
+    """Іконка Meteocons (assets/icons, 512×512, MIT), обрізана до вмісту й зменшена до `size`."""
     from PIL import Image
 
-    im = Image.open(ASSETS / "emoji" / f"{name}.png").convert("RGBA")
-    scale = size / max(im.size)
+    im = Image.open(ASSETS / "icons" / f"{name}.png").convert("RGBA")
+    im = im.crop(im.getbbox())
+    scale = size * _ICON_SCALE.get(name, 1.0) / max(im.size)
     return im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.LANCZOS)
 
 
@@ -313,60 +323,66 @@ def _paste_center(base, im, cx: int, cy: int) -> None:
 
 
 def render(f: DayForecast, channel_title: str) -> bytes:
-    from PIL import Image, ImageDraw
+    from PIL import Image, ImageDraw, ImageFilter
 
-    top, bottom = _BACKGROUNDS.get(f.hero_icon, _BACKGROUNDS["cloud"])
+    top, bottom = _BACKGROUNDS.get(f.hero_icon, _BACKGROUNDS["cloudy"])
     img = Image.new("RGBA", (SIZE, SIZE))
     grad = ImageDraw.Draw(img)
     for y in range(SIZE):
         k = y / (SIZE - 1)
         grad.line([(0, y), (SIZE, y)], fill=tuple(round(a + (b - a) * k) for a, b in zip(top, bottom)) + (255,))
 
-    # тінь картки + картка
-    shadow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle((60, 72, SIZE - 60, SIZE - 48), radius=56, fill=(20, 40, 80, 40))
-    img.alpha_composite(shadow)
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((60, 60, SIZE - 60, SIZE - 60), radius=56, fill=CARD)
+    # м'яке світіння за головною іконкою
+    glow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse((150, 230, 510, 590), fill=(255, 255, 255, 70))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(70)))
 
+    overlay = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
     cx = SIZE // 2
+
     title = f"Погода у {f.city_loc} сьогодні"
-    size = 70
-    while size > 44 and d.textlength(title, font=_font(size)) > SIZE - 200:
+    size = 68
+    while size > 44 and od.textlength(title, font=_font(size)) > SIZE - 140:
         size -= 2
-    d.text((cx, 150), title, font=_font(size), fill=INK, anchor="mm")
+    od.text((cx, 112), title, font=_font(size), fill=WHITE, anchor="mm")
     date_line = f"{WEEKDAYS[f.date.weekday()]}, {f.date.day} {MONTHS[f.date.month - 1]}"
-    d.text((cx, 222), date_line, font=_font(38, "SemiBold"), fill=MUTED, anchor="mm")
+    od.text((cx, 180), date_line, font=_font(38, "SemiBold"), fill=SOFT, anchor="mm")
 
-    # головний блок: іконка + температура вдень + фраза
-    _paste_center(img, _emoji(f.hero_icon, 230), 330, 415)
-    d.text((640, 392), fmt_temp(f.day_max), font=_font(170), fill=INK, anchor="mm")
-    d.text((640, 500), f.phrase, font=_font(44, "Bold"), fill=MUTED, anchor="mm")
+    # головний блок
+    od.text((650, 380), fmt_temp(f.day_max), font=_font(190), fill=WHITE, anchor="mm")
+    od.text((650, 500), f.phrase, font=_font(46, "Bold"), fill=SOFT, anchor="mm")
 
-    # чотири частини доби
+    # частини доби — «скляні» плитки
     n = len(f.parts)
-    gap, left, right = 22, 100, SIZE - 100
+    gap, left, right = 22, 70, SIZE - 70
     width = (right - left - gap * (n - 1)) / n
-    y0, y1 = 585, 835
-    for i, part in enumerate(f.parts):
+    y0, y1 = 590, 850
+    for i in range(n):
         x0 = left + i * (width + gap)
-        d.rounded_rectangle((x0, y0, x0 + width, y1), radius=36, fill=TILE)
+        od.rounded_rectangle((x0, y0, x0 + width, y1), radius=40, fill=(255, 255, 255, 46), outline=(255, 255, 255, 70), width=2)
+        part = f.parts[i]
         mid = x0 + width / 2
-        d.text((mid, y0 + 42), part.name, font=_font(34, "Bold"), fill=MUTED, anchor="mm")
-        _paste_center(img, _emoji(part.icon, 92), round(mid), y0 + 125)
-        d.text((mid, y0 + 208), fmt_temp(part.temp), font=_font(52), fill=INK, anchor="mm")
+        od.text((mid, y0 + 44), part.name, font=_font(34, "Bold"), fill=SOFT, anchor="mm")
+        od.text((mid, y0 + 214), fmt_temp(part.temp), font=_font(56), fill=WHITE, anchor="mm")
 
     # підказка
     tip_font = _font(38, "Bold")
-    tip_w = d.textlength(f.tip, font=tip_font)
-    icon = _emoji(f.tip_icon, 56)
-    total = icon.width + 18 + tip_w
-    px0 = cx - total / 2 - 34
-    d.rounded_rectangle((px0, 870, cx + total / 2 + 34, 950), radius=40, fill=(255, 244, 214))
-    _paste_center(img, icon, round(cx - total / 2 + icon.width / 2), 910)
-    d.text((cx - total / 2 + icon.width + 18, 910), f.tip, font=tip_font, fill=INK, anchor="lm")
+    tip_w = od.textlength(f.tip, font=tip_font)
+    tip_icon = _icon(f.tip_icon, 66)
+    total = tip_icon.width + 16 + tip_w
+    od.rounded_rectangle((cx - total / 2 - 36, 890, cx + total / 2 + 36, 972), radius=41, fill=(255, 255, 255, 235))
+    od.text((cx - total / 2 + tip_icon.width + 16, 931), f.tip, font=tip_font, fill=INK, anchor="lm")
 
-    d.text((cx, 990), channel_title, font=_font(28, "SemiBold"), fill=(160, 172, 190), anchor="mm")
+    od.text((cx, 1020), channel_title, font=_font(28, "SemiBold"), fill=(255, 255, 255, 170), anchor="mm")
+    img.alpha_composite(overlay)
+
+    # іконки — поверх, щоб не пригасали під напівпрозорими шарами
+    _paste_center(img, _icon(f.hero_icon, 300), 320, 395)
+    for i, part in enumerate(f.parts):
+        mid = left + i * (width + gap) + width / 2
+        _paste_center(img, _icon(part.icon, 112), round(mid), y0 + 128)
+    _paste_center(img, tip_icon, round(cx - total / 2 + tip_icon.width / 2), 931)
 
     out = io.BytesIO()
     img.convert("RGB").save(out, format="PNG", optimize=True)
