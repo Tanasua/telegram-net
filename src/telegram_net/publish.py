@@ -154,7 +154,9 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
 
         today = [p for p in state.posts_since(channel.channel_id, day_start) if p.get("kind") not in SERVICE_KINDS]
         this_run = in_run.get(channel.channel_id, [])
-        if len(today) + len(this_run) >= channel.daily_limit:
+        # Всеукраїнські поза квотою каналу: не рахуються й не блокуються добовим лімітом.
+        local_today = [p for p in today if p.get("kind") != "national"] + [p for p in this_run if p.kind != "national"]
+        if kind != "national" and len(local_today) >= channel.daily_limit:
             fail(f"добовий ліміт каналу ({channel.daily_limit}) вичерпано")
             continue
         # «Україна» має власний слот: один пост за прогін поверх ліміту місцевих,

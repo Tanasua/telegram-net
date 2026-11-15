@@ -111,9 +111,11 @@ def test_daily_per_run_and_national_limits(tmp_path):
         state.log_post({"channel_id": "malyn", "published_at": iso(NOW), "kind": "national", "text": "т", "candidate_ids": []})
     assert "всеукраїнських" in _errors(tmp_path, _post(kind="national", candidate_ids=["n1"]), state=state)
 
-    for _ in range(8):
+    for _ in range(12):
         state.log_post({"channel_id": "malyn", "published_at": iso(NOW), "kind": "local", "text": "т", "candidate_ids": []})
     assert "добовий ліміт каналу" in _errors(tmp_path, _post(), state=state)
+    # всеукраїнські поза квотою каналу (свій ліміт 4 уже вичерпано, тому перевіряємо іншим каналом)
+    assert _errors(tmp_path, _post(kind="national", candidate_ids=["n1"], channel_id="zhytomyr"), state=state) == ""
     # Сигнали тривоги в добовий ліміт не входять, інший канал — окремий лічильник.
     assert _errors(tmp_path, _post(channel_id="zhytomyr"), state=state) == ""
 

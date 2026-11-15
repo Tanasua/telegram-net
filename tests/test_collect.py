@@ -169,7 +169,7 @@ def test_brief_shows_limits_and_live_channel_posts(tmp_path):
     live = {"malyn": [item(1, "Пост, опублікований вручну"), item(2, "🟢 Коростенський район — відбій повітряної тривоги")]}
     brief = build_brief(config, state, NOW, live_posts=live)
     malyn, zhytomyr = brief["channels"]
-    assert (malyn["posts_today"], malyn["remaining_today"], malyn["national_remaining_today"]) == (2, 10, 3)
+    assert (malyn["posts_today"], malyn["remaining_today"], malyn["national_remaining_today"]) == (2, 11, 3)
     assert [p["text"] for p in malyn["recent_posts"]] == ["Пост, опублікований вручну"]
     assert zhytomyr["posts_today"] == 0 and zhytomyr["recent_posts"] == []
     assert brief["quiet_hours_now"] is False and brief["local_time"].startswith("2026-11-14 15:00")

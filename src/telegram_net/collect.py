@@ -362,7 +362,7 @@ def build_brief(
                 "channel_id": ch.channel_id,
                 "name": ch.name,
                 "posts_today": len(today),
-                "remaining_today": max(0, ch.daily_limit - len(today)),
+                "remaining_today": max(0, ch.daily_limit - len([p for p in today if p.get("kind") != "national"])),
                 "max_posts_this_run": ch.max_posts_per_run,
                 "national_remaining_today": max(
                     0, config.settings.national_daily_limit - len([p for p in today if p.get("kind") == "national"])
