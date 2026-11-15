@@ -176,7 +176,7 @@ class AlertRelay:
         if image is None:
             return
         for ch in channels:
-            caption = f"{map_caption(now)}\n\n{signature_html(ch)}"
+            caption = map_caption(now)  # без підпису каналу: лише дата й застереження з джерелом
             self.sent.append((ch.telegram_chat_id, f"[карта] {caption}"))
             if self._sender is None:
                 logger.info("[пробний] %s: карта NEPTUN (%d байт)", ch.telegram_chat_id, len(image))

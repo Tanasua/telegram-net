@@ -153,6 +153,7 @@ def test_map_is_sent_when_a_new_alert_starts_and_refreshed_while_it_lasts():
     relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=0)], NOW)
     assert [chat for chat, _, _ in sender.photos] == ["@mymalyn"] and len(shots) == 1
     assert "Карта повітряних загроз" in sender.photos[0][2] and "neptun.in.ua" in sender.photos[0][2]
+    assert "Підписатися" not in sender.photos[0][2]  # підпису каналу під картою нема
 
     # Те саме повідомлення про рівень не дублює карту, коротка пауза теж.
     relay.process([item(3, "🔴 Коростенський район — повітряна тривога, червоний рівень", minutes_ago=0)], NOW + dt.timedelta(minutes=5))
