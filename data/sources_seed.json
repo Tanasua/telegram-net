@@ -27,7 +27,7 @@
       "active": true,
       "alert_district": "Житомирський",
       "daily_limit": 12,
-      "max_posts_per_run": 2,
+      "max_posts_per_run": 3,
       "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Житомир»"
     },
@@ -38,7 +38,7 @@
       "active": true,
       "alert_district": "Бердичівський",
       "daily_limit": 12,
-      "max_posts_per_run": 2,
+      "max_posts_per_run": 3,
       "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Бердичів»"
     },
@@ -49,7 +49,7 @@
       "active": true,
       "alert_district": "Коростенський",
       "daily_limit": 12,
-      "max_posts_per_run": 2,
+      "max_posts_per_run": 3,
       "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Коростень»"
     },
@@ -60,7 +60,7 @@
       "active": true,
       "alert_district": "Звягельський",
       "daily_limit": 12,
-      "max_posts_per_run": 2,
+      "max_posts_per_run": 3,
       "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Звягель»"
     },
@@ -71,7 +71,7 @@
       "active": true,
       "alert_district": "Коростенський",
       "daily_limit": 12,
-      "max_posts_per_run": 2,
+      "max_posts_per_run": 3,
       "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Малин»"
     },
@@ -82,7 +82,7 @@
       "active": true,
       "alert_district": "Житомирський",
       "daily_limit": 12,
-      "max_posts_per_run": 2,
+      "max_posts_per_run": 3,
       "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Радомишль»"
     },
@@ -93,7 +93,7 @@
       "active": false,
       "alert_district": "Житомирський",
       "daily_limit": 12,
-      "max_posts_per_run": 2,
+      "max_posts_per_run": 3,
       "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Коростишів»",
       "note": "Вимкнено 15.11.2026: Telegram не знаходить канал @mykorostyshivnews (chat not found). Виправ telegram_chat_id і постав active: true."

@@ -50,7 +50,7 @@ class ChannelConfig:
     active: bool = True
     alert_district: str | None = None  # район області для сигналів тривоги, напр. "Коростенський"
     daily_limit: int = 12  # максимум постів на добу (без тривог)
-    max_posts_per_run: int = 2
+    max_posts_per_run: int = 3
     subscribe_cta: str | None = None
     cta_every: int = 4  # заклик підписатись — у кожному N-му пості, не в кожному
 
@@ -112,7 +112,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> Config:
             active=c.get("active", True),
             alert_district=c.get("alert_district"),
             daily_limit=c.get("daily_limit", 12),
-            max_posts_per_run=c.get("max_posts_per_run", 2),
+            max_posts_per_run=c.get("max_posts_per_run", 3),
             subscribe_cta=c.get("subscribe_cta") or f"Підписуйся на {c['name']}",
             cta_every=c.get("cta_every", 4),
         )

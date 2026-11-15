@@ -102,8 +102,8 @@ def test_rubric_needs_no_candidates_but_goes_once_a_day(tmp_path):
 
 def test_daily_per_run_and_national_limits(tmp_path):
     config = make_config()
-    state = _state(tmp_path, ("c1", "local"), ("c2", "local"), ("c3", "local"), ("n1", "national"))
-    _, errors = prepare(_run([_post(candidate_ids=[c]) for c in ("c1", "c2", "c3")]), config, state, NOW)
+    state = _state(tmp_path, ("c1", "local"), ("c2", "local"), ("c3", "local"), ("c4", "local"), ("n1", "national"))
+    _, errors = prepare(_run([_post(candidate_ids=[c]) for c in ("c1", "c2", "c3", "c4")]), config, state, NOW)
     assert len(errors) == 1 and "ліміт новин за прогін" in errors[0]
 
     for _ in range(4):
