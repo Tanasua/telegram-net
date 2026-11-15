@@ -1,0 +1,40 @@
+{
+  "source": "zhytomyrmilitaryadministration",
+  "channels": [
+    {
+      "channel_id": "zhytomyr",
+      "telegram_chat_id": "@myzhytomyrnews",
+      "alert_district": "Житомирський"
+    },
+    {
+      "channel_id": "berdychiv",
+      "telegram_chat_id": "@myberdychivnews",
+      "alert_district": "Бердичівський"
+    },
+    {
+      "channel_id": "korosten",
+      "telegram_chat_id": "@mykorostennews",
+      "alert_district": "Коростенський"
+    },
+    {
+      "channel_id": "zvyahel",
+      "telegram_chat_id": "@myzvyahelnews",
+      "alert_district": "Звягельський"
+    },
+    {
+      "channel_id": "malyn",
+      "telegram_chat_id": "@mymalynnews",
+      "alert_district": "Коростенський"
+    },
+    {
+      "channel_id": "radomyshl",
+      "telegram_chat_id": "@myradomyshlnews",
+      "alert_district": "Житомирський"
+    },
+    {
+      "channel_id": "korostyshiv",
+      "telegram_chat_id": "@mykorostyshivnews",
+      "alert_district": "Житомирський"
+    }
+  ]
+}

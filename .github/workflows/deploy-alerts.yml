@@ -1,0 +1,82 @@
+name: Deploy alerts worker
+
+# Розгортає Cloudflare Worker сигналів тривоги й відбою (cloudflare/alerts):
+# щохвилини читає канал Житомирської ОВА і публікує сигнали в канали за районами.
+# Безкоштовний план Cloudflare: cron щохвилини, KV для стану.
+#
+# Потрібні секрети репозиторію (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   — токен із шаблону «Edit Cloudflare Workers»
+#   CLOUDFLARE_ACCOUNT_ID  — Account ID з панелі Cloudflare
+#   TELEGRAM_BOT_TOKEN     — уже є; передається воркеру як його секрет
+#
+# Запускається при зміні коду воркера чи списку каналів і вручну.
+on:
+  push:
+    branches: ["claude/zhytomyr-telegram-network-1gjddq"]
+    paths: ["cloudflare/alerts/**", "data/sources_seed.json", ".github/workflows/deploy-alerts.yml"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-alerts-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cloudflare/alerts
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      KV_TITLE: telegram-net-alerts-state
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Check Cloudflare secrets
+        id: secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::Не задано CLOUDFLARE_API_TOKEN або CLOUDFLARE_ACCOUNT_ID — розгортання пропущено. Див. README, розділ «Сигнали тривоги й відбою»."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build channel list and test
+        run: |
+          node build-channels.mjs
+          npm test
+
+      - name: Ensure KV namespace
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          find_id() {
+            npx --yes wrangler@4 kv namespace list 2>/dev/null \
+              | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const t=process.env.KV_TITLE;const j=JSON.parse(s.slice(s.indexOf("[")));const n=j.find(x=>x.title===t||x.title.endsWith(t));if(n)console.log(n.id)})'
+          }
+          id="$(find_id)"
+          if [ -z "$id" ]; then
+            npx --yes wrangler@4 kv namespace create "$KV_TITLE"
+            id="$(find_id)"
+          fi
+          if [ -z "$id" ]; then echo "::error::Не вдалося знайти чи створити KV-простір $KV_TITLE"; exit 1; fi
+          sed -i "s/KV_NAMESPACE_ID/$id/" wrangler.toml
+          echo "KV: $id"
+
+      - name: Deploy worker
+        if: steps.secrets.outputs.ready == 'true'
+        run: npx --yes wrangler@4 deploy
+
+      - name: Pass the bot token to the worker
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: printf '%s' "$TELEGRAM_BOT_TOKEN" | npx --yes wrangler@4 secret put TELEGRAM_BOT_TOKEN

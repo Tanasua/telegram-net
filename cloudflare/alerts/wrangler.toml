@@ -1,0 +1,12 @@
+name = "telegram-net-alerts"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+workers_dev = false  # публічна адреса не потрібна: воркер працює лише за розкладом
+
+[triggers]
+crons = ["* * * * *"]
+
+# id простору KV підставляє workflow deploy-alerts.yml (створює простір, якщо його ще немає).
+[[kv_namespaces]]
+binding = "ALERTS_STATE"
+id = "KV_NAMESPACE_ID"
