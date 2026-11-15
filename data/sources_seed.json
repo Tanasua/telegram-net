@@ -29,13 +29,13 @@
       "alert_district": "Житомирський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
-      "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Житомир»",
       "weather": {
         "lat": 50.2547,
         "lon": 28.6587,
         "city_loc": "Житомирі"
-      }
+      },
+      "name_genitive": "Житомира"
     },
     {
       "channel_id": "berdychiv",
@@ -45,13 +45,13 @@
       "alert_district": "Бердичівський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
-      "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Бердичів»",
       "weather": {
         "lat": 49.8994,
         "lon": 28.6025,
         "city_loc": "Бердичеві"
-      }
+      },
+      "name_genitive": "Бердичева"
     },
     {
       "channel_id": "korosten",
@@ -61,13 +61,13 @@
       "alert_district": "Коростенський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
-      "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Коростень»",
       "weather": {
         "lat": 50.9505,
         "lon": 28.6383,
         "city_loc": "Коростені"
-      }
+      },
+      "name_genitive": "Коростеня"
     },
     {
       "channel_id": "zvyahel",
@@ -77,13 +77,13 @@
       "alert_district": "Звягельський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
-      "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Звягель»",
       "weather": {
         "lat": 50.5883,
         "lon": 27.6164,
         "city_loc": "Звягелі"
-      }
+      },
+      "name_genitive": "Звягеля"
     },
     {
       "channel_id": "malyn",
@@ -93,13 +93,13 @@
       "alert_district": "Коростенський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
-      "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Малин»",
       "weather": {
         "lat": 50.7686,
         "lon": 29.24,
         "city_loc": "Малині"
-      }
+      },
+      "name_genitive": "Малина"
     },
     {
       "channel_id": "radomyshl",
@@ -109,13 +109,13 @@
       "alert_district": "Житомирський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
-      "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Радомишль»",
       "weather": {
         "lat": 50.4983,
         "lon": 29.2333,
         "city_loc": "Радомишлі"
-      }
+      },
+      "name_genitive": "Радомишля"
     },
     {
       "channel_id": "korostyshiv",
@@ -125,13 +125,13 @@
       "alert_district": "Житомирський",
       "daily_limit": 12,
       "max_posts_per_run": 3,
-      "cta_every": 4,
       "subscribe_cta": "Підписатися на «Мій Коростишів»",
       "weather": {
         "lat": 50.3167,
         "lon": 29.05,
         "city_loc": "Коростишеві"
-      }
+      },
+      "name_genitive": "Коростишева"
     }
   ],
   "sources": [

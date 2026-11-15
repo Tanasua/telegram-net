@@ -90,7 +90,7 @@ def test_report_counts_night_messages_and_zhytomyr_places():
     text = caption(r)
     assert text.startswith("У ніч на 15 листопада росія атакувала Україну: 132 ударні БпЛА (з них 78 реактивних).")
     assert "Житомирщина фігурувала в 3 повідомленнях" in text
-    assert post_caption(r).startswith("<b>Нічна атака: підсумок</b>\n")
+    assert post_caption(r, make_config().channels[0]).startswith("<b>Нічна атака: підсумок</b>\n")
 
 
 def test_no_summary_yet_means_no_report():

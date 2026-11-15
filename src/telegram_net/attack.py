@@ -32,6 +32,7 @@ from zoneinfo import ZoneInfo
 import httpx
 
 from telegram_net.fetchers.base import FetchedItem
+from telegram_net.signature import signature_html
 from telegram_net.fetchers.tme_fetcher import parse_channel_page
 
 logger = logging.getLogger(__name__)
@@ -309,10 +310,10 @@ def caption(r: NightReport) -> str:
     return " ".join(lines)
 
 
-def post_caption(r: NightReport) -> str:
+def post_caption(r: NightReport, ch) -> str:
     import html
 
-    return f"<b>Нічна атака: підсумок</b>\n{html.escape(caption(r))}\n\nДжерело: Повітряні сили ЗСУ"
+    return f"<b>Нічна атака: підсумок</b>\n{html.escape(caption(r))}\n\nДжерело: Повітряні сили ЗСУ\n\n{signature_html(ch)}"
 
 
 # --- малювання -----------------------------------------------------------------
@@ -553,7 +554,7 @@ def publish_attack(config, state, publisher, now: dt.datetime | None = None, for
             lines.append(f"{ch.channel_id}: [пробний] {caption(report)}")
             continue
         try:
-            message_id = publisher.send_photo_bytes(ch.telegram_chat_id, image, post_caption(report), f"attack_{ch.channel_id}.png")
+            message_id = publisher.send_photo_bytes(ch.telegram_chat_id, image, post_caption(report, ch), f"attack_{ch.channel_id}.png")
         except Exception as exc:
             logger.exception("Не вдалося надіслати підсумок ночі в %s", ch.channel_id)
             lines.append(f"{ch.channel_id}: ПОМИЛКА Telegram — {exc}")

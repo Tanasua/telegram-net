@@ -23,7 +23,8 @@ import time
 from dataclasses import dataclass
 from typing import Callable, Protocol
 
-from telegram_net.config import Config
+from telegram_net.config import ChannelConfig, Config
+from telegram_net.signature import signature_html
 from telegram_net.fetchers.base import FetchedItem
 
 logger = logging.getLogger(__name__)
@@ -103,10 +104,10 @@ class TextSender(Protocol):
 class AlertRelay:
     def __init__(self, config: Config, sender: TextSender | None):
         self._sender = sender
-        self._channels_by_district: dict[str, list[str]] = {}
+        self._channels_by_district: dict[str, list[ChannelConfig]] = {}
         for ch in config.active_channels:
             if ch.alert_district:
-                self._channels_by_district.setdefault(ch.alert_district, []).append(ch.telegram_chat_id)
+                self._channels_by_district.setdefault(ch.alert_district, []).append(ch)
         self.cursor: int | None = None
         self.active: dict[str, dt.datetime] = {}  # район -> коли почалась тривога
         self.sent: list[tuple[str, str]] = []  # (chat_id, текст) — для логу й тестів
@@ -132,8 +133,10 @@ class AlertRelay:
                         self._announce(render_alert(event, district, started, at), district)
             self.cursor = msg_id if self.cursor is None else max(self.cursor, msg_id)
 
-    def _announce(self, text: str, district: str) -> None:
-        for chat_id in self._channels_by_district.get(district, []):
+    def _announce(self, base: str, district: str) -> None:
+        for ch in self._channels_by_district.get(district, []):
+            chat_id = ch.telegram_chat_id
+            text = f"{base}\n\n{signature_html(ch)}"
             self.sent.append((chat_id, text))
             if self._sender is None:
                 logger.info("[пробний] %s: %s", chat_id, text.replace("\n", " | "))

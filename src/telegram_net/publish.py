@@ -35,6 +35,7 @@ from typing import Protocol, Sequence
 from telegram_net.clock import is_quiet, local_now, start_of_local_day
 from telegram_net.config import ChannelConfig, Config
 from telegram_net.fetchers.base import FetchedMedia
+from telegram_net.signature import signature_html, signature_len, signature_plain, utf16_len
 from telegram_net.media import MAX_MEDIA_GROUP_SIZE, build_media_batches
 from telegram_net.state import SERVICE_KINDS, State, iso, now_utc, parse_iso, post_time
 from telegram_net.stoplist import find_stop_topic
@@ -89,20 +90,11 @@ def load_decisions(path: str | Path) -> dict:
     return data
 
 
-def _cta_html(channel: ChannelConfig) -> str:
-    label = html.escape(channel.subscribe_cta or f"Підписуйся на {channel.name}")
-    chat = channel.telegram_chat_id or ""
-    if chat.startswith("@"):
-        return f'<a href="https://t.me/{chat[1:]}">{label}</a>'
-    return label
-
-
-def _render(headline: str, text: str, channel: ChannelConfig, with_cta: bool) -> tuple[str, str]:
+def _render(headline: str, text: str, channel: ChannelConfig) -> tuple[str, str]:
+    """Текст посту + підпис каналу (однаковий під усіма постами)."""
     plain = f"{headline}\n\n{text}" if headline else text
     body = f"<b>{html.escape(headline)}</b>\n\n{html.escape(text)}" if headline else html.escape(text)
-    if with_cta:
-        body = f"{body}\n\n{_cta_html(channel)}"
-    return plain, body
+    return plain, f"{body}\n\n{signature_html(channel)}"
 
 
 def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | None = None) -> tuple[list[PreparedPost], list[str]]:
@@ -194,15 +186,12 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
                     break
             media = media[:1] if media_mode == "first" else media[:MAX_MEDIA_GROUP_SIZE]
 
-        # Заклик підписатись — у кожному N-му пості каналу, а не в кожному.
-        news_count = state.channel_post_count(channel.channel_id)
-        with_cta = channel.cta_every > 0 and (news_count + len(this_run) + 1) % channel.cta_every == 0
-        plain, html_text = _render(headline, text, channel, with_cta)
+        plain, html_text = _render(headline, text, channel)
 
         limit = settings.max_caption_chars if media else settings.max_text_chars
-        visible_len = len(plain) + (len(channel.subscribe_cta or "") + 2 if with_cta else 0)
+        visible_len = utf16_len(plain) + signature_len(channel)
         if visible_len > limit:
-            fail(f"задовгий текст: {visible_len} символів при ліміті {limit}" + (" (підпис до медіа)" if media else ""))
+            fail(f"задовгий текст: {visible_len} символів (з підписом каналу) при ліміті {limit}" + (" (підпис до медіа)" if media else ""))
             continue
 
         item = PreparedPost(
@@ -214,7 +203,7 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
             media=tuple(media),
             candidate_ids=candidate_ids,
             source_urls=[state.pool[c]["url"] for c in candidate_ids],
-            with_cta=with_cta,
+            with_cta=True,
             urgent=bool(post.get("urgent")),
             run_id=str(decisions.get("run_id")),
         )
@@ -257,7 +246,7 @@ def publish_run(
         for p in prepared:
             report.published.append(
                 f"[пробний] {p.channel.channel_id} · {p.kind} · медіа: {len(p.media)}\n{p.plain_text}"
-                + ("\n[+ заклик підписатись]" if p.with_cta else "")
+                + f"\n\n{signature_plain(p.channel)}"
             )
         return report
 

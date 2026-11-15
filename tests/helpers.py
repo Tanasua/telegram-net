@@ -9,8 +9,8 @@ NOW = dt.datetime(2026, 11, 14, 13, 0, tzinfo=dt.timezone.utc)
 
 def make_config(sources=(), **settings):
     channels = [
-        ChannelConfig("malyn", "Малин", "@mymalyn", alert_district="Коростенський", subscribe_cta="Підписуйся на Малин"),
-        ChannelConfig("zhytomyr", "Житомир", "@myzhytomyr", alert_district="Житомирський", subscribe_cta="Підписуйся на Житомир"),
+        ChannelConfig("malyn", "Малин", "@mymalyn", alert_district="Коростенський", subscribe_cta="Підписатися на «Мій Малин»", name_genitive="Малина"),
+        ChannelConfig("zhytomyr", "Житомир", "@myzhytomyr", alert_district="Житомирський", subscribe_cta="Підписатися на «Мій Житомир»", name_genitive="Житомира"),
         ChannelConfig("off", "Вимкнений", None),
     ]
     return Config(settings=Settings(**settings), channels=channels, sources=list(sources))

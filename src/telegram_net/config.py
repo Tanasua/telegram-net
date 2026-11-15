@@ -51,8 +51,8 @@ class ChannelConfig:
     alert_district: str | None = None  # район області для сигналів тривоги, напр. "Коростенський"
     daily_limit: int = 12  # максимум постів на добу (без тривог)
     max_posts_per_run: int = 3
-    subscribe_cta: str | None = None
-    cta_every: int = 4  # заклик підписатись — у кожному N-му пості, не в кожному
+    subscribe_cta: str | None = None  # «Підписатися на «Мій Малин»» — з нього береться «Мій Малин» у підписі
+    name_genitive: str | None = None  # «Малина» — для рядка «Новини Малина» в підписі під постами
     weather: dict | None = None  # {"lat", "lon", "city_loc"} — для ранкової інфографіки погоди
 
 
@@ -64,7 +64,7 @@ class Settings:
     max_age_hours: float = 12  # старіші новини в кандидати не потрапляють
     pool_ttl_hours: float = 10  # скільки невикористаний кандидат чекає в пулі
     national_daily_limit: int = 4  # всеукраїнських постів на канал за добу
-    max_caption_chars: int = 1000  # ліміт Telegram на підпис до фото — 1024
+    max_caption_chars: int = 1024  # ліміт Telegram на підпис до фото (разом з підписом каналу)
     max_text_chars: int = 3500
     post_spacing_minutes: int = 40  # мінімальний інтервал між постами одного каналу
     weather_hour: int = 8  # о котрій (за Києвом) виходить інфографіка погоди
@@ -117,7 +117,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> Config:
             daily_limit=c.get("daily_limit", 12),
             max_posts_per_run=c.get("max_posts_per_run", 3),
             subscribe_cta=c.get("subscribe_cta") or f"Підписуйся на {c['name']}",
-            cta_every=c.get("cta_every", 4),
+            name_genitive=c.get("name_genitive"),
             weather=c.get("weather"),
         )
         for c in data["channels"]

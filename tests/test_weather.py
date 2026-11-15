@@ -40,7 +40,7 @@ def test_summary_has_four_parts_hero_and_tip():
     cold_morning = summarize(_hours(temp=lambda h: 1 if h < 11 else 9), DAY, "Радомишлі")
     assert cold_morning.tip == "Зранку холодно — вдягніться тепліше"
     assert caption(f).startswith("Хмарно, вдень до +")
-    assert post_caption(f).startswith("<b>Погода у Радомишлі сьогодні</b>\n")
+    assert post_caption(f, make_config().channels[0]).startswith("<b>Погода у Радомишлі сьогодні</b>\n")
 
 
 def test_rain_wins_over_clouds_and_suggests_umbrella():
