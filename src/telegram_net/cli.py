@@ -1,6 +1,7 @@
 """Командний рядок пайплайна. Запуск: PYTHONPATH=src python -m telegram_net.cli <команда>
 
-    collect            зібрати кандидатів → work/brief.json (читає редактор)
+    collect            зібрати кандидатів → work/brief.md (читає редактор)
+    show    <id…>      повний текст кандидатів
     check   <файл>     перевірити файл рішень редактора, нічого не надсилаючи
     publish <файл…>    опублікувати рішення (потрібен TELEGRAM_BOT_TOKEN)
     report             стан мережі: пости за добу, проблемні джерела
@@ -35,7 +36,8 @@ def _publisher(required: bool):
 
 
 def cmd_collect(args) -> int:
-    from telegram_net.collect import collect
+    from telegram_net.clock import local_now
+    from telegram_net.collect import brief_text, collect, nothing_to_do
     from telegram_net.fetchers.article import ArticleFetcher
     from telegram_net.fetchers.scrape_fetcher import HtmlListFetcher
     from telegram_net.fetchers.tme_fetcher import TmeFetcher
@@ -54,11 +56,31 @@ def cmd_collect(args) -> int:
     state.save()
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(brief, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"Кандидатів у пулі: {len(brief['candidates'])} → {out}")
+    out.write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
+    text_out = out.with_suffix(".md")
+    text_out.write_text(brief_text(brief), encoding="utf-8")
     print(f"Статистика збору: {brief['stats']}")
-    for problem in brief["problems"]:
-        print(f"Проблема: {problem}")
+    if nothing_to_do(brief):
+        # Порожній файл рішень пишемо самі: тоді редактору не треба нічого читати,
+        # лише закомітити — а курсори джерел однаково збережуться.
+        run_id = local_now(config, now_utc()).strftime("%Y-%m-%dT%H-%M")
+        empty = Path("outbox") / f"{run_id}.json"
+        empty.parent.mkdir(parents=True, exist_ok=True)
+        empty.write_text(json.dumps({"run_id": run_id, "cleanup_branch": True, "posts": [], "keep": []}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"НІЧОГО НОВОГО: кандидатів і рубрик немає. Створено {empty} — лише закоміть і запуш state/ та outbox/.")
+    else:
+        print(f"Кандидатів: {len(brief['candidates'])}. Читай {text_out}")
+    return 0
+
+
+def cmd_show(args) -> int:
+    state = State(args.state)
+    for cid in args.ids:
+        cand = state.pool.get(cid)
+        if cand is None:
+            print(f"[{cid}] немає в пулі")
+            continue
+        print(f"[{cid}] {cand['source']} · {cand['url']}\n{cand['text']}\n")
     return 0
 
 
@@ -160,6 +182,10 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("collect")
     p.add_argument("--out", default="work/brief.json")
     p.set_defaults(func=cmd_collect)
+
+    p = sub.add_parser("show")
+    p.add_argument("ids", nargs="+")
+    p.set_defaults(func=cmd_show)
 
     p = sub.add_parser("check")
     p.add_argument("file")

@@ -24,8 +24,8 @@ from telegram_net.stoplist import find_stop_topic
 
 logger = logging.getLogger(__name__)
 
-MAX_CANDIDATE_CHARS = 1500
-MAX_NATIONAL_PER_SOURCE = 6  # всеукраїнські стрічки дуже щільні — беремо лише найсвіжіше
+MAX_CANDIDATE_CHARS = 2500
+MAX_NATIONAL_PER_SOURCE = 4  # всеукраїнські стрічки дуже щільні — беремо лише найсвіжіше
 MAX_ARTICLES_PER_SOURCE = 8
 MIN_TEXT_CHARS = 20
 RECENT_POSTS_HOURS = 36
@@ -35,6 +35,39 @@ RECENT_POSTS_LIMIT = 30
 # а не редактор раз на годину — тому в кандидати вони не потрапляють.
 _ALERT_RE = re.compile(r"^\W*(?:[\w,\s]+ район\w*|[\w\s]+ област\w*)?\s*[—-]?\s*(?:повітрян\w+ тривог|відбій)", re.IGNORECASE)
 _ALERT_ANY_RE = re.compile(r"повітрян\w+ тривог\w*|відбій (?:повітрян\w+ )?тривог\w*", re.IGNORECASE)
+
+
+# Шум, який редактор однаково відхиляє, — відсіюємо кодом, щоб модель не
+# витрачала на нього токени: моніторинг повітряних цілей, календарі свят,
+# привітання, зведення втрат, гороскопи.
+_NOISE_RE = re.compile(
+    r"повітряна загроза станом на|бпла\W{0,3}(?:курс|в напрямку|у напрямку|на )|реактивн\w+ (?:бпла|на )|"
+    r"дорозвідка|шахед\w* (?:курс|в напрямку|на )|"
+    r"бойові втрати противника|втрати противника|ще один день до перемоги|"
+    r"доброго ранку|добрий ранок|на добраніч|гороскоп|схід сонця|день в історії|цей день в історії|"
+    r"яке сьогодні свято|свята сьогодні|курс валют",
+    re.IGNORECASE,
+)
+_NOISE_MAX_CHARS = 700  # довгий текст із таким словом — уже новина, а не зведення
+MIN_SOCIAL_CHARS = 80  # коротший пост із телеграм-каналу — репліка, писати з неї нема чого
+
+# Службові хвости джерел: «Підписатися | Надіслати новину», «Читати повністю»…
+_FOOTER_LINE_RE = re.compile(
+    r"підпи(?:сатис|шись|шіться|суйся|суйтесь)|надіслати (?:новину|контент)|читати (?:повністю|далі)|деталі на сайті|подробиці тут|"
+    r"facebook\s*\||\|\s*youtube|карта загроз|джерело: за даними|телеграм канал|дивитись відео|^деталі\.?$",
+    re.IGNORECASE,
+)
+
+
+def is_noise(text: str) -> bool:
+    return len(text) <= _NOISE_MAX_CHARS and bool(_NOISE_RE.search(text))
+
+
+def strip_footer(text: str) -> str:
+    lines = text.rstrip().split("\n")
+    while len(lines) > 1 and (not lines[-1].strip() or (len(lines[-1]) < 120 and _FOOTER_LINE_RE.search(lines[-1]))):
+        lines.pop()
+    return "\n".join(lines).strip()
 
 
 class ArticleSource(Protocol):
@@ -60,7 +93,7 @@ def collect(
 ) -> dict:
     now = now or now_utc()
     active_channels = {c.channel_id for c in config.active_channels}
-    stats = {"sources_ok": 0, "sources_failed": 0, "new": 0, "stale": 0, "duplicate": 0, "stop_topic": 0, "alert": 0, "empty": 0, "capped": 0}
+    stats = {"sources_ok": 0, "sources_failed": 0, "new": 0, "stale": 0, "duplicate": 0, "stop_topic": 0, "alert": 0, "noise": 0, "empty": 0, "capped": 0}
 
     for source in config.sources:
         if not source.active or source.type not in fetchers:
@@ -117,7 +150,11 @@ def _consider(
     if is_alert_signal(item.text):
         return {"result": "alert"}
 
-    text = _clean_text(item.text)
+    text = strip_footer(_clean_text(item.text))
+    if is_noise(text):
+        return {"result": "noise"}
+    if source.type == "telegram" and len(text) < MIN_SOCIAL_CHARS:
+        return {"result": "empty"}
     published_at = item.published_at
     media = [{"type": m.type, "url": m.url, **({"duration_sec": m.duration_sec} if m.duration_sec else {})} for m in item.media]
     enriched = False
@@ -344,3 +381,58 @@ def source_problems(config: Config, state: State, now: dt.datetime, silent_days:
             days = (now - parse_iso(health["last_item"])).days
             problems.append(f"{source.name} ({source.handle_or_url}): {days} дн. без нових матеріалів")
     return problems
+
+
+BRIEF_TEXT_CHARS = 450
+BRIEF_RECENT_CHARS = 110
+BRIEF_RECENT_POSTS = 8
+
+
+def brief_text(brief: dict) -> str:
+    """Той самий бриф, але компактним текстом — саме його читає редактор.
+
+    JSON з відступами, посиланнями на медіа й повними текстами коштував
+    30–50 тис. токенів на прогін. Тут — лише те, що потрібно для рішення:
+    початок тексту кандидата (повний — командою `show <id>`), кількість медіа
+    замість посилань, короткі згадки про вже опубліковане."""
+    lines = [f"ЧАС: {brief['local_time']} · нічна тиша: {'ТАК' if brief['quiet_hours_now'] else 'ні'}"]
+    if brief.get("problems"):
+        lines.append("ПРОБЛЕМИ ДЖЕРЕЛ: " + "; ".join(brief["problems"]))
+    lines.append("")
+    lines.append("КАНАЛИ")
+    for ch in brief["channels"]:
+        extras = []
+        if ch["rubrics_due"]:
+            extras.append("рубрики: " + ", ".join(ch["rubrics_due"]))
+        if ch.get("address_hint"):
+            extras.append(f"звертання: {ch['address_hint']}")
+        lines.append(
+            f"{ch['channel_id']} «{ch['name']}» · лишилось сьогодні {ch['remaining_today']}, за прогін {ch['max_posts_this_run']}, "
+            f"всеукр. {ch['national_remaining_today']}" + (" · " + " · ".join(extras) if extras else "")
+        )
+        for post in ch["recent_posts"][-BRIEF_RECENT_POSTS:]:
+            head = " ".join(post["text"].split())[:BRIEF_RECENT_CHARS]
+            lines.append(f"  вже було {post.get('at') or ''}: {head}")
+    lines.append("")
+    lines.append(f"КАНДИДАТИ ({len(brief['candidates'])})")
+    for c in brief["candidates"]:
+        target = c["channel_id"] or "мережа"
+        media = c.get("media", [])
+        photos = len([m for m in media if m["type"] == "photo"])
+        videos = len(media) - photos
+        media_note = ", ".join(x for x in (f"фото {photos}" if photos else "", f"відео {videos}" if videos else "") if x) or "без медіа"
+        age = f"{c['age_minutes']} хв" if c.get("age_minutes") is not None else "час невідомий"
+        text = c["text"]
+        tail = ""
+        if len(text) > BRIEF_TEXT_CHARS:
+            tail = f" …(+{len(text) - BRIEF_TEXT_CHARS} симв., повний текст: show {c['id']})"
+            text = text[:BRIEF_TEXT_CHARS]
+        lines.append("")
+        lines.append(f"[{c['id']}] {c['scope']}→{target} · {c['source']} · {age} · {media_note}")
+        lines.append(text + tail)
+    return "\n".join(lines) + "\n"
+
+
+def nothing_to_do(brief: dict) -> bool:
+    """Немає ні кандидатів, ні рубрик — редактору нема чого робити, прогін можна завершити."""
+    return not brief["candidates"] and not any(ch["rubrics_due"] for ch in brief["channels"])

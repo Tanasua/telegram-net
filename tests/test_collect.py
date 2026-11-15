@@ -2,9 +2,29 @@ import datetime as dt
 
 from helpers import NOW, FakeFetcher, item, make_config, src
 
-from telegram_net.collect import address_hint, build_brief, collect, is_alert_signal, is_quiet, rubrics_due
+import pytest
+
+import telegram_net.collect as collect_module
+from telegram_net.clock import is_quiet
+from telegram_net.collect import (
+    address_hint,
+    brief_text,
+    build_brief,
+    collect,
+    is_alert_signal,
+    is_noise,
+    nothing_to_do,
+    rubrics_due,
+    strip_footer,
+)
 from telegram_net.fetchers.article import Article
 from telegram_net.state import State, iso
+
+
+@pytest.fixture(autouse=True)
+def short_texts_allowed(monkeypatch):
+    """У тестах тексти короткі для читабельності; сам поріг перевіряє окремий тест."""
+    monkeypatch.setattr(collect_module, "MIN_SOCIAL_CHARS", 20)
 
 
 def _run(tmp_path, sources, items_by_handle, articles=None, state=None, config=None, **kw):
@@ -123,7 +143,7 @@ def test_national_source_is_capped_to_freshest_items(tmp_path):
     nat = src("Агенція", scope="national")
     items = [item(i, f"Всеукраїнська новина номер {i} про важливу подію", minutes_ago=100 - i) for i in range(1, 11)]
     brief, _, _ = _run(tmp_path, [nat], {"@Агенція": items})
-    assert len(brief["candidates"]) == 6 and brief["stats"]["capped"] == 4
+    assert len(brief["candidates"]) == 4 and brief["stats"]["capped"] == 6
     assert "номер 10" in brief["candidates"][0]["text"]  # найсвіжіша — перша
 
 
@@ -205,3 +225,52 @@ def test_address_hint_comes_every_third_post_and_rotates(tmp_path):
     assert address_hint(config, state, zhytomyr) is None
     assert address_hint(make_config([], addresses=()), state, malyn) is None
     assert "address_hint" in build_brief(config, state, NOW)["channels"][0]
+
+
+def test_noise_is_filtered_by_code_before_the_editor_sees_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(collect_module, "MIN_SOCIAL_CHARS", 80)
+    noise = [
+        "Житомирщина, повітряна загроза станом на 21:42\n\nРеактивний БпЛА. Курс: Малин.",
+        "⚠️Реактивний БпЛА в напрямку Малина",
+        "🗓 15 листопада, неділя\n✔️ ще один день до Перемоги\n✔️ День працівників сільського господарства",
+        "Доброго ранку🤗! Неділя — не для того, щоб переживати через незроблене за тиждень. Видихніть.",
+        "Загальні бойові втрати противника з 24.02.22 по 15.11.26",
+    ]
+    assert all(is_noise(t) for t in noise)
+    real = "У Радомишлі прорвало дамбу пивзаводу: стоки потрапили в річку Тетерів. Екологи вже відібрали проби води й ґрунту."
+    assert not is_noise(real)
+    # Довгий матеріал, де таке слово трапилось побіжно, — це вже новина.
+    assert not is_noise("Вночі оголошували тривогу: реактивний БпЛА курсом на місто. " + "Подробиці наслідків атаки. " * 30)
+
+    items = [item(i, t) for i, t in enumerate(noise)] + [item(50, "Перелітає 🛸"), item(51, real)]
+    brief, _, _ = _run(tmp_path, [src("А")], {"@А": items})
+    assert [c["text"] for c in brief["candidates"]] == [real]
+    assert brief["stats"]["noise"] == 5 and brief["stats"]["empty"] == 1
+
+
+def test_source_footers_are_stripped():
+    text = "🚒 У Житомирі горіла квартира\n\nОбійшлося без травмованих.\n\n❤️Телеграм канал PZHYTOMYR |\nПідписатися | Надіслати новину🆘"
+    assert strip_footer(text) == "🚒 У Житомирі горіла квартира\n\nОбійшлося без травмованих."
+    assert strip_footer("Вибухи в Дніпрі.\n\n📲 Підпишись на Укрінформ | Facebook | X | YouTube") == "Вибухи в Дніпрі."
+    assert strip_footer("Мер закликав мешканців підписати петицію щодо ремонту мосту через річку.") .startswith("Мер закликав")
+
+
+def test_text_brief_is_compact_and_points_to_full_text(tmp_path):
+    long_text = "У Малині відкрили оновлений міст через Іршу. " + "Деталь ремонту номер такий-то. " * 60
+    state = State(tmp_path)
+    state.log_post({"channel_id": "malyn", "published_at": iso(NOW), "kind": "local", "text": "Учора в Малині " + "щось сталося " * 40, "candidate_ids": []})
+    brief, state, _ = _run(tmp_path, [src("А")], {"@А": [item(1, long_text, media=["https://cdn/very/long/url/photo.jpg"])]}, state=state)
+    text = brief_text(brief)
+    cid = brief["candidates"][0]["id"]
+    assert f"[{cid}] local→malyn · А · 30 хв · фото 1" in text
+    assert f"повний текст: show {cid}" in text and "https://cdn" not in text
+    assert "вже було" in text and len(text) < 1800
+    assert state.pool[cid]["text"].count("Деталь") > 40  # повний текст лишився в пулі
+    assert not nothing_to_do(brief)
+
+
+def test_nothing_to_do_when_no_candidates_and_no_rubrics(tmp_path):
+    brief, _, _ = _run(tmp_path, [src("А")], {"@А": []})
+    assert nothing_to_do(brief)  # 15:00, субота: рубрик немає
+    morning = build_brief(make_config([]), State(tmp_path), dt.datetime(2026, 11, 14, 6, 0, tzinfo=dt.timezone.utc))
+    assert not nothing_to_do(morning)  # 08:00 — час ранкової рубрики
