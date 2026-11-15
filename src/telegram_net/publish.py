@@ -157,9 +157,14 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
         if len(today) + len(this_run) >= channel.daily_limit:
             fail(f"добовий ліміт каналу ({channel.daily_limit}) вичерпано")
             continue
-        news_this_run = [p for p in this_run if p.kind in NEWS_KINDS]
-        if kind in NEWS_KINDS and len(news_this_run) >= channel.max_posts_per_run:
+        # «Україна» має власний слот: один пост за прогін поверх ліміту місцевих,
+        # щоб місцеве не витісняло всеукраїнське.
+        news_this_run = [p for p in this_run if p.kind in NEWS_KINDS and p.kind != "national"]
+        if kind in NEWS_KINDS and kind != "national" and len(news_this_run) >= channel.max_posts_per_run:
             fail(f"ліміт новин за прогін ({channel.max_posts_per_run}) вичерпано")
+            continue
+        if kind == "national" and any(p.kind == "national" for p in this_run):
+            fail("за один прогін у канал — не більше однієї всеукраїнської новини")
             continue
         if kind in RUBRIC_KINDS and (
             any(p.kind == kind for p in this_run) or any(p.get("kind") == kind for p in today)

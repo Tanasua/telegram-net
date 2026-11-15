@@ -306,6 +306,20 @@ def rubrics_due(config: Config, state: State, channel: ChannelConfig, now: dt.da
     return due
 
 
+def national_due(config: Config, state: State, channel: ChannelConfig, now: dt.datetime) -> int:
+    """Скільки всеукраїнських новин каналу вже «винні» на цю мить.
+
+    Кожна година з `national_slot_hours`, що настала, додає одну; віднімаємо вже
+    опубліковані за добу. Так «Україна» не залежить від настрою редактора й не
+    витісняється місцевим."""
+    settings = config.settings
+    local = local_now(config, now)
+    slots = len([h for h in settings.national_slot_hours if local.hour >= h and h < settings.quiet_from_hour])
+    day_start = start_of_local_day(config, now)
+    done = len([p for p in state.posts_since(channel.channel_id, day_start) if p.get("kind") == "national"])
+    return max(0, min(slots, settings.national_daily_limit) - done)
+
+
 def address_hint(config: Config, state: State, channel: ChannelConfig) -> str | None:
     """Звертання до підписників для наступного посту каналу або None, якщо ще не час.
 
@@ -353,6 +367,7 @@ def build_brief(
                 "national_remaining_today": max(
                     0, config.settings.national_daily_limit - len([p for p in today if p.get("kind") == "national"])
                 ),
+                "national_due": national_due(config, state, ch, now),
                 "rubrics_due": rubrics_due(config, state, ch, now),
                 "address_hint": address_hint(config, state, ch),
                 "recent_posts": (
@@ -450,6 +465,8 @@ def brief_text(brief: dict) -> str:
         extras = []
         if ch["rubrics_due"]:
             extras.append("рубрики: " + ", ".join(ch["rubrics_due"]))
+        if ch.get("national_due"):
+            extras.append(f"ВСЕУКР. ОБОВ'ЯЗКОВО: {ch['national_due']} (kind=national, поза лімітом прогону)")
         if ch.get("address_hint"):
             extras.append(f"звертання: {ch['address_hint']}")
         lines.append(
@@ -485,4 +502,4 @@ def brief_text(brief: dict) -> str:
 
 def nothing_to_do(brief: dict) -> bool:
     """Немає ні кандидатів, ні рубрик — редактору нема чого робити, прогін можна завершити."""
-    return not brief["candidates"] and not any(ch["rubrics_due"] for ch in brief["channels"])
+    return not brief["candidates"] and not any(ch["rubrics_due"] for ch in brief["channels"])  # без кандидатів «Україна» теж нічого випускати
