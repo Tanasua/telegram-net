@@ -4,6 +4,7 @@
     show    <id…>      повний текст кандидатів
     check   <файл>     перевірити файл рішень редактора, нічого не надсилаючи
     publish <файл…>    опублікувати рішення (потрібен TELEGRAM_BOT_TOKEN)
+    attack             ранкова інфографіка «Нічна атака» в усі канали
     weather            ранкова інфографіка погоди в усі канали
     drain              надіслати з черги пости, чий час настав
     report             стан мережі: пости за добу, проблемні джерела
@@ -159,6 +160,22 @@ def cmd_weather(args) -> int:
     return 1 if any("ПОМИЛКА" in line for line in lines) else 0
 
 
+def cmd_attack(args) -> int:
+    from telegram_net.attack import publish_attack
+
+    config = load_config(args.config)
+    state = State(args.state)
+    publisher = None if args.dry_run else _publisher(required=True)
+    lines = publish_attack(config, state, publisher, force=args.force, out_dir=Path(args.out) if args.out else None)
+    for line in lines:
+        print(line)
+    sent = any("надіслано" in line for line in lines)
+    if sent:
+        state.save()
+    _github_output(save_state=sent)
+    return 1 if any("ПОМИЛКА" in line for line in lines) else 0
+
+
 def _github_output(**values: bool) -> None:
     """Сигнали наступним крокам workflow (publish.yml): чи зберігати стан, чи видаляти гілку."""
     path = os.environ.get("GITHUB_OUTPUT")
@@ -248,6 +265,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dry-run", action="store_true", help="нічого не надсилати")
     p.add_argument("--out", default=None, help="куди зберегти картинки")
     p.set_defaults(func=cmd_weather)
+
+    p = sub.add_parser("attack")
+    p.add_argument("--force", action="store_true", help="не перевіряти годину")
+    p.add_argument("--dry-run", action="store_true", help="нічого не надсилати")
+    p.add_argument("--out", default=None, help="куди зберегти картинки")
+    p.set_defaults(func=cmd_attack)
 
     p = sub.add_parser("report")
     p.set_defaults(func=cmd_report)
