@@ -115,32 +115,26 @@ PYTHONPATH=src .venv/bin/python -m telegram_net.cli attack --force --dry-run --o
 
 ## Сигнали тривоги й відбою
 
-Працюють на **Cloudflare Workers** (безкоштовний план), бо мають виходити за
-секунди, а не за розкладом: воркер `cloudflare/alerts` запускається щохвилини,
-двічі за запуск читає канал Житомирської ОВА (сигнали там ідуть по районах у
+Окремий цикл без моделей (`alerts.py`, `.github/workflows/alerts.yml`): раз на
+30 секунд читає канал Житомирської ОВА (сигнали там ідуть по районах у
 стабільному форматі) і за шаблоном публікує їх у канали відповідного району — у
-відбої з тривалістю тривоги. Затримка — до ~30 секунд. Моделей немає.
+відбої з тривалістю тривоги. Затримка — до ~30 секунд.
 
-- Район кожного каналу — поле `alert_district` у конфізі; список каналів воркер
-  отримує при розгортанні (`build-channels.mjs`).
-- Стан (останнє оброблене повідомлення й райони з тривогою) — у Cloudflare KV,
-  пишеться лише при змінах (у межах безкоштовного ліміту).
-- Після простою застарілі сигнали (старші за 10 хв) не публікуються.
+- Працює цілодобово в GitHub Actions: запуск на 5 год 20 хв, новий — кожні
+  5 годин у черзі за попереднім. Репозиторій публічний, тож хвилини Actions
+  безкоштовні й не лімітовані.
+- Між запусками курсор і райони з тривогою зберігаються в кеші Actions:
+  сигнал, що прийшов під час перезапуску, буде надіслано, а надіслані раніше
+  не повторюються. Сигнали, старші за 10 хв, не публікуються.
+- Район кожного каналу — поле `alert_district` у конфізі.
 
-**Розгортання** — `.github/workflows/deploy-alerts.yml`, автоматично при зміні
-воркера чи списку каналів. Потрібно один раз додати секрети репозиторію:
+Запасні варіанти: Cloudflare Worker (`cloudflare/alerts`, розгортання вручну
+через `deploy-alerts.yml`, потрібні секрети Cloudflare) або той самий цикл на
+власному сервері:
 
-1. Безкоштовний акаунт на dash.cloudflare.com.
-2. My Profile → API Tokens → Create Token → шаблон «Edit Cloudflare Workers» →
-   у «Account Resources» обрати свій акаунт → Create Token.
-3. Account ID — на сторінці Workers & Pages (праворуч) або в URL панелі.
-4. GitHub → Settings → Secrets and variables → Actions: `CLOUDFLARE_API_TOKEN`
-   і `CLOUDFLARE_ACCOUNT_ID`.
-5. Actions → «Deploy alerts worker» → Run workflow.
-
-Тести воркера: `cd cloudflare/alerts && npm test`. Запасний варіант без
-Cloudflare — той самий цикл на Python (`cli alerts`, `alerts.yml` вручну або на
-власному сервері).
+```bash
+TELEGRAM_BOT_TOKEN=... PYTHONPATH=src python -m telegram_net.cli alerts --state-file work/alerts_state.json
+```
 
 ## Конфіг — `data/sources_seed.json`
 

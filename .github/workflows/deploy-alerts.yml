@@ -1,6 +1,6 @@
 name: Deploy alerts worker
 
-# Розгортає Cloudflare Worker сигналів тривоги й відбою (cloudflare/alerts):
+# ЗАПАСНИЙ ВАРІАНТ. Розгортає Cloudflare Worker сигналів тривоги й відбою (cloudflare/alerts):
 # щохвилини читає канал Житомирської ОВА і публікує сигнали в канали за районами.
 # Безкоштовний план Cloudflare: cron щохвилини, KV для стану.
 #
@@ -11,9 +11,8 @@ name: Deploy alerts worker
 #
 # Запускається при зміні коду воркера чи списку каналів і вручну.
 on:
-  push:
-    branches: ["claude/zhytomyr-telegram-network-1gjddq"]
-    paths: ["cloudflare/alerts/**", "data/sources_seed.json", ".github/workflows/deploy-alerts.yml"]
+  # Лише вручну: основний варіант — alerts.yml у GitHub Actions (публічний репозиторій).
+  # Воркер — запасний, якщо колись знадобиться Cloudflare.
   workflow_dispatch: {}
 
 concurrency:
