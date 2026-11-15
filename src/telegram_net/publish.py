@@ -36,7 +36,7 @@ from telegram_net.clock import is_quiet, local_now, start_of_local_day
 from telegram_net.config import ChannelConfig, Config
 from telegram_net.fetchers.base import FetchedMedia
 from telegram_net.media import MAX_MEDIA_GROUP_SIZE, build_media_batches
-from telegram_net.state import State, iso, now_utc, parse_iso, post_time
+from telegram_net.state import SERVICE_KINDS, State, iso, now_utc, parse_iso, post_time
 from telegram_net.stoplist import find_stop_topic
 
 logger = logging.getLogger(__name__)
@@ -160,7 +160,7 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
             fail(f"новина з кандидата {repeated} у цьому каналі вже виходила")
             continue
 
-        today = [p for p in state.posts_since(channel.channel_id, day_start) if p.get("kind") != "alert"]
+        today = [p for p in state.posts_since(channel.channel_id, day_start) if p.get("kind") not in SERVICE_KINDS]
         this_run = in_run.get(channel.channel_id, [])
         if len(today) + len(this_run) >= channel.daily_limit:
             fail(f"добовий ліміт каналу ({channel.daily_limit}) вичерпано")
@@ -303,7 +303,7 @@ def schedule(prepared: list[PreparedPost], config: Config, state: State, now: dt
     spacing = dt.timedelta(minutes=config.settings.post_spacing_minutes)
     last: dict[str, dt.datetime] = {}
     for entry in state.published + state.queue:
-        if entry.get("kind") == "alert":
+        if entry.get("kind") in SERVICE_KINDS:
             continue
         t = post_time(entry)
         if entry["channel_id"] not in last or t > last[entry["channel_id"]]:

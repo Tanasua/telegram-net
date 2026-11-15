@@ -68,6 +68,15 @@ class TelegramPublisher:
             data = self._upload(method, payload, {field: media.url})
         return data["result"]["message_id"]
 
+    def send_photo_bytes(self, chat_id: str, image: bytes, caption: str | None = None, filename: str = "image.png") -> int:
+        """Фото, згенероване в коді (інфографіка погоди), — завантаженням файлу."""
+        data = {"chat_id": chat_id}
+        if caption:
+            data["caption"] = caption
+            data["parse_mode"] = "HTML"
+        resp = self._http.post(f"{self._base_url}/sendPhoto", data=data, files={"photo": (filename, image, "image/png")})
+        return self._parse("sendPhoto", resp)["result"]["message_id"]
+
     def send_media_group(
         self, chat_id: str, media_batch: Sequence[FetchedMedia], caption: str | None = None
     ) -> list[int]:

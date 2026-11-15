@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 SEEN_TTL_DAYS = 14
+SERVICE_KINDS = ("alert", "weather")  # службові пости: не входять у ліміти, ротації й «вже було»
 PUBLISHED_TTL_DAYS = 30
 
 
@@ -85,7 +86,7 @@ class State:
 
     def channel_post_count(self, channel_id: str) -> int:
         """Скільки новинних постів каналу вийшло або чекає в черзі (без сигналів тривоги)."""
-        return len([p for p in self.published + self.queue if p["channel_id"] == channel_id and p.get("kind") != "alert"])
+        return len([p for p in self.published + self.queue if p["channel_id"] == channel_id and p.get("kind") not in SERVICE_KINDS])
 
     def log_post(self, entry: dict) -> None:
         self.published.append(entry)
