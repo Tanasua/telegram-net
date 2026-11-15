@@ -1,106 +1,107 @@
 {
+  "settings": {
+    "timezone": "Europe/Kyiv",
+    "quiet_from_hour": 23,
+    "quiet_to_hour": 7,
+    "max_age_hours": 12,
+    "pool_ttl_hours": 10,
+    "national_daily_limit": 4,
+    "alerts_source": "zhytomyrmilitaryadministration",
+    "addresses": [
+      "Котики",
+      "Друзі",
+      "Любі друзі",
+      "Хлопці й дівчатка",
+      "Шановні",
+      "Хороші мої",
+      "Любчики-голубчики",
+      "Сонечки"
+    ],
+    "address_every": 3
+  },
   "channels": [
     {
       "channel_id": "zhytomyr",
       "name": "Житомир",
       "telegram_chat_id": "@myzhytomyrnews",
       "active": true,
-      "min_relevance": 0.5,
-      "length_weights": {
-        "short": 0.4,
-        "medium": 0.35,
-        "long": 0.25
-      },
-      "headline_probability": 0.4,
-      "timezone": "Europe/Kyiv"
+      "alert_district": "Житомирський",
+      "daily_limit": 12,
+      "max_posts_per_run": 3,
+      "cta_every": 4,
+      "subscribe_cta": "Підписатися на «Мій Житомир»"
     },
     {
       "channel_id": "berdychiv",
       "name": "Бердичів",
       "telegram_chat_id": "@myberdychivnews",
       "active": true,
-      "min_relevance": 0.5,
-      "length_weights": {
-        "short": 0.4,
-        "medium": 0.35,
-        "long": 0.25
-      },
-      "headline_probability": 0.4,
-      "timezone": "Europe/Kyiv"
+      "alert_district": "Бердичівський",
+      "daily_limit": 12,
+      "max_posts_per_run": 3,
+      "cta_every": 4,
+      "subscribe_cta": "Підписатися на «Мій Бердичів»"
     },
     {
       "channel_id": "korosten",
       "name": "Коростень",
       "telegram_chat_id": "@mykorostennews",
       "active": true,
-      "min_relevance": 0.5,
-      "length_weights": {
-        "short": 0.4,
-        "medium": 0.35,
-        "long": 0.25
-      },
-      "headline_probability": 0.4,
-      "timezone": "Europe/Kyiv"
+      "alert_district": "Коростенський",
+      "daily_limit": 12,
+      "max_posts_per_run": 3,
+      "cta_every": 4,
+      "subscribe_cta": "Підписатися на «Мій Коростень»"
     },
     {
       "channel_id": "zvyahel",
       "name": "Звягель (Новоград-Волинський)",
       "telegram_chat_id": "@myzvyahelnews",
       "active": true,
-      "min_relevance": 0.5,
-      "length_weights": {
-        "short": 0.4,
-        "medium": 0.35,
-        "long": 0.25
-      },
-      "headline_probability": 0.4,
-      "timezone": "Europe/Kyiv"
+      "alert_district": "Звягельський",
+      "daily_limit": 12,
+      "max_posts_per_run": 3,
+      "cta_every": 4,
+      "subscribe_cta": "Підписатися на «Мій Звягель»"
     },
     {
       "channel_id": "malyn",
       "name": "Малин",
       "telegram_chat_id": "@mymalynnews",
       "active": true,
-      "min_relevance": 0.5,
-      "length_weights": {
-        "short": 0.4,
-        "medium": 0.35,
-        "long": 0.25
-      },
-      "headline_probability": 0.4,
-      "timezone": "Europe/Kyiv"
+      "alert_district": "Коростенський",
+      "daily_limit": 12,
+      "max_posts_per_run": 3,
+      "cta_every": 4,
+      "subscribe_cta": "Підписатися на «Мій Малин»"
     },
     {
       "channel_id": "radomyshl",
       "name": "Радомишль",
       "telegram_chat_id": "@myradomyshlnews",
       "active": true,
-      "min_relevance": 0.5,
-      "length_weights": {
-        "short": 0.4,
-        "medium": 0.35,
-        "long": 0.25
-      },
-      "headline_probability": 0.4,
-      "timezone": "Europe/Kyiv"
+      "alert_district": "Житомирський",
+      "daily_limit": 12,
+      "max_posts_per_run": 3,
+      "cta_every": 4,
+      "subscribe_cta": "Підписатися на «Мій Радомишль»"
     },
     {
       "channel_id": "korostyshiv",
       "name": "Коростишів",
       "telegram_chat_id": "@mykorostyshivnews",
-      "active": true,
-      "min_relevance": 0.5,
-      "length_weights": {
-        "short": 0.4,
-        "medium": 0.35,
-        "long": 0.25
-      },
-      "headline_probability": 0.4,
-      "timezone": "Europe/Kyiv"
+      "active": false,
+      "alert_district": "Житомирський",
+      "daily_limit": 12,
+      "max_posts_per_run": 3,
+      "cta_every": 4,
+      "subscribe_cta": "Підписатися на «Мій Коростишів»",
+      "note": "Вимкнено 15.11.2026: Telegram не знаходить канал @mykorostyshivnews (chat not found). Виправ telegram_chat_id і постав active: true."
     }
   ],
   "sources": [
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "website",
       "name": "Житомир.info",
@@ -109,6 +110,7 @@
       "note": "Один з найстаріших новинних сайтів міста"
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "website",
       "name": "Zhitomir-OnLine",
@@ -117,6 +119,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "web_scrape",
       "name": "ZhitomirNEWS",
@@ -126,6 +129,7 @@
       "scrape_item_selector": "section.zhitomirToday-item a"
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "telegram",
       "name": "Житомир.info",
@@ -134,6 +138,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "telegram",
       "name": "Новини Житомира | pzhytomyr",
@@ -142,6 +147,7 @@
       "note": "Оперативний паблік: тривоги/світло/вода/транспорт"
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "telegram",
       "name": "Труха⚡️Житомир",
@@ -150,14 +156,15 @@
       "note": "Вузол мультиміської мережі 'Труха' — агрегатор інцидентів, не класична редакція"
     },
     {
-      "channel_id": "zhytomyr",
+      "scope": "oblast",
       "type": "telegram",
       "name": "Суспільне Житомир",
       "handle_or_url": "@suspilnezhytomyr",
       "active": true,
-      "note": "Офіційна регіональна редакція Суспільного"
+      "note": "Офіційна регіональна редакція Суспільного Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "telegram",
       "name": "Житомирська міська рада",
@@ -166,14 +173,15 @@
       "note": "Офіційний канал міськради"
     },
     {
-      "channel_id": "zhytomyr",
+      "scope": "oblast",
       "type": "telegram",
       "name": "Житомирська ОВА",
       "handle_or_url": "@zhytomyrmilitaryadministration",
       "active": true,
-      "note": "Офіційний канал облвійськадміністрації"
+      "note": "Офіційний канал облвійськадміністрації Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "facebook_page",
       "name": "Житомирська міська рада",
@@ -182,6 +190,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "facebook_page",
       "name": "Житомирська обласна рада",
@@ -190,6 +199,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "facebook_page",
       "name": "Житомирська ОВА (2 кандидати)",
@@ -198,6 +208,7 @@
       "note": "Незрозуміло, яка сторінка активна зараз"
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "facebook_page",
       "name": "Підслухано Житомир (це Page, не Group)",
@@ -206,6 +217,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "facebook_page",
       "name": "Житомир.info (FB)",
@@ -214,6 +226,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "facebook_page",
       "name": "Новини Житомира 20minut.ua",
@@ -222,6 +235,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zhytomyr",
       "type": "facebook_page",
       "name": "Суспільне Житомир (FB)",
@@ -230,31 +244,32 @@
       "note": ""
     },
     {
-      "channel_id": "zhytomyr",
+      "scope": "oblast",
       "type": "telegram",
       "name": "Поліція Житомирської області",
       "handle_or_url": "@zt_police",
       "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
     },
     {
-      "channel_id": "zhytomyr",
+      "scope": "oblast",
       "type": "telegram",
       "name": "Патрульна поліція Житомирської області",
       "handle_or_url": "@patrol_police_zt",
       "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами."
     },
     {
-      "channel_id": "zhytomyr",
+      "scope": "oblast",
       "type": "web_scrape",
       "name": "ГУНП в Житомирській області (сайт)",
       "handle_or_url": "https://zt.npu.gov.ua",
       "active": true,
-      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
+      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор Обласне джерело: читається один раз, редактор розподіляє новини між каналами.",
       "scrape_item_selector": "div.main-item_content a.title-16"
     },
     {
+      "scope": "local",
       "channel_id": "berdychiv",
       "type": "website",
       "name": "РІО Бердичів",
@@ -263,6 +278,7 @@
       "note": "Прямий фетч дав 403, активність підтверджена опосередковано"
     },
     {
+      "scope": "local",
       "channel_id": "berdychiv",
       "type": "website",
       "name": "Бердичів.biz",
@@ -271,6 +287,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "berdychiv",
       "type": "telegram",
       "name": "РІО Бердичів Новини",
@@ -279,14 +296,16 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "berdychiv",
       "type": "telegram",
       "name": "Офіційно в Бердичеві",
       "handle_or_url": "@officially_in_berdychiv",
-      "active": false,
-      "note": "Назва оманлива — НЕ офіційний канал міськради, незалежний агрегатор"
+      "active": true,
+      "note": "Назва оманлива — НЕ офіційний канал міськради, незалежний агрегатор. Увімкнено 15.11.2026: канал живий, 23,5 тис. підписників, ~13 постів на добу."
     },
     {
+      "scope": "local",
       "channel_id": "berdychiv",
       "type": "telegram",
       "name": "Бердичів Підслухано (старий лінк)",
@@ -295,6 +314,7 @@
       "note": "Хендл зараз веде на непов'язану заглушку 35 підписників — канал або змінив ім'я, або перейшов новому власнику"
     },
     {
+      "scope": "local",
       "channel_id": "berdychiv",
       "type": "facebook_page",
       "name": "Бердичівська міська рада",
@@ -303,6 +323,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "berdychiv",
       "type": "facebook_page",
       "name": "Бердичів BIZ (FB)",
@@ -311,31 +332,7 @@
       "note": ""
     },
     {
-      "channel_id": "berdychiv",
-      "type": "telegram",
-      "name": "Поліція Житомирської області",
-      "handle_or_url": "@zt_police",
-      "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "berdychiv",
-      "type": "telegram",
-      "name": "Патрульна поліція Житомирської області",
-      "handle_or_url": "@patrol_police_zt",
-      "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "berdychiv",
-      "type": "web_scrape",
-      "name": "ГУНП в Житомирській області (сайт)",
-      "handle_or_url": "https://zt.npu.gov.ua",
-      "active": true,
-      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
-      "scrape_item_selector": "div.main-item_content a.title-16"
-    },
-    {
+      "scope": "local",
       "channel_id": "korosten",
       "type": "website",
       "name": "Офіційний портал міськради",
@@ -344,6 +341,7 @@
       "note": "Адміністративний сайт, не новинний портал у чистому вигляді"
     },
     {
+      "scope": "local",
       "channel_id": "korosten",
       "type": "telegram",
       "name": "КОРОСТЕНЬ today",
@@ -352,6 +350,7 @@
       "note": "Головне медіа району: 'Коростень, Малин, Овруч, Олевськ та вся Житомирщина'"
     },
     {
+      "scope": "local",
       "channel_id": "korosten",
       "type": "facebook_page",
       "name": "Коростенська міська рада",
@@ -360,6 +359,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "korosten",
       "type": "facebook_page",
       "name": "Коростень-Інфо (FB)",
@@ -368,6 +368,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "korosten",
       "type": "facebook_page",
       "name": "КоростеньТБ",
@@ -376,6 +377,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "korosten",
       "type": "facebook_page",
       "name": "КОРОСТЕНЬ today (FB)",
@@ -384,31 +386,7 @@
       "note": ""
     },
     {
-      "channel_id": "korosten",
-      "type": "telegram",
-      "name": "Поліція Житомирської області",
-      "handle_or_url": "@zt_police",
-      "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "korosten",
-      "type": "telegram",
-      "name": "Патрульна поліція Житомирської області",
-      "handle_or_url": "@patrol_police_zt",
-      "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "korosten",
-      "type": "web_scrape",
-      "name": "ГУНП в Житомирській області (сайт)",
-      "handle_or_url": "https://zt.npu.gov.ua",
-      "active": true,
-      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
-      "scrape_item_selector": "div.main-item_content a.title-16"
-    },
-    {
+      "scope": "local",
       "channel_id": "zvyahel",
       "type": "web_scrape",
       "name": "Новоград.City",
@@ -418,6 +396,7 @@
       "scrape_item_selector": "div.info a.title"
     },
     {
+      "scope": "local",
       "channel_id": "zvyahel",
       "type": "website",
       "name": "04141.com.ua",
@@ -426,6 +405,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zvyahel",
       "type": "telegram",
       "name": "Новоград.City",
@@ -434,14 +414,16 @@
       "note": "Офіційний канал сайту novograd.city"
     },
     {
+      "scope": "local",
       "channel_id": "zvyahel",
       "type": "telegram",
       "name": "Звягельська міська рада",
       "handle_or_url": "@Novograd_miskarada",
-      "active": true,
-      "note": "Офіційний канал міськради"
+      "active": false,
+      "note": "Канал не оновлюється з жовтня 2024 року (перевірено 15.11.2026)"
     },
     {
+      "scope": "local",
       "channel_id": "zvyahel",
       "type": "facebook_page",
       "name": "Звягельська міська рада",
@@ -450,6 +432,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "zvyahel",
       "type": "facebook_page",
       "name": "Novograd City / Новоград Сіті",
@@ -458,6 +441,7 @@
       "note": "Дублікат facebook.com/novogradcity — перевірити активний"
     },
     {
+      "scope": "local",
       "channel_id": "zvyahel",
       "type": "facebook_page",
       "name": "04141.com.ua (FB)",
@@ -466,31 +450,7 @@
       "note": ""
     },
     {
-      "channel_id": "zvyahel",
-      "type": "telegram",
-      "name": "Поліція Житомирської області",
-      "handle_or_url": "@zt_police",
-      "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "zvyahel",
-      "type": "telegram",
-      "name": "Патрульна поліція Житомирської області",
-      "handle_or_url": "@patrol_police_zt",
-      "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "zvyahel",
-      "type": "web_scrape",
-      "name": "ГУНП в Житомирській області (сайт)",
-      "handle_or_url": "https://zt.npu.gov.ua",
-      "active": true,
-      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
-      "scrape_item_selector": "div.main-item_content a.title-16"
-    },
-    {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "web_scrape",
       "name": "Малинська міська рада",
@@ -501,6 +461,7 @@
       "scrape_title_selector": ".tm-text-semibold .uk-text-middle"
     },
     {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "website",
       "name": "MALYN.MEDIA (сайт-супутник)",
@@ -509,6 +470,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "website",
       "name": "Malyn-Live",
@@ -517,6 +479,7 @@
       "note": "Довідково-новинний портал"
     },
     {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "web_scrape",
       "name": "Polissya.today / Малин",
@@ -526,6 +489,7 @@
       "scrape_item_selector": "article.masonry-item h2 a"
     },
     {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "telegram",
       "name": "MALYN.MEDIA",
@@ -534,6 +498,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "telegram",
       "name": "Малин | Новини Житомирщини",
@@ -542,6 +507,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "facebook_page",
       "name": "Малинська міська рада (FB)",
@@ -550,6 +516,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "malyn",
       "type": "facebook_page",
       "name": "ІнфоМалин",
@@ -558,31 +525,7 @@
       "note": ""
     },
     {
-      "channel_id": "malyn",
-      "type": "telegram",
-      "name": "Поліція Житомирської області",
-      "handle_or_url": "@zt_police",
-      "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "malyn",
-      "type": "telegram",
-      "name": "Патрульна поліція Житомирської області",
-      "handle_or_url": "@patrol_police_zt",
-      "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "malyn",
-      "type": "web_scrape",
-      "name": "ГУНП в Житомирській області (сайт)",
-      "handle_or_url": "https://zt.npu.gov.ua",
-      "active": true,
-      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
-      "scrape_item_selector": "div.main-item_content a.title-16"
-    },
-    {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "website",
       "name": "Радомишльська міська громада",
@@ -591,6 +534,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "website",
       "name": "Radomyshl.city",
@@ -599,6 +543,7 @@
       "note": "DNS-помилка при прямому фетчі"
     },
     {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "website",
       "name": "Radomyshl.news",
@@ -607,6 +552,7 @@
       "note": "DNS-помилка при прямому фетчі"
     },
     {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "website",
       "name": "Radomyshl.com",
@@ -615,6 +561,7 @@
       "note": "503 при фетчі"
     },
     {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "web_scrape",
       "name": "Polissya.today / Радомишль",
@@ -624,6 +571,7 @@
       "scrape_item_selector": "article.masonry-item h2 a"
     },
     {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "facebook_page",
       "name": "Радомишль Оперативно",
@@ -632,6 +580,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "facebook_page",
       "name": "Радомишль Сіті",
@@ -640,6 +589,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "radomyshl",
       "type": "facebook_page",
       "name": "Наш Радомишль",
@@ -648,31 +598,7 @@
       "note": ""
     },
     {
-      "channel_id": "radomyshl",
-      "type": "telegram",
-      "name": "Поліція Житомирської області",
-      "handle_or_url": "@zt_police",
-      "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "radomyshl",
-      "type": "telegram",
-      "name": "Патрульна поліція Житомирської області",
-      "handle_or_url": "@patrol_police_zt",
-      "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
-    },
-    {
-      "channel_id": "radomyshl",
-      "type": "web_scrape",
-      "name": "ГУНП в Житомирській області (сайт)",
-      "handle_or_url": "https://zt.npu.gov.ua",
-      "active": true,
-      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
-      "scrape_item_selector": "div.main-item_content a.title-16"
-    },
-    {
+      "scope": "local",
       "channel_id": "korostyshiv",
       "type": "website",
       "name": "Коростишівська міська рада",
@@ -681,6 +607,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "korostyshiv",
       "type": "website",
       "name": "Korostyshiv.misto.online",
@@ -689,6 +616,7 @@
       "note": ""
     },
     {
+      "scope": "local",
       "channel_id": "korostyshiv",
       "type": "web_scrape",
       "name": "Polissya.today / Коростишів",
@@ -698,6 +626,7 @@
       "scrape_item_selector": "article.masonry-item h2 a"
     },
     {
+      "scope": "local",
       "channel_id": "korostyshiv",
       "type": "facebook_page",
       "name": "Коростишівська міська рада (FB)",
@@ -706,29 +635,115 @@
       "note": ""
     },
     {
-      "channel_id": "korostyshiv",
+      "scope": "national",
       "type": "telegram",
-      "name": "Поліція Житомирської області",
-      "handle_or_url": "@zt_police",
+      "name": "Суспільне Новини",
+      "handle_or_url": "@suspilnenews",
       "active": true,
-      "note": "Обласний канал ГУНП — релевантність до конкретного району вирішує класифікатор"
+      "note": "Загальнонаціональні новини"
     },
     {
-      "channel_id": "korostyshiv",
+      "scope": "national",
       "type": "telegram",
-      "name": "Патрульна поліція Житомирської області",
-      "handle_or_url": "@patrol_police_zt",
+      "name": "Укрінформ",
+      "handle_or_url": "@ukrinform_news",
       "active": true,
-      "note": "Обласний канал патрульної поліції — релевантність до конкретного району вирішує класифікатор"
+      "note": "Державне інформагентство"
     },
     {
-      "channel_id": "korostyshiv",
-      "type": "web_scrape",
-      "name": "ГУНП в Житомирській області (сайт)",
-      "handle_or_url": "https://zt.npu.gov.ua",
+      "scope": "national",
+      "type": "telegram",
+      "name": "Укренерго",
+      "handle_or_url": "@Ukrenergo",
       "active": true,
-      "note": "Обласний сайт поліції, без RSS — скрапінг верстки. Релевантність до конкретного району вирішує класифікатор",
-      "scrape_item_selector": "div.main-item_content a.title-16"
+      "note": "Графіки відключень, стан енергосистеми"
+    },
+    {
+      "scope": "national",
+      "type": "telegram",
+      "name": "ДСНС України",
+      "handle_or_url": "@dsns_telegram",
+      "active": true,
+      "note": "Надзвичайні події, попередження"
+    },
+    {
+      "scope": "oblast",
+      "type": "telegram",
+      "name": "ДСНС Житомирщини",
+      "handle_or_url": "@dsns_zhytomyr",
+      "active": true,
+      "note": "Офіційний канал ГУ ДСНС в області: пожежі, ДТП, попередження"
+    },
+    {
+      "scope": "oblast",
+      "type": "telegram",
+      "name": "Житомиробленерго",
+      "handle_or_url": "@ztoe_ua",
+      "active": true,
+      "note": "Офіційний канал: графіки відключень, аварії в мережах"
+    },
+    {
+      "scope": "local",
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Житомирводоканал",
+      "handle_or_url": "@zhytomyrvodokanal",
+      "active": true,
+      "note": "Офіційний канал КП: відключення води, аварії"
+    },
+    {
+      "scope": "local",
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "«20 хвилин» Житомир",
+      "handle_or_url": "@zt20minut",
+      "active": true,
+      "note": "Міське видання"
+    },
+    {
+      "scope": "local",
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Перший Житомирський",
+      "handle_or_url": "@firstzt",
+      "active": true,
+      "note": "Канал сайту 1.zt.ua"
+    },
+    {
+      "scope": "local",
+      "channel_id": "zhytomyr",
+      "type": "telegram",
+      "name": "Житомир Інфо | Новини",
+      "handle_or_url": "@zhitomir_info",
+      "active": false,
+      "note": "Близько 70 постів на добу, переважно передруки — вимкнено, щоб не засмічувати добірку"
+    },
+    {
+      "scope": "local",
+      "channel_id": "korosten",
+      "type": "telegram",
+      "name": "Коростенська міська рада",
+      "handle_or_url": "@korostenskamiskarada",
+      "active": true,
+      "note": "Офіційний канал міськради"
+    },
+    {
+      "scope": "local",
+      "channel_id": "zvyahel",
+      "type": "telegram",
+      "name": "Zvyahel news",
+      "handle_or_url": "@zvyagel_news",
+      "active": true,
+      "note": "Міський новинний канал"
+    },
+    {
+      "scope": "local",
+      "channel_id": "radomyshl",
+      "type": "telegram",
+      "name": "Радомишль/Radomyshl",
+      "handle_or_url": "@radomyshl_city",
+      "active": true,
+      "note": "Єдиний живий телеграм-канал міста; багато моніторингу тривог — редактор відсіює"
     }
   ]
 }

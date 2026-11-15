@@ -1,32 +1,45 @@
-"""Конфіг-шар: список каналів і джерел. Google Sheets — робоче джерело правди,
-LocalJSONConfigSource — той самий формат локально (для розробки й тестів без
-живого доступу до Sheets)."""
+"""Конфіг: канали мережі, джерела й спільні налаштування. Єдине джерело правди —
+JSON-файл у репозиторії (data/sources_seed.json), його легко правити руками чи
+попросити Claude.
+
+Джерело має scope:
+- "local"    — про одне місто, прив'язане до channel_id;
+- "oblast"   — обласне (поліція, ОВА, Суспільне Житомир): читається ОДИН раз за
+               прогін, а редактор вирішує, у які канали мережі піде новина;
+- "national" — всеукраїнське: так само один раз на всю мережу.
+"""
 
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Literal
 
 SourceType = Literal["telegram", "website", "web_scrape", "facebook_page"]
+Scope = Literal["local", "oblast", "national"]
 
 
 @dataclass(frozen=True)
 class SourceConfig:
-    channel_id: str
+    channel_id: str | None
     type: SourceType
     name: str
     handle_or_url: str
     active: bool = True
     note: str = ""
-    # Тільки для type="web_scrape" — сайт без RSS/Atom. Дає скрапери
-    # спільний код (fetchers/scrape_fetcher.py) замість окремого Python-парсера
-    # на кожен сайт: scrape_item_selector знаходить кожну картку новини на
-    # сторінці, scrape_title_selector (опційно) — заголовок усередині картки;
-    # без нього береться весь текст картки (як title+summary у RSS-записі).
+    scope: Scope = "local"
+    # Тільки для type="web_scrape" (сайт без RSS): CSS-селектор картки новини
+    # і, опційно, заголовка всередині неї. Див. fetchers/scrape_fetcher.py.
     scrape_item_selector: str | None = None
     scrape_title_selector: str | None = None
+
+    @property
+    def key(self) -> str:
+        """Ключ стану (курсор, здоров'я джерела). Для обласних/всеукраїнських
+        джерел не залежить від каналу — тому джерело читається один раз."""
+        owner = self.channel_id if self.scope == "local" else self.scope
+        return f"{owner}|{self.type}|{self.handle_or_url}"
 
 
 @dataclass(frozen=True)
@@ -35,138 +48,92 @@ class ChannelConfig:
     name: str
     telegram_chat_id: str | None
     active: bool = True
-    min_relevance: float = 0.5
-    min_interest: float = 0.5
-    max_posts_per_run: int = 1
-    max_age_minutes: int = 60
-    length_weights: dict[str, float] = field(
-        default_factory=lambda: {"short": 0.4, "medium": 0.35, "long": 0.25}
-    )
-    headline_probability: float = 0.4
+    alert_district: str | None = None  # район області для сигналів тривоги, напр. "Коростенський"
+    daily_limit: int = 12  # максимум постів на добу (без тривог)
+    max_posts_per_run: int = 3
+    subscribe_cta: str | None = None
+    cta_every: int = 4  # заклик підписатись — у кожному N-му пості, не в кожному
+
+
+@dataclass(frozen=True)
+class Settings:
     timezone: str = "Europe/Kyiv"
-    subscribe_cta: str | None = None  # додається кодом після генерації, не LLM — див. pipeline.py
+    quiet_from_hour: int = 23  # нічна тиша: з цієї години...
+    quiet_to_hour: int = 7  # ...до цієї новини не публікуються (тривоги — завжди)
+    max_age_hours: float = 12  # старіші новини в кандидати не потрапляють
+    pool_ttl_hours: float = 10  # скільки невикористаний кандидат чекає в пулі
+    national_daily_limit: int = 4  # всеукраїнських постів на канал за добу
+    max_caption_chars: int = 1000  # ліміт Telegram на підпис до фото — 1024
+    max_text_chars: int = 3500
+    alerts_source: str = "zhytomyrmilitaryadministration"
+    # Лагідні звертання до підписників: код підказує редактору, коли й яке
+    # вжити (кожен N-й пост каналу, по колу), щоб вони не зникали й не частили.
+    addresses: tuple[str, ...] = (
+        "Котики",
+        "Друзі",
+        "Любі друзі",
+        "Хлопці й дівчатка",
+        "Шановні",
+        "Хороші мої",
+        "Любчики-голубчики",
+        "Сонечки",
+    )
+    address_every: int = 3
 
 
-class ConfigSource(Protocol):
-    def load_channels(self) -> list[ChannelConfig]: ...
-    def load_sources(self) -> list[SourceConfig]: ...
+@dataclass(frozen=True)
+class Config:
+    settings: Settings
+    channels: list[ChannelConfig] = field(default_factory=list)
+    sources: list[SourceConfig] = field(default_factory=list)
+
+    def channel(self, channel_id: str) -> ChannelConfig | None:
+        return next((c for c in self.channels if c.channel_id == channel_id), None)
+
+    @property
+    def active_channels(self) -> list[ChannelConfig]:
+        return [c for c in self.channels if c.active and c.telegram_chat_id]
 
 
-class LocalJSONConfigSource:
-    """Формат файлу — див. data/sources_seed.json."""
+DEFAULT_CONFIG_PATH = "data/sources_seed.json"
 
-    def __init__(self, path: str | Path):
-        self._path = Path(path)
 
-    def _load(self) -> dict:
-        return json.loads(self._path.read_text(encoding="utf-8"))
-
-    def load_channels(self) -> list[ChannelConfig]:
-        data = self._load()
-        return [
-            ChannelConfig(
-                channel_id=c["channel_id"],
-                name=c["name"],
-                telegram_chat_id=c.get("telegram_chat_id") or None,
-                active=c.get("active", True),
-                min_relevance=c.get("min_relevance", 0.5),
-                min_interest=c.get("min_interest", 0.5),
-                max_posts_per_run=c.get("max_posts_per_run", 1),
-                max_age_minutes=c.get("max_age_minutes", 60),
-                length_weights=c.get(
-                    "length_weights", {"short": 0.4, "medium": 0.35, "long": 0.25}
-                ),
-                headline_probability=c.get("headline_probability", 0.4),
-                timezone=c.get("timezone", "Europe/Kyiv"),
-                subscribe_cta=c.get("subscribe_cta") or f"Підписуйся на {c['name']}",
-            )
-            for c in data["channels"]
-        ]
-
-    def load_sources(self) -> list[SourceConfig]:
-        data = self._load()
-        return [
+def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> Config:
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    raw_settings = dict(data.get("settings", {}))
+    if "addresses" in raw_settings:
+        raw_settings["addresses"] = tuple(raw_settings["addresses"])
+    settings = Settings(**raw_settings)
+    channels = [
+        ChannelConfig(
+            channel_id=c["channel_id"],
+            name=c["name"],
+            telegram_chat_id=c.get("telegram_chat_id") or None,
+            active=c.get("active", True),
+            alert_district=c.get("alert_district"),
+            daily_limit=c.get("daily_limit", 12),
+            max_posts_per_run=c.get("max_posts_per_run", 3),
+            subscribe_cta=c.get("subscribe_cta") or f"Підписуйся на {c['name']}",
+            cta_every=c.get("cta_every", 4),
+        )
+        for c in data["channels"]
+    ]
+    sources = []
+    for s in data["sources"]:
+        scope = s.get("scope", "local")
+        if scope == "local" and not s.get("channel_id"):
+            raise ValueError(f"Локальне джерело без channel_id: {s.get('name')}")
+        sources.append(
             SourceConfig(
-                channel_id=s["channel_id"],
+                channel_id=s.get("channel_id") if scope == "local" else None,
                 type=s["type"],
                 name=s["name"],
                 handle_or_url=s["handle_or_url"],
                 active=s.get("active", True),
                 note=s.get("note", ""),
+                scope=scope,
                 scrape_item_selector=s.get("scrape_item_selector") or None,
                 scrape_title_selector=s.get("scrape_title_selector") or None,
             )
-            for s in data["sources"]
-        ]
-
-
-class GoogleSheetsConfigSource:
-    """Лист 'Channels' — перелік каналів. Один лист на кожен channel_id — його джерела.
-
-    Очікувані заголовки:
-      Channels:     channel_id | Райцентр | telegram_chat_id | Активний | Мін. релевантність |
-                    Мін. цікавість | Макс. постів за прогін | Макс. вік новини (хв) | Заклик підписатись
-      <channel_id>: Тип | Назва | URL/handle | Активне | Примітка |
-                    CSS: картка новини | CSS: заголовок
-
-    Останні дві колонки — тільки для Тип="сайт (скрапінг)" (сайт без RSS):
-    CSS-селектор картки новини на сторінці й, опційно, заголовка всередині неї
-    (без нього береться весь текст картки). Див. fetchers/scrape_fetcher.py.
-    """
-
-    CHANNELS_SHEET = "Channels"
-
-    def __init__(self, spreadsheet_id: str, credentials_path: str):
-        import gspread
-
-        gc = gspread.service_account(filename=credentials_path)
-        self._sheet = gc.open_by_key(spreadsheet_id)
-
-    def load_channels(self) -> list[ChannelConfig]:
-        ws = self._sheet.worksheet(self.CHANNELS_SHEET)
-        rows = ws.get_all_records()
-        return [
-            ChannelConfig(
-                channel_id=str(r["channel_id"]),
-                name=str(r["Райцентр"]),
-                telegram_chat_id=str(r["telegram_chat_id"]) or None,
-                active=str(r.get("Активний", "Так")).strip().lower() == "так",
-                min_relevance=float(r.get("Мін. релевантність") or 0.5),
-                min_interest=float(r.get("Мін. цікавість") or 0.5),
-                max_posts_per_run=int(r.get("Макс. постів за прогін") or 1),
-                max_age_minutes=int(r.get("Макс. вік новини (хв)") or 60),
-                subscribe_cta=str(r.get("Заклик підписатись") or "").strip()
-                or f"Підписуйся на {r['Райцентр']}",
-            )
-            for r in rows
-            if r.get("channel_id")
-        ]
-
-    def load_sources(self) -> list[SourceConfig]:
-        type_map = {
-            "сайт": "website",
-            "сайт (скрапінг)": "web_scrape",
-            "телеграм": "telegram",
-            "facebook сторінка": "facebook_page",
-        }
-        sources: list[SourceConfig] = []
-        for channel in self.load_channels():
-            ws = self._sheet.worksheet(channel.channel_id)
-            for r in ws.get_all_records():
-                raw_type = str(r.get("Тип", "")).strip().lower()
-                mapped_type = type_map.get(raw_type)
-                if mapped_type is None or not r.get("URL/handle"):
-                    continue
-                sources.append(
-                    SourceConfig(
-                        channel_id=channel.channel_id,
-                        type=mapped_type,  # type: ignore[arg-type]
-                        name=str(r.get("Назва", "")),
-                        handle_or_url=str(r["URL/handle"]),
-                        active=str(r.get("Активне", "Так")).strip().lower() == "так",
-                        note=str(r.get("Примітка", "")),
-                        scrape_item_selector=str(r.get("CSS: картка новини", "")).strip() or None,
-                        scrape_title_selector=str(r.get("CSS: заголовок", "")).strip() or None,
-                    )
-                )
-        return sources
+        )
+    return Config(settings=settings, channels=channels, sources=sources)
