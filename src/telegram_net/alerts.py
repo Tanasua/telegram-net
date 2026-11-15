@@ -26,11 +26,13 @@ from typing import Callable, Protocol
 from telegram_net.config import ChannelConfig, Config
 from telegram_net.signature import signature_html
 from telegram_net.fetchers.base import FetchedItem
+from telegram_net.neptun import map_caption
 
 logger = logging.getLogger(__name__)
 
 DISTRICTS = ("Житомирський", "Бердичівський", "Коростенський", "Звягельський")
 MAX_EVENT_AGE = dt.timedelta(minutes=10)  # після простою не публікуємо застарілі сигнали
+MAP_REPEAT = dt.timedelta(minutes=30)  # поки тривога триває, свіжу карту — не частіше за цей інтервал
 
 _LEVEL_SUFFIX_RE = re.compile(r"\s*\((?:жовтий|червоний) рівень\)\s*", re.IGNORECASE)
 
@@ -100,10 +102,14 @@ def render_alert(event: AlertEvent, district: str, started_at: dt.datetime | Non
 class TextSender(Protocol):
     def send_text(self, chat_id: str, text: str) -> int: ...
 
+    def send_photo_bytes(self, chat_id: str, image: bytes, caption: str | None = None, filename: str = "image.png") -> int: ...
+
 
 class AlertRelay:
-    def __init__(self, config: Config, sender: TextSender | None):
+    def __init__(self, config: Config, sender: TextSender | None, map_provider: Callable[[], bytes | None] | None = None):
         self._sender = sender
+        self._map_provider = map_provider  # знімок карти NEPTUN; None — без карт
+        self.last_map: dict[str, dt.datetime] = {}  # район -> коли востаннє надсилали карту
         self._channels_by_district: dict[str, list[ChannelConfig]] = {}
         for ch in config.active_channels:
             if ch.alert_district:
@@ -114,13 +120,18 @@ class AlertRelay:
 
     # --- стан між перезапусками (GitHub Actions перезапускає цикл кожні ~5 год) ---
     def dump_state(self) -> dict:
-        return {"cursor": self.cursor, "active": {d: t.isoformat() for d, t in self.active.items()}}
+        return {
+            "cursor": self.cursor,
+            "active": {d: t.isoformat() for d, t in self.active.items()},
+            "last_map": {d: t.isoformat() for d, t in self.last_map.items()},
+        }
 
     def load_state(self, data: dict) -> None:
         """Продовжити з місця, де зупинився попередній запуск: сигнали, що прийшли
         під час перезапуску (новіші за курсор і не старші за 10 хв), буде надіслано."""
         self.cursor = data.get("cursor")
         self.active = {d: dt.datetime.fromisoformat(t) for d, t in (data.get("active") or {}).items()}
+        self.last_map = {d: dt.datetime.fromisoformat(t) for d, t in (data.get("last_map") or {}).items()}
 
     def process(self, items: list[FetchedItem], now: dt.datetime) -> None:
         """items — повідомлення джерела від старішого до новішого."""
@@ -141,7 +152,38 @@ class AlertRelay:
                         self.active.pop(district, None)
                     if fresh:
                         self._announce(render_alert(event, district, started, at), district)
+                        self._send_map(district, now)  # карта під кожним сигналом: тривога, зміна рівня, відбій
+                    if event.kind == "clear":
+                        self.last_map.pop(district, None)
             self.cursor = msg_id if self.cursor is None else max(self.cursor, msg_id)
+        self._refresh_maps(now)
+
+    def _refresh_maps(self, now: dt.datetime) -> None:
+        """Поки в районі триває тривога — свіжа карта раз на MAP_REPEAT."""
+        for district in list(self.active):
+            last = self.last_map.get(district)
+            if last is not None and now - last >= MAP_REPEAT:
+                self._send_map(district, now)
+
+    def _send_map(self, district: str, now: dt.datetime) -> None:
+        """Карта NEPTUN у канали району. Збій знімка чи відправки не зачіпає сигнали тривоги."""
+        self.last_map[district] = now  # навіть при збої — щоб не знімати щотіка
+        channels = self._channels_by_district.get(district, [])
+        if self._map_provider is None or not channels:
+            return
+        image = self._map_provider()
+        if image is None:
+            return
+        for ch in channels:
+            caption = map_caption(now)  # без підпису каналу: лише дата й застереження з джерелом
+            self.sent.append((ch.telegram_chat_id, f"[карта] {caption}"))
+            if self._sender is None:
+                logger.info("[пробний] %s: карта NEPTUN (%d байт)", ch.telegram_chat_id, len(image))
+                continue
+            try:
+                self._sender.send_photo_bytes(ch.telegram_chat_id, image, caption=caption, filename="neptun.png")
+            except Exception:
+                logger.exception("Не вдалося надіслати карту в %s", ch.telegram_chat_id)
 
     def _announce(self, base: str, district: str) -> None:
         for ch in self._channels_by_district.get(district, []):

@@ -11,6 +11,9 @@ name: Air raid alerts
 # Між запусками курсор і райони з тривогою зберігаються в кеші Actions: сигнал,
 # що прийшов під час перезапуску, новий запуск надішле (якщо він не старший за
 # 10 хв), а вже надіслані не повторить.
+#
+# На початку тривоги й далі раз на 30 хв, поки вона триває, у канали району йде
+# знімок карти NEPTUN (src/telegram_net/neptun.py; chromium ставиться тут).
 on:
   schedule:
     - cron: "7 0,5,10,15,20 * * *"
@@ -34,7 +37,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install --quiet "httpx>=0.27" "beautifulsoup4>=4.12" "lxml>=5.2"
+        run: |
+          pip install --quiet "httpx>=0.27" "beautifulsoup4>=4.12" "lxml>=5.2" "playwright>=1.45"
+          playwright install --with-deps chromium
 
       - name: Restore alert state
         uses: actions/cache/restore@v4
