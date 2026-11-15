@@ -1,1 +1,72 @@
-[]
+[
+ {
+  "attempts": 0,
+  "candidate_ids": [
+   "a981c97f",
+   "6f839eaa"
+  ],
+  "channel_id": "zhytomyr",
+  "due_at": "2026-11-15T13:05:44+00:00",
+  "html": "<b>⚠️ Сапери ДСНС: підозрілу знахідку не чіпайте — телефонуйте 101</b>\n\nСапери ДСНС Житомирщини продовжують пошук і знешкодження вибухонебезпечних предметів: за красивим осіннім пейзажем іноді ховається смертельна небезпека.\n\nЯкщо побачили підозрілу знахідку — не чіпайте її, відійдіть і телефонуйте 101.",
+  "kind": "oblast",
+  "media": [
+   {
+    "type": "photo",
+    "url": "https://cdn4.telesco.pe/file/h7KpR2VKIcZtIqm_IvNnlWc0l4hFBXSHYzXf6L6TEfy3-o2N9OpTqcnb5h9H9L2uWw9AWDMbu90QIgRTf0QnkRVukjhLVOj-ydPObsI_NL6tssfDw7S5OqN8t97MV02O7vd0bTUfRc1njVOdzcq0eDiDKZQWBwLbr2Yv61A3wOqHnmLiWIxtJ9pfEMMEfWH3KbD9pCEFAnvF97kPnuAh_SQsSQhujF1YmTj_aOxXUK2m9rukgC3l9zGL6kRKq7JxLuKnHiY-qg8B9BkHd46YBywp7RwZzZ2BIAm1tV9jdkmj2eI5gD6p9SeUtbgkPqpCMl19kHRTCeH0qgnjPtCEGQ.jpg"
+   }
+  ],
+  "run_id": "2026-11-15T14-24",
+  "source_urls": [
+   "https://t.me/DSNS_Zhytomyr/39570",
+   "https://t.me/malyn_inform/101709"
+  ],
+  "text": "⚠️ Сапери ДСНС: підозрілу знахідку не чіпайте — телефонуйте 101\n\nСапери ДСНС Житомирщини продовжують пошук і знешкодження вибухонебезпечних предметів: за красивим осіннім пейзажем іноді ховається смертельна небезпека.\n\nЯкщо побачили підозрілу знахідку — не чіпайте її, відійдіть і телефонуйте 101.",
+  "urgent": false
+ },
+ {
+  "attempts": 0,
+  "candidate_ids": [
+   "c2d78174"
+  ],
+  "channel_id": "malyn",
+  "due_at": "2026-11-15T13:05:44+00:00",
+  "html": "<b>🧶 89-річна жителька Федорівки тче доріжки на дідовому верстаті</b>\n\nГалина Мартиненко із села Федорівка Малинської громади працює на дерев’яному верстаті, який виготовив її дідусь: у родині ним користувалися кілька поколінь. Доріжки жінка робить зі старого одягу.\n\nДо ткацтва після тривалої перерви повернулася два роки тому, а нині продає свої вироби, щоб мати додатковий заробіток.\n\n<a href=\"https://t.me/mymalynnews\">Підписатися на «Мій Малин»</a>",
+  "kind": "local",
+  "media": [
+   {
+    "type": "photo",
+    "url": "https://cdn4.telesco.pe/file/FMohlc6JV5IpGKrZQrkiaGhp4YfVmk8uAxaMPaWo7fFLLc3tJ8nwHdpqePDLI8xwoUS-Bf3FzUqJO-_FnGbc-_7PJbmkaLQ8ckPEwUeg9JximPTC-wjF3vwfsClzFkRiczEWuc87c9mtzWAbdikdFSjy89wBlV7ypHZPXWVwMdaDKaSNp4ZKFDsoYdAsTzB4zDtAK4hBGIsiPTqUxRPACQp9MJaHUM0L4ltjq_I8XXcXKS4eRuw5JyMt1Yca7XFrn8uWDJeXhPUS5z1-1S8HuV-vJaV-07apHv5NLnZLJtRSbtDX9JqbfIHBbES1t6hw2vffCXkwBXhnSXoab4LrQQ.jpg"
+   }
+  ],
+  "run_id": "2026-11-15T14-24",
+  "source_urls": [
+   "https://t.me/suspilnezhytomyr/42651"
+  ],
+  "text": "🧶 89-річна жителька Федорівки тче доріжки на дідовому верстаті\n\nГалина Мартиненко із села Федорівка Малинської громади працює на дерев’яному верстаті, який виготовив її дідусь: у родині ним користувалися кілька поколінь. Доріжки жінка робить зі старого одягу.\n\nДо ткацтва після тривалої перерви повернулася два роки тому, а нині продає свої вироби, щоб мати додатковий заробіток.",
+  "urgent": false
+ },
+ {
+  "attempts": 0,
+  "candidate_ids": [
+   "a981c97f",
+   "6f839eaa"
+  ],
+  "channel_id": "malyn",
+  "due_at": "2026-11-15T13:45:44+00:00",
+  "html": "<b>⚠️ Сапери ДСНС: підозрілу знахідку не чіпайте — телефонуйте 101</b>\n\nСапери ДСНС Житомирщини продовжують пошук і знешкодження вибухонебезпечних предметів: за красивим осіннім пейзажем іноді ховається смертельна небезпека.\n\nЯкщо побачили підозрілу знахідку — не чіпайте її, відійдіть і телефонуйте 101.",
+  "kind": "oblast",
+  "media": [
+   {
+    "type": "photo",
+    "url": "https://cdn4.telesco.pe/file/h7KpR2VKIcZtIqm_IvNnlWc0l4hFBXSHYzXf6L6TEfy3-o2N9OpTqcnb5h9H9L2uWw9AWDMbu90QIgRTf0QnkRVukjhLVOj-ydPObsI_NL6tssfDw7S5OqN8t97MV02O7vd0bTUfRc1njVOdzcq0eDiDKZQWBwLbr2Yv61A3wOqHnmLiWIxtJ9pfEMMEfWH3KbD9pCEFAnvF97kPnuAh_SQsSQhujF1YmTj_aOxXUK2m9rukgC3l9zGL6kRKq7JxLuKnHiY-qg8B9BkHd46YBywp7RwZzZ2BIAm1tV9jdkmj2eI5gD6p9SeUtbgkPqpCMl19kHRTCeH0qgnjPtCEGQ.jpg"
+   }
+  ],
+  "run_id": "2026-11-15T14-24",
+  "source_urls": [
+   "https://t.me/DSNS_Zhytomyr/39570",
+   "https://t.me/malyn_inform/101709"
+  ],
+  "text": "⚠️ Сапери ДСНС: підозрілу знахідку не чіпайте — телефонуйте 101\n\nСапери ДСНС Житомирщини продовжують пошук і знешкодження вибухонебезпечних предметів: за красивим осіннім пейзажем іноді ховається смертельна небезпека.\n\nЯкщо побачили підозрілу знахідку — не чіпайте її, відійдіть і телефонуйте 101.",
+  "urgent": false
+ }
+]
