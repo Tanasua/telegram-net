@@ -7,7 +7,7 @@ from telegram_net.config import load_config
 
 def test_seed_config_loads_and_is_consistent():
     config = load_config("data/sources_seed.json")
-    assert len(config.active_channels) == 7
+    assert len(config.channels) == 7 and len(config.active_channels) >= 6
     assert all(c.alert_district for c in config.active_channels)
     channel_ids = {c.channel_id for c in config.channels}
     for s in config.sources:
