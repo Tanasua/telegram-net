@@ -1,0 +1,9 @@
+{
+  "name": "telegram-net-alerts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-channels.mjs",
+    "test": "node --test test/*.test.js"
+  }
+}
