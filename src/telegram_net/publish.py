@@ -246,9 +246,9 @@ def publish_run(
             for channel in {p.channel.channel_id: p.channel for p in prepared}.values():
                 try:
                     title = publisher.check_chat(channel.telegram_chat_id)
-                    report.published.append(f"[перевірка] бот має доступ до {channel.telegram_chat_id} («{title}»)")
+                    report.published.append(f"[перевірка] бот може публікувати в {channel.telegram_chat_id} («{title}»)")
                 except Exception as exc:
-                    report.errors.append(f"канал {channel.telegram_chat_id}: бот не має доступу — {exc}")
+                    report.errors.append(f"канал {channel.telegram_chat_id}: бот не може публікувати — {exc}")
         for p in prepared:
             report.published.append(
                 f"[пробний] {p.channel.channel_id} · {p.kind} · медіа: {len(p.media)}\n{p.plain_text}"

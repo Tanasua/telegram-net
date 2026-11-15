@@ -192,7 +192,7 @@ def test_dry_run_sends_nothing_and_changes_nothing(tmp_path):
     report = publish_run(_run([_post()], dry_run=True), config, state, publisher, NOW)
     assert publisher.sent == [] and state.published == [] and list(state.pool) == ["c1"] and state.runs == []
     text = format_report(report)
-    assert "пробний" in text and "бот має доступ до @mymalyn" in text and "У Малині відкрили міст." in text
+    assert "пробний" in text and "бот може публікувати в @mymalyn" in text and "У Малині відкрили міст." in text
 
     offline = publish_run(_run([_post()]), config, state, None, NOW)  # без токена — теж лише перевірка
     assert offline.dry_run and state.published == []

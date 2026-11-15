@@ -43,9 +43,16 @@ class TelegramPublisher:
         return data["result"]["message_id"]
 
     def check_chat(self, chat_id: str) -> str:
-        """Перевірка доступу бота до каналу (для пробного прогону) — нічого не публікує."""
-        data = self._post("getChat", {"chat_id": chat_id})
-        return str(data["result"].get("title", chat_id))
+        """Перевірка для пробного прогону: канал існує і бот у ньому — адміністратор
+        із правом публікації. Нічого не надсилає. (Сам getChat для публічного
+        каналу успішний і без жодних прав, тому його замало.)"""
+        title = str(self._post("getChat", {"chat_id": chat_id})["result"].get("title", chat_id))
+        bot_id = self._post("getMe", {})["result"]["id"]
+        member = self._post("getChatMember", {"chat_id": chat_id, "user_id": bot_id})["result"]
+        status = member.get("status")
+        if status == "creator" or (status == "administrator" and member.get("can_post_messages", False)):
+            return title
+        raise RuntimeError(f"бот у каналі «{title}» не адміністратор із правом публікації (статус: {status})")
 
     def send_single_media(self, chat_id: str, media: FetchedMedia, caption: str | None = None) -> int:
         method = "sendPhoto" if media.type == "photo" else "sendVideo"

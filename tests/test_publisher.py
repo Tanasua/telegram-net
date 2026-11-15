@@ -167,3 +167,27 @@ def test_post_goes_out_as_text_when_media_fails_completely():
     ids = TelegramPublisher(TOKEN).publish("@c", "новина важливіша за картинку", media_batches=media)
 
     assert ids == [3] and text_route.called
+
+
+def _mock_membership(status, can_post=None):
+    respx.post(f"{BASE}/getChat").mock(return_value=httpx.Response(200, json={"ok": True, "result": {"title": "Мій Малин"}}))
+    respx.post(f"{BASE}/getMe").mock(return_value=httpx.Response(200, json={"ok": True, "result": {"id": 42}}))
+    member = {"status": status}
+    if can_post is not None:
+        member["can_post_messages"] = can_post
+    respx.post(f"{BASE}/getChatMember").mock(return_value=httpx.Response(200, json={"ok": True, "result": member}))
+
+
+@respx.mock
+def test_check_chat_passes_for_admin_with_post_right():
+    _mock_membership("administrator", can_post=True)
+    assert TelegramPublisher(TOKEN).check_chat("@mymalyn") == "Мій Малин"
+
+
+@respx.mock
+@pytest.mark.parametrize("status,can_post", [("administrator", False), ("member", None), ("left", None)])
+def test_check_chat_fails_when_bot_cannot_post(status, can_post):
+    """getChat для публічного каналу успішний і без прав — перевіряти треба саме право публікації."""
+    _mock_membership(status, can_post)
+    with pytest.raises(RuntimeError, match="не адміністратор"):
+        TelegramPublisher(TOKEN).check_chat("@mymalyn")
