@@ -150,12 +150,11 @@ class AlertRelay:
                         self.active.setdefault(district, at)
                     else:
                         self.active.pop(district, None)
-                    if event.kind == "clear":
-                        self.last_map.pop(district, None)
                     if fresh:
                         self._announce(render_alert(event, district, started, at), district)
-                        if event.kind == "alert" and started is None:  # нова тривога — одразу карта
-                            self._send_map(district, now)
+                        self._send_map(district, now)  # карта під кожним сигналом: тривога, зміна рівня, відбій
+                    if event.kind == "clear":
+                        self.last_map.pop(district, None)
             self.cursor = msg_id if self.cursor is None else max(self.cursor, msg_id)
         self._refresh_maps(now)
 

@@ -155,17 +155,19 @@ def test_map_is_sent_when_a_new_alert_starts_and_refreshed_while_it_lasts():
     assert "Карта повітряних загроз" in sender.photos[0][2] and "neptun.in.ua" in sender.photos[0][2]
     assert "Підписатися" not in sender.photos[0][2]  # підпису каналу під картою нема
 
-    # Те саме повідомлення про рівень не дублює карту, коротка пауза теж.
+    # Зміна рівня — теж сигнал, тож і карта.
     relay.process([item(3, "🔴 Коростенський район — повітряна тривога, червоний рівень", minutes_ago=0)], NOW + dt.timedelta(minutes=5))
-    relay.process([], NOW + dt.timedelta(minutes=20))
-    assert len(sender.photos) == 1
-
-    relay.process([], NOW + dt.timedelta(minutes=31))  # тривога триває — свіжа карта
     assert len(sender.photos) == 2
+    relay.process([], NOW + dt.timedelta(minutes=20))
+    assert len(sender.photos) == 2  # пауза між повторами ще не минула
 
-    relay.process([item(4, "🟢 Коростенський район — відбій повітряної тривоги", minutes_ago=0)], NOW + dt.timedelta(minutes=40))
+    relay.process([], NOW + dt.timedelta(minutes=36))  # 30 хв від останньої карти, тривога триває
+    assert len(sender.photos) == 3
+
+    relay.process([item(4, "🟢 Коростенський район — відбій повітряної тривоги", minutes_ago=-40)], NOW + dt.timedelta(minutes=40))
+    assert len(sender.photos) == 4  # відбій теж із картою
     relay.process([], NOW + dt.timedelta(minutes=80))
-    assert len(sender.photos) == 2  # після відбою карт нема
+    assert len(sender.photos) == 4  # далі карт нема
 
 
 def test_map_failure_does_not_block_alert_text():
