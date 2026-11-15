@@ -342,8 +342,9 @@ def publish_markets(config, state, publisher, now: dt.datetime | None = None, fo
     now = now or dt.datetime.now(dt.timezone.utc)
     local = local_now(config, now)
     hour = getattr(config.settings, "markets_hour", 19)
-    if not force and local.hour != hour:
-        return [f"Зараз {local:%H:%M} за Києвом — курс і пальне виходять о {hour}:00, пропускаю"]
+    # Вікно у 2 години: GitHub часом пропускає заплановані запуски, тож пізніша спроба — запасна.
+    if not force and not (hour <= local.hour < hour + 2):
+        return [f"Зараз {local:%H:%M} за Києвом — курс і пальне виходять з {hour}:00 до {hour + 2}:00, пропускаю"]
     day_start = start_of_local_day(config, now)
     channels = [ch for ch in config.active_channels if publisher is None or not state.posts_since(ch.channel_id, day_start, kind="markets")]
     if not channels:
