@@ -1,5 +1,6 @@
 import datetime as dt
 
+from telegram_net.signature import signature_html
 from helpers import NOW, make_config
 
 from telegram_net.publish import drain, format_report, prepare, publish_run
@@ -57,7 +58,7 @@ def test_valid_post_is_rendered_with_bold_headline_and_escaped_html(tmp_path):
     )
     assert errors == []
     (p,) = prepared
-    assert p.html_text == "<b>Міст &lt;відкрито&gt;</b>\n\nРух &amp; пішоходи."
+    assert p.html_text == "<b>Міст &lt;відкрито&gt;</b>\n\nРух &amp; пішоходи.\n\n" + signature_html(p.channel)
     assert p.plain_text == "Міст <відкрито>\n\nРух & пішоходи."
     assert [m.url for m in p.media] == ["https://cdn/c1-1.jpg", "https://cdn/c1-2.jpg"]
     assert p.source_urls == ["https://src/c1"]
@@ -129,15 +130,13 @@ def test_same_candidate_cannot_be_posted_twice_to_one_channel_but_can_go_to_seve
     assert len(errors) == 1 and "вже виходила" in errors[0]
 
 
-def test_cta_is_added_to_every_fourth_post_as_channel_link(tmp_path):
+def test_every_post_ends_with_three_line_channel_signature(tmp_path):
     config, state = make_config(), _state(tmp_path)
-    for _ in range(3):
-        state.log_post({"channel_id": "malyn", "published_at": iso(NOW - dt.timedelta(days=2)), "kind": "local", "text": "т", "candidate_ids": []})
     (p,), _ = prepare(_run([_post()]), config, state, NOW)
-    assert p.with_cta and p.html_text.endswith('\n\n<a href="https://t.me/mymalyn">Підписуйся на Малин</a>')
-    state.log_post({"channel_id": "malyn", "published_at": iso(NOW - dt.timedelta(days=1)), "kind": "local", "text": "т", "candidate_ids": []})
-    (p,), _ = prepare(_run([_post()]), config, state, NOW)
-    assert not p.with_cta and "Підписуйся" not in p.html_text
+    assert p.html_text.endswith(
+        "\n\n<b>❤️ Мій Малин | Новини Малина 🇺🇦</b>\n\n⚡️Новини нашого району⚡️"
+        '\n\n<a href="https://t.me/mymalyn"><b>👉👉👉 Підписатися 👈👈👈</b></a>'
+    )
 
 
 def test_publish_run_sends_logs_and_trims_pool(tmp_path):
@@ -148,7 +147,7 @@ def test_publish_run_sends_logs_and_trims_pool(tmp_path):
 
     assert report.ok and len(publisher.sent) == 1
     chat_id, text, batches = publisher.sent[0]
-    assert chat_id == "@mymalyn" and text == "У Малині відкрили міст." and len(batches[0]) == 2
+    assert chat_id == "@mymalyn" and text == "У Малині відкрили міст.\n\n" + signature_html(config.channel("malyn")) and len(batches[0]) == 2
     (entry,) = state.published
     assert entry["channel_id"] == "malyn" and entry["kind"] == "local" and entry["candidate_ids"] == ["c1"]
     assert entry["message_ids"] == [101] and entry["run_id"] == "r1" and entry["source_urls"] == ["https://src/c1"]

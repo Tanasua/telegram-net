@@ -2,7 +2,7 @@
 // мережі «Мій …» за районами. Запускається щохвилини (cron) і перевіряє джерело
 // двічі за запуск — затримка до ~30 секунд. Стан — у KV (ALERTS_STATE), пишеться
 // лише коли щось змінилось, щоб не виходити за безкоштовний ліміт записів.
-import { parsePage, step } from "./core.js";
+import { parsePage, renderSignature, step } from "./core.js";
 import config from "./channels.json" with { type: "json" };
 
 const STATE_KEY = "state";
@@ -38,8 +38,9 @@ export async function tick(env, now = Date.now()) {
   const items = await fetchItems(config.source);
   const result = step(state, items, now, channelsByDistrict());
   for (const { chat, text } of result.sends) {
+    const ch = config.channels.find((c) => c.telegram_chat_id === chat);
     try {
-      await sendMessage(env.TELEGRAM_BOT_TOKEN, chat, text);
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, chat, ch ? `${text}\n\n${renderSignature(ch)}` : text);
     } catch (err) {
       console.error(String(err)); // один недоступний канал не має зупиняти інші
     }

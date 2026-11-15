@@ -433,10 +433,12 @@ def render(f: DayForecast, channel_title: str) -> bytes:
 # --- публікація ----------------------------------------------------------------
 
 
-def post_caption(f: DayForecast) -> str:
+def post_caption(f: DayForecast, ch) -> str:
     import html
 
-    return f"<b>Погода у {html.escape(f.city_loc)} сьогодні</b>\n{html.escape(caption(f))}"
+    from telegram_net.signature import signature_html
+
+    return f"<b>Погода у {html.escape(f.city_loc)} сьогодні</b>\n{html.escape(caption(f))}\n\n{signature_html(ch)}"
 
 
 def publish_weather(config, state, publisher, now: dt.datetime | None = None, force: bool = False, out_dir: Path | None = None, fetch=fetch_hours) -> list[str]:
@@ -480,7 +482,7 @@ def publish_weather(config, state, publisher, now: dt.datetime | None = None, fo
             lines.append(f"{ch.channel_id}: [пробний] {caption(forecast)}")
             continue
         try:
-            message_id = publisher.send_photo_bytes(ch.telegram_chat_id, image, post_caption(forecast), f"weather_{ch.channel_id}.png")
+            message_id = publisher.send_photo_bytes(ch.telegram_chat_id, image, post_caption(forecast, ch), f"weather_{ch.channel_id}.png")
         except Exception as exc:
             logger.exception("Не вдалося надіслати погоду в %s", ch.channel_id)
             lines.append(f"{ch.channel_id}: ПОМИЛКА Telegram — {exc}")
@@ -500,8 +502,6 @@ def publish_weather(config, state, publisher, now: dt.datetime | None = None, fo
 
 
 def _channel_title(ch) -> str:
-    """«Мій Радомишль» для підпису внизу картинки: з заклику підписатись, інакше з назви."""
-    cta = ch.subscribe_cta or ""
-    if "«" in cta and "»" in cta:
-        return cta[cta.index("«") + 1 : cta.index("»")]
-    return f"Мій {ch.name}"
+    from telegram_net.signature import channel_title
+
+    return channel_title(ch)

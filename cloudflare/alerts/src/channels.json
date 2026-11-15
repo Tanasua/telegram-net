@@ -4,37 +4,51 @@
     {
       "channel_id": "zhytomyr",
       "telegram_chat_id": "@myzhytomyrnews",
-      "alert_district": "Житомирський"
+      "alert_district": "Житомирський",
+      "title": "Мій Житомир",
+      "name_genitive": "Житомира"
     },
     {
       "channel_id": "berdychiv",
       "telegram_chat_id": "@myberdychivnews",
-      "alert_district": "Бердичівський"
+      "alert_district": "Бердичівський",
+      "title": "Мій Бердичів",
+      "name_genitive": "Бердичева"
     },
     {
       "channel_id": "korosten",
       "telegram_chat_id": "@mykorostennews",
-      "alert_district": "Коростенський"
+      "alert_district": "Коростенський",
+      "title": "Мій Коростень",
+      "name_genitive": "Коростеня"
     },
     {
       "channel_id": "zvyahel",
       "telegram_chat_id": "@myzvyahelnews",
-      "alert_district": "Звягельський"
+      "alert_district": "Звягельський",
+      "title": "Мій Звягель",
+      "name_genitive": "Звягеля"
     },
     {
       "channel_id": "malyn",
       "telegram_chat_id": "@mymalynnews",
-      "alert_district": "Коростенський"
+      "alert_district": "Коростенський",
+      "title": "Мій Малин",
+      "name_genitive": "Малина"
     },
     {
       "channel_id": "radomyshl",
       "telegram_chat_id": "@myradomyshlnews",
-      "alert_district": "Житомирський"
+      "alert_district": "Житомирський",
+      "title": "Мій Радомишль",
+      "name_genitive": "Радомишля"
     },
     {
       "channel_id": "korostyshiv",
       "telegram_chat_id": "@mykorostyshivnews",
-      "alert_district": "Житомирський"
+      "alert_district": "Житомирський",
+      "title": "Мій Коростишів",
+      "name_genitive": "Коростишева"
     }
   ]
 }

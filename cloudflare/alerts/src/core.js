@@ -133,3 +133,15 @@ export function step(state, items, nowMs, channelsByDistrict) {
   }
   return { state: next, sends };
 }
+
+const escapeHtml = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** Підпис під усіма постами мережі (той самий, що в Python: signature.py). */
+export function renderSignature(ch) {
+  const news = ch.name_genitive ? `Новини ${ch.name_genitive}` : "Новини";
+  const line1 = `<b>${escapeHtml(`❤️ ${ch.title} | ${news} 🇺🇦`)}</b>`;
+  const cta = "👉👉👉 Підписатися 👈👈👈";
+  const chat = ch.telegram_chat_id ?? "";
+  const line3 = chat.startsWith("@") ? `<a href="https://t.me/${chat.slice(1)}"><b>${cta}</b></a>` : `<b>${cta}</b>`;
+  return `${line1}\n\n⚡️Новини нашого району⚡️\n\n${line3}`;
+}
