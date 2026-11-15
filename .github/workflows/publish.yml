@@ -1,9 +1,14 @@
 name: Publish editor decisions
 
-# Редактор (Claude) пушить файл рішень outbox/<run_id>.json у свою гілку claude/**.
-# Цей workflow перевіряє рішення, публікує пости ботом (токен — у GitHub Secrets,
-# у сесію Claude він не потрапляє) і зберігає стан у гілку за замовчуванням,
-# звідки його візьме наступний прогін.
+# Редактор (Claude) пушить файл рішень outbox/<run_id>.json у гілку claude/**.
+# Цей workflow перевіряє рішення, ставить пости в чергу з інтервалом між постами
+# одного каналу (перший пост каналу виходить одразу) і зберігає стан у гілку за
+# замовчуванням. Решту черги надсилає drain.yml.
+#
+# Стан збирається так: published.json і queue.json беруться з гілки за
+# замовчуванням (їх пишуть лише цей workflow і drain.yml), а state.json
+# (курсори, пул кандидатів) — з коміту редактора. Тому черга, надіслана поки
+# редактор працював, не перетирається.
 on:
   push:
     branches: ["claude/**"]
@@ -21,8 +26,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
+      - name: Checkout the default branch
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Take the editor's decisions and collection state
+        run: |
+          git fetch --depth=1 origin "$GITHUB_SHA"
+          git checkout FETCH_HEAD -- outbox
+          git checkout FETCH_HEAD -- state/state.json 2>/dev/null || echo "У коміті редактора немає state.json"
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -47,12 +60,10 @@ jobs:
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          mkdir -p /tmp/state && cp state/*.json /tmp/state/
           git config user.name "telegram-net-bot"
           git config user.email "actions@users.noreply.github.com"
-          git fetch --depth=1 origin "$DEFAULT_BRANCH"
-          git checkout -f -B _state FETCH_HEAD
-          mkdir -p state && cp /tmp/state/*.json state/
+          git reset -q -- outbox && git checkout -q -- outbox 2>/dev/null || true
+          git clean -fdq outbox
           git add state
           git diff --cached --quiet || git commit -m "Update pipeline state"
           git push origin "HEAD:$DEFAULT_BRANCH"

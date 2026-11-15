@@ -65,6 +65,7 @@ class Settings:
     national_daily_limit: int = 4  # всеукраїнських постів на канал за добу
     max_caption_chars: int = 1000  # ліміт Telegram на підпис до фото — 1024
     max_text_chars: int = 3500
+    post_spacing_minutes: int = 40  # мінімальний інтервал між постами одного каналу
     alerts_source: str = "zhytomyrmilitaryadministration"
     # Лагідні звертання до підписників: код підказує редактору, коли й яке
     # вжити (кожен N-й пост каналу, по колу), щоб вони не зникали й не частили.

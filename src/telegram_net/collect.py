@@ -283,7 +283,7 @@ def address_hint(config: Config, state: State, channel: ChannelConfig) -> str | 
     settings = config.settings
     if not settings.addresses or settings.address_every <= 0:
         return None
-    count = len([p for p in state.published if p["channel_id"] == channel.channel_id and p.get("kind") != "alert"])
+    count = state.channel_post_count(channel.channel_id)
     if count % settings.address_every != 0:
         return None  # звертання отримують 1-й, (N+1)-й, (2N+1)-й… пости каналу
     turn = count // settings.address_every
@@ -343,9 +343,20 @@ def build_brief(
                             "text": p["text"][:500],
                         }
                         for p in recent
-                        if p.get("kind") != "alert"
+                        if p.get("kind") != "alert" and p.get("published_at")
                     ]
-                )[-RECENT_POSTS_LIMIT:],
+                )[-RECENT_POSTS_LIMIT:]
+                # Заплановане ще не видно в самому каналі, але повторювати його не можна.
+                + [
+                    {
+                        "at": parse_iso(q["due_at"]).astimezone(local.tzinfo).strftime("%d.%m %H:%M"),
+                        "kind": q.get("kind"),
+                        "text": q["text"][:500],
+                        "scheduled": True,
+                    }
+                    for q in state.queue
+                    if q["channel_id"] == ch.channel_id
+                ],
             }
         )
 
@@ -410,9 +421,12 @@ def brief_text(brief: dict) -> str:
             f"{ch['channel_id']} «{ch['name']}» · лишилось сьогодні {ch['remaining_today']}, за прогін {ch['max_posts_this_run']}, "
             f"всеукр. {ch['national_remaining_today']}" + (" · " + " · ".join(extras) if extras else "")
         )
-        for post in ch["recent_posts"][-BRIEF_RECENT_POSTS:]:
+        published = [p for p in ch["recent_posts"] if not p.get("scheduled")][-BRIEF_RECENT_POSTS:]
+        scheduled = [p for p in ch["recent_posts"] if p.get("scheduled")]
+        for post in published + scheduled:
             head = " ".join(post["text"].split())[:BRIEF_RECENT_CHARS]
-            lines.append(f"  вже було {post.get('at') or ''}: {head}")
+            label = "заплановано" if post.get("scheduled") else "вже було"
+            lines.append(f"  {label} {post.get('at') or ''}: {head}")
     lines.append("")
     lines.append(f"КАНДИДАТИ ({len(brief['candidates'])})")
     for c in brief["candidates"]:
