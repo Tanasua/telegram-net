@@ -1,0 +1,57 @@
+name: Evening currency and fuel
+
+# О 19:00 за Києвом — інфографіка «Курс валют і пальне» в кожен канал
+# (src/telegram_net/markets.py). Без моделей: курс НБУ, готівка ПриватБанку,
+# ціни на пальне по Житомирщині з index.minfin.com.ua.
+#
+# GitHub не знає про літній час, тому запуск двічі — о 16:00 і 17:00 UTC.
+# Код публікує лише тоді, коли в Києві саме 19-та година, і лише раз на добу.
+on:
+  schedule:
+    - cron: "0 16,17 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Опублікувати зараз, не чекаючи 19:00"
+        type: boolean
+        default: false
+
+concurrency:
+  group: telegram-net-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  markets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet "httpx>=0.27" "pillow>=10.0" "beautifulsoup4>=4.12" "lxml>=5.2"
+
+      - name: Publish currency and fuel
+        id: markets
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: PYTHONPATH=src python -m telegram_net.cli markets $FORCE
+
+      - name: Save state
+        if: always() && steps.markets.outputs.save_state == 'true'
+        run: |
+          git config user.name "telegram-net-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state
+          git diff --cached --quiet || git commit -m "Evening currency and fuel"
+          git pull --rebase --quiet || true
+          git push

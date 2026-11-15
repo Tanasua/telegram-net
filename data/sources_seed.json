@@ -18,7 +18,8 @@
       "Сонечки"
     ],
     "address_every": 3,
-    "weather_hour": 8
+    "weather_hour": 8,
+    "markets_hour": 19
   },
   "channels": [
     {
