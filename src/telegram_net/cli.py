@@ -237,7 +237,12 @@ def cmd_alerts(args) -> int:
 
     config = load_config(args.config)
     sender = None if args.dry_run else _publisher(required=True)
-    relay = AlertRelay(config, sender)
+    map_provider = None
+    if not args.no_map:
+        from telegram_net.neptun import capture_map
+
+        map_provider = capture_map
+    relay = AlertRelay(config, sender, map_provider)
     http = httpx.Client(timeout=15)
     url = f"https://t.me/s/{config.settings.alerts_source}"
 
@@ -320,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-minutes", type=float, default=None)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--state-file", default=None, help="де зберігати курсор між перезапусками")
+    p.add_argument("--no-map", action="store_true", help="не знімати карту NEPTUN")
     p.set_defaults(func=cmd_alerts)
 
     args = parser.parse_args(argv)
