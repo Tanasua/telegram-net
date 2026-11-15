@@ -17,7 +17,8 @@
       "Любчики-голубчики",
       "Сонечки"
     ],
-    "address_every": 3
+    "address_every": 3,
+    "weather_hour": 8
   },
   "channels": [
     {
@@ -29,7 +30,12 @@
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Житомир»"
+      "subscribe_cta": "Підписатися на «Мій Житомир»",
+      "weather": {
+        "lat": 50.2547,
+        "lon": 28.6587,
+        "city_loc": "Житомирі"
+      }
     },
     {
       "channel_id": "berdychiv",
@@ -40,7 +46,12 @@
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Бердичів»"
+      "subscribe_cta": "Підписатися на «Мій Бердичів»",
+      "weather": {
+        "lat": 49.8994,
+        "lon": 28.6025,
+        "city_loc": "Бердичеві"
+      }
     },
     {
       "channel_id": "korosten",
@@ -51,7 +62,12 @@
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Коростень»"
+      "subscribe_cta": "Підписатися на «Мій Коростень»",
+      "weather": {
+        "lat": 50.9505,
+        "lon": 28.6383,
+        "city_loc": "Коростені"
+      }
     },
     {
       "channel_id": "zvyahel",
@@ -62,7 +78,12 @@
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Звягель»"
+      "subscribe_cta": "Підписатися на «Мій Звягель»",
+      "weather": {
+        "lat": 50.5883,
+        "lon": 27.6164,
+        "city_loc": "Звягелі"
+      }
     },
     {
       "channel_id": "malyn",
@@ -73,7 +94,12 @@
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Малин»"
+      "subscribe_cta": "Підписатися на «Мій Малин»",
+      "weather": {
+        "lat": 50.7686,
+        "lon": 29.24,
+        "city_loc": "Малині"
+      }
     },
     {
       "channel_id": "radomyshl",
@@ -84,7 +110,12 @@
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Радомишль»"
+      "subscribe_cta": "Підписатися на «Мій Радомишль»",
+      "weather": {
+        "lat": 50.4983,
+        "lon": 29.2333,
+        "city_loc": "Радомишлі"
+      }
     },
     {
       "channel_id": "korostyshiv",
@@ -95,7 +126,12 @@
       "daily_limit": 12,
       "max_posts_per_run": 3,
       "cta_every": 4,
-      "subscribe_cta": "Підписатися на «Мій Коростишів»"
+      "subscribe_cta": "Підписатися на «Мій Коростишів»",
+      "weather": {
+        "lat": 50.3167,
+        "lon": 29.05,
+        "city_loc": "Коростишеві"
+      }
     }
   ],
   "sources": [

@@ -1,0 +1,56 @@
+name: Morning weather
+
+# О 08:00 за Києвом — інфографіка погоди в кожен канал (src/telegram_net/weather.py).
+# Без моделей: дані MET Norway (запасне — Open-Meteo), картинку малює Pillow.
+#
+# GitHub не знає про літній час, тому запуск двічі — о 05:00 і 06:00 UTC
+# (08:00 за Києвом улітку й узимку). Код публікує лише тоді, коли в Києві
+# саме 8-ма година, і лише раз на добу; зайвий запуск закінчується за секунди.
+on:
+  schedule:
+    - cron: "0 5,6 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Опублікувати зараз, не чекаючи 8:00"
+        type: boolean
+        default: false
+
+concurrency:
+  group: telegram-net-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  weather:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet "httpx>=0.27" "pillow>=10.0"
+
+      - name: Publish weather
+        id: weather
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: PYTHONPATH=src python -m telegram_net.cli weather $FORCE
+
+      - name: Save state
+        if: always() && steps.weather.outputs.save_state == 'true'
+        run: |
+          git config user.name "telegram-net-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state
+          git diff --cached --quiet || git commit -m "Morning weather"
+          git push

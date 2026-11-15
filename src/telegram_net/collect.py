@@ -19,7 +19,7 @@ from telegram_net.config import ChannelConfig, Config, SourceConfig
 from telegram_net.dedup import content_hash
 from telegram_net.fetchers.article import Article, looks_like_logo
 from telegram_net.fetchers.base import FetchedItem, Fetcher
-from telegram_net.state import State, iso, now_utc, parse_iso
+from telegram_net.state import SERVICE_KINDS, State, iso, now_utc, parse_iso
 from telegram_net.stoplist import find_stop_topic
 
 logger = logging.getLogger(__name__)
@@ -310,7 +310,7 @@ def build_brief(
     recent_from = now - dt.timedelta(hours=RECENT_POSTS_HOURS)
     channels = []
     for ch in config.active_channels:
-        today = [p for p in state.posts_since(ch.channel_id, day_start) if p.get("kind") != "alert"]
+        today = [p for p in state.posts_since(ch.channel_id, day_start) if p.get("kind") not in SERVICE_KINDS]
         recent = state.posts_since(ch.channel_id, recent_from)
         channels.append(
             {
@@ -333,6 +333,7 @@ def build_brief(
                         for i in live_posts[ch.channel_id]
                         if i.text
                         and not is_alert_signal(i.text)
+                        and not i.text.startswith("Погода у ")
                         and (i.published_at is None or _aware(i.published_at) >= recent_from)
                     ]
                     if ch.channel_id in live_posts
@@ -343,7 +344,7 @@ def build_brief(
                             "text": p["text"][:500],
                         }
                         for p in recent
-                        if p.get("kind") != "alert" and p.get("published_at")
+                        if p.get("kind") not in SERVICE_KINDS and p.get("published_at")
                     ]
                 )[-RECENT_POSTS_LIMIT:]
                 # Заплановане ще не видно в самому каналі, але повторювати його не можна.

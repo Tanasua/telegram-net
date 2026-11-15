@@ -53,6 +53,7 @@ class ChannelConfig:
     max_posts_per_run: int = 3
     subscribe_cta: str | None = None
     cta_every: int = 4  # заклик підписатись — у кожному N-му пості, не в кожному
+    weather: dict | None = None  # {"lat", "lon", "city_loc"} — для ранкової інфографіки погоди
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,7 @@ class Settings:
     max_caption_chars: int = 1000  # ліміт Telegram на підпис до фото — 1024
     max_text_chars: int = 3500
     post_spacing_minutes: int = 40  # мінімальний інтервал між постами одного каналу
+    weather_hour: int = 8  # о котрій (за Києвом) виходить інфографіка погоди
     alerts_source: str = "zhytomyrmilitaryadministration"
     # Лагідні звертання до підписників: код підказує редактору, коли й яке
     # вжити (кожен N-й пост каналу, по колу), щоб вони не зникали й не частили.
@@ -116,6 +118,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> Config:
             max_posts_per_run=c.get("max_posts_per_run", 3),
             subscribe_cta=c.get("subscribe_cta") or f"Підписуйся на {c['name']}",
             cta_every=c.get("cta_every", 4),
+            weather=c.get("weather"),
         )
         for c in data["channels"]
     ]

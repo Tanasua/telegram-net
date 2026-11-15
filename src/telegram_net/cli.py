@@ -4,6 +4,7 @@
     show    <id…>      повний текст кандидатів
     check   <файл>     перевірити файл рішень редактора, нічого не надсилаючи
     publish <файл…>    опублікувати рішення (потрібен TELEGRAM_BOT_TOKEN)
+    weather            ранкова інфографіка погоди в усі канали
     drain              надіслати з черги пости, чий час настав
     report             стан мережі: пости за добу, проблемні джерела
     alerts             цикл сигналів тривоги/відбою (потрібен TELEGRAM_BOT_TOKEN)
@@ -20,7 +21,7 @@ import sys
 from pathlib import Path
 
 from telegram_net.config import DEFAULT_CONFIG_PATH, load_config
-from telegram_net.state import State, now_utc
+from telegram_net.state import SERVICE_KINDS, State, now_utc
 
 logger = logging.getLogger("telegram_net")
 
@@ -142,6 +143,22 @@ def cmd_drain(args) -> int:
     return 1 if errors and not sent else 0
 
 
+def cmd_weather(args) -> int:
+    from telegram_net.weather import publish_weather
+
+    config = load_config(args.config)
+    state = State(args.state)
+    publisher = None if args.dry_run else _publisher(required=True)
+    lines = publish_weather(config, state, publisher, force=args.force, out_dir=Path(args.out) if args.out else None)
+    for line in lines:
+        print(line)
+    sent = any("надіслано" in line for line in lines)
+    if sent:
+        state.save()
+    _github_output(save_state=sent)
+    return 1 if any("ПОМИЛКА" in line for line in lines) else 0
+
+
 def _github_output(**values: bool) -> None:
     """Сигнали наступним крокам workflow (publish.yml): чи зберігати стан, чи видаляти гілку."""
     path = os.environ.get("GITHUB_OUTPUT")
@@ -161,7 +178,7 @@ def cmd_report(args) -> int:
     day_ago = now - dt.timedelta(hours=24)
     print("Постів за останні 24 години (без сигналів тривоги):")
     for ch in config.active_channels:
-        posts = [p for p in state.posts_since(ch.channel_id, day_ago) if p.get("kind") != "alert"]
+        posts = [p for p in state.posts_since(ch.channel_id, day_ago) if p.get("kind") not in SERVICE_KINDS]
         kinds: dict[str, int] = {}
         for p in posts:
             kinds[p.get("kind", "?")] = kinds.get(p.get("kind", "?"), 0) + 1
@@ -225,6 +242,12 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("drain")
     p.set_defaults(func=cmd_drain)
+
+    p = sub.add_parser("weather")
+    p.add_argument("--force", action="store_true", help="не перевіряти годину")
+    p.add_argument("--dry-run", action="store_true", help="нічого не надсилати")
+    p.add_argument("--out", default=None, help="куди зберегти картинки")
+    p.set_defaults(func=cmd_weather)
 
     p = sub.add_parser("report")
     p.set_defaults(func=cmd_report)
