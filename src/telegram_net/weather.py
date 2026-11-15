@@ -455,8 +455,10 @@ def publish_weather(config, state, publisher, now: dt.datetime | None = None, fo
 
     now = now or dt.datetime.now(dt.timezone.utc)
     local = local_now(config, now)
-    if not force and local.hour != config.settings.weather_hour:
-        return [f"Зараз {local:%H:%M} за Києвом — погода виходить о {config.settings.weather_hour}:00, пропускаю"]
+    start = config.settings.weather_hour
+    # Вікно у 2 години: GitHub часом пропускає заплановані запуски, тож пізніша спроба — запасна.
+    if not force and not (start <= local.hour < start + 2):
+        return [f"Зараз {local:%H:%M} за Києвом — погода виходить з {start}:00 до {start + 2}:00, пропускаю"]
     tz = ZoneInfo(config.settings.timezone)
     day_start = start_of_local_day(config, now)
     lines = []
