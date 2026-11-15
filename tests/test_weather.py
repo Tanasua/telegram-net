@@ -33,7 +33,7 @@ def test_met_symbols_and_temperatures_format():
 def test_summary_has_four_parts_hero_and_tip():
     f = summarize(_hours(), DAY, "Радомишлі")
     assert [p.name for p in f.parts] == ["Ранок", "День", "Вечір", "Ніч"]
-    assert f.hero_icon == "cloud" and f.phrase == "хмарно"
+    assert f.hero_icon == "cloudy" and f.phrase == "хмарно"
     assert f.day_max == round(max(2 + h / 3 for h in range(8, 22)))
     assert f.parts[3].temp == round(min([2 + h / 3 for h in (22, 23)] + [2 + h / 3 for h in range(0, 6)]))
     assert f.tip == "Гарного дня!"  # ранок близько +5°, без опадів
@@ -54,7 +54,7 @@ def test_clear_evening_and_night_show_the_moon_and_frost_tip():
     clear = {h: "clear" for h in range(24)}
     f = summarize(_hours(clear, temp=lambda h: -5), DAY, "Житомирі")
     icons = {p.name: p.icon for p in f.parts}
-    assert icons == {"Ранок": "sun", "День": "sun", "Вечір": "moon", "Ніч": "moon"}
+    assert icons == {"Ранок": "clear-day", "День": "clear-day", "Вечір": "clear-night", "Ніч": "clear-night"}
     assert f.tip == "Морозно — вдягайтеся тепло" and fmt_temp(f.day_max) == "−5°"
 
 
@@ -146,3 +146,12 @@ def test_failed_fetch_is_reported_not_raised(tmp_path):
 
     lines = publish_weather(_weather_config(), State(tmp_path), FakePhotoPublisher(), now=EIGHT, fetch=broken)
     assert "ПОМИЛКА" in lines[0]
+
+
+def test_every_icon_used_by_the_code_exists():
+    from telegram_net.weather import _SKY, ASSETS
+
+    tips = {"lightning-bolt", "snowflake", "umbrella", "wind", "thermometer-colder", "thermometer-warmer", "sunrise"}
+    names = {c.icon for c in _SKY.values()} | {c.night_icon for c in _SKY.values()} | tips
+    missing = [n for n in names if not (ASSETS / "icons" / f"{n}.png").exists()]
+    assert missing == []
