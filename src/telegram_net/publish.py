@@ -238,6 +238,14 @@ def publish_run(
         # Повторний запуск workflow для того самого файлу не має дублювати пости.
         report.skipped_run = True
         return report
+    slot = run_id[:13]  # «2026-11-16T07» — година прогону
+    if not dry_run and len(run_id) >= 13 and any(r[:13] == slot for r in processed if len(r) >= 13):
+        # Захист від двох редакторів одночасно (так було 16.11, коли старе
+        # завдання не видалилось): другий прогін у ту саму годину пропускаємо.
+        report.skipped_run = True
+        report.published.append(f"прогін {run_id} пропущено: у цю годину вже був інший прогін (два редактори?)")
+        processed.append(run_id)
+        return report
 
     prepared, errors = prepare(decisions, config, state, now)
     report.errors.extend(errors)
@@ -312,7 +320,12 @@ def schedule(prepared: list[PreparedPost], config: Config, state: State, now: dt
             due = now
         else:
             due = max(now, last[cid] + spacing) if cid in last else now
-            due = _next_open_time(config, due)
+            opened = _next_open_time(config, due)
+            if opened != due and p.kind == "evening":
+                # «Головне за день» уранці наступного дня нікому не потрібне.
+                logger.info("Вечірній підсумок %s не встигає до нічної тиші — пропускаю", cid)
+                continue
+            due = opened
         last[cid] = max(last.get(cid, due), due)
         entries.append(
             {
