@@ -107,6 +107,29 @@ def test_loop_survives_fetch_errors_and_stops_by_runtime():
     assert len(calls) == 1 and sleeps == []
 
 
+def test_loop_stops_early_when_new_code_is_out():
+    relay = AlertRelay(make_config(), None)
+    answers = iter([False, False, True])
+    sleeps = []
+    run_loop(relay, lambda: [], interval_sec=30, max_runtime_min=600, sleep=sleeps.append, should_stop=lambda: next(answers))
+    assert len(sleeps) == 2
+
+
+def test_loop_keeps_running_when_stop_check_fails():
+    relay = AlertRelay(make_config(), None)
+    calls = []
+
+    def should_stop():
+        calls.append(1)
+        if len(calls) == 1:
+            raise RuntimeError("api")
+        return True
+
+    sleeps = []
+    run_loop(relay, lambda: [], interval_sec=30, max_runtime_min=600, sleep=sleeps.append, should_stop=should_stop)
+    assert len(sleeps) == 1
+
+
 def test_state_survives_restart_and_catches_signals_from_the_gap():
     """GitHub Actions перезапускає цикл кожні ~5 год. Сигнал, що прийшов під час
     перезапуску, має вийти, а вже надіслані — не повторитись."""

@@ -206,7 +206,10 @@ def run_loop(
     max_runtime_min: float | None = None,
     sleep: Callable[[float], None] = time.sleep,
     after_tick: Callable[[], None] | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> None:
+    """should_stop — дострокова зупинка (напр. у main новий код: наступний запуск
+    уже в черзі й візьме його, а не крутитиме старий до кінця ~5-год. циклу)."""
     started = time.monotonic()
     while True:
         try:
@@ -217,4 +220,11 @@ def run_loop(
             after_tick()
         if max_runtime_min is not None and (time.monotonic() - started) / 60 >= max_runtime_min:
             return
+        if should_stop is not None:
+            try:
+                if should_stop():
+                    logger.info("Зупиняю цикл достроково — наступний запуск продовжить")
+                    return
+            except Exception:
+                logger.exception("Перевірка дострокової зупинки не вдалася — працюю далі")
         sleep(interval_sec)
