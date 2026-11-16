@@ -1,1 +1,28 @@
-[]
+[
+ {
+  "attempts": 0,
+  "candidate_ids": [
+   "33743923",
+   "733a7dca",
+   "ff4950f3"
+  ],
+  "channel_id": "malyn",
+  "due_at": "2026-11-16T20:29:23+00:00",
+  "html": "<b>🚨 На Малинщині в лобовій аварії постраждала водійка</b>\n\n14 листопада близько 23:10 на трасі Київ — Ковель — Ягодин, неподалік села Українки Малинської громади, зіткнулися Toyota Camry і мікроавтобус Mercedes-Benz Sprinter. Водійка легковика, 50-річна жителька Київщини, отримала травми, її забрала швидка. Водій мікроавтобуса, 50-річний мешканець Рівненщини, у допомозі не потребував.\n\nПоліція відкрила кримінальне провадження й встановлює причини аварії.\n\n<b>❤️ Мій Малин | Новини Малина 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/mymalynnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
+  "kind": "local",
+  "media": [
+   {
+    "type": "photo",
+    "url": "https://cdn4.telesco.pe/file/jKt3rhpvd6lPvVKM_bH4zoVWtm_D7Ss6bAas2itw8lt32d6Nl0zQ36rG_Pf_HUiRSLRVXa2vRt64TvTRc1ECJAcF8BTedCh2syaFXvK-MG4M6RcKWxAnJIrm5YGbQOnRe0xYrY_bI-71LOB_koEUqcicQoqsvwHNIW6V3V06Kks_3VQCJwX8f_eUok7rT2uzESRLBmnZEMjrYkDs1lBRbfdLF0-9Bv827Q0rnB_GAdwx2XV8s4gDfM5T7ifvbJIsYAM33M3TADnWB1dhYsHZckRY0QM1iVi48GBZtktAgpF14SPuZxVs_Jym9GO61-c7bWUxxpcD8wRRXDeoZQxHFA.jpg"
+   }
+  ],
+  "run_id": "2026-11-16T21-47",
+  "source_urls": [
+   "https://t.me/malyn_inform/101866",
+   "https://polissya.today/na-malynshchyni-lehkovyk-zitknuvsya-z-mikroavtobusom-postrazhdala-zhinka",
+   "https://t.me/zt_police/25892"
+  ],
+  "text": "🚨 На Малинщині в лобовій аварії постраждала водійка\n\n14 листопада близько 23:10 на трасі Київ — Ковель — Ягодин, неподалік села Українки Малинської громади, зіткнулися Toyota Camry і мікроавтобус Mercedes-Benz Sprinter. Водійка легковика, 50-річна жителька Київщини, отримала травми, її забрала швидка. Водій мікроавтобуса, 50-річний мешканець Рівненщини, у допомозі не потребував.\n\nПоліція відкрила кримінальне провадження й встановлює причини аварії.",
+  "urgent": false
+ }
+]
