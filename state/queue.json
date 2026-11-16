@@ -2,30 +2,6 @@
  {
   "attempts": 0,
   "candidate_ids": [
-   "248b668c",
-   "a3859fc7"
-  ],
-  "channel_id": "zhytomyr",
-  "due_at": "2026-11-16T12:08:41+00:00",
-  "html": "<b>🚨 На трасі М-06 біля Ставища сталася ДТП, є потерпілі</b>\n\nАварія на 77 км траси Київ — Чоп, поблизу села Ставище Брусилівської громади. Рух у напрямку Житомира частково ускладнений: транспорт пропускають крайньою лівою смугою.\n\nОбставини події встановлюють.\n\n<b>❤️ Мій Житомир | Новини Житомира 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/myzhytomyrnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
-  "kind": "local",
-  "media": [
-   {
-    "type": "photo",
-    "url": "https://cdn4.telesco.pe/file/nQWGIxJ1-faqZL8keLKBvCxMRDZ3rx8pK350fzY8wgUANA4wTWR8LUicTO_UcJllU4Jo1A-GopuDL3chggyX4SWKtIxAYPkgTJ5gO_UnUxx_QDKOvb0nE_dWM4YPwHYRiIThfY5oJHBUewtH5-MsU88ThlDjgY-N44H4h8df5HIkpetDN4_87fi51IBoxKkpyVmewf-AiJ5HoffG4gnoRYxyw7eCxIcPwPjE_z3304rUcaOcPeyWuDr6Z6ymDAX6bgUMPWy8x6QPf09zdnzd2XgXgwoPxEtP6nbzwU8Psz7trGD55-x3k_tp_WWtospP0f14VgFat3zxd3yiZ-8JUw.jpg"
-   }
-  ],
-  "run_id": "2026-11-16T13-48",
-  "source_urls": [
-   "https://t.me/zhytomir_info/31762",
-   "https://t.me/patrol_police_zt/13935"
-  ],
-  "text": "🚨 На трасі М-06 біля Ставища сталася ДТП, є потерпілі\n\nАварія на 77 км траси Київ — Чоп, поблизу села Ставище Брусилівської громади. Рух у напрямку Житомира частково ускладнений: транспорт пропускають крайньою лівою смугою.\n\nОбставини події встановлюють.",
-  "urgent": false
- },
- {
-  "attempts": 0,
-  "candidate_ids": [
    "4b635866"
   ],
   "channel_id": "malyn",
