@@ -2,28 +2,6 @@
  {
   "attempts": 0,
   "candidate_ids": [
-   "4b635866"
-  ],
-  "channel_id": "malyn",
-  "due_at": "2026-11-16T12:30:26+00:00",
-  "html": "<b>🏆 Малинські спортсменки здобули п&#x27;ять медалей на чемпіонаті України з поул-спорту</b>\n\nВихованки Школи пілонного спорту «ВМ» завершили змагальний сезон двома золотими й трьома бронзовими нагородами.\n\n<b>❤️ Мій Малин | Новини Малина 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/mymalynnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
-  "kind": "local",
-  "media": [
-   {
-    "type": "photo",
-    "url": "https://cdn4.telesco.pe/file/afjEOQgD2Kg50TPqIe0jOvWl-0m95TpLnRb7oNu0TmTik00y2aP5IwwCvO1562nohe9M_7rgCuqPiJ0T9AAHmPpyVVl0pOAARMaUVR2eyo-fBGtq7I73Y_JDmgwawVjpciB1goM7dstojWlEUYxE910Vc30Wc42ocvFyRBYFXV9bkkVWr9e0f4gJydYWGPDBdVgIwMXETaZecQZkvANFTIpBD0hGnHH_b7onJXr47sNTq9_u9DCu5SL2Uk9t7J2WaHaQ3ZPOAveMUr_0rNAI7riR-CnD-ENraDRv_zsFJMb1o8l_UXEcJ_pTsU_GF8udi5oi-x3KvZUyp1BakjStgA.jpg"
-   }
-  ],
-  "run_id": "2026-11-16T13-48",
-  "source_urls": [
-   "https://t.me/MalynMedia/9250"
-  ],
-  "text": "🏆 Малинські спортсменки здобули п'ять медалей на чемпіонаті України з поул-спорту\n\nВихованки Школи пілонного спорту «ВМ» завершили змагальний сезон двома золотими й трьома бронзовими нагородами.",
-  "urgent": false
- },
- {
-  "attempts": 0,
-  "candidate_ids": [
    "738f82b5",
    "e0a31b41",
    "b53d97e6",
