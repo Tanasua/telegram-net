@@ -12,8 +12,8 @@ name: Air raid alerts
 # Цей цикл — ще й «годинник» мережі (src/telegram_net/ticker.py): щохвилини він
 # запускає чергу постів, погоду й курс валют у їхні вікна.
 #
-# Новий код у main цикл підхоплює сам: раз на 5 хв звіряє коміт гілки з тим,
-# з яким стартував, і за розбіжності завершується — наступний запуск (уже в
+# Новий код у main цикл підхоплює сам: раз на 5 хв звіряє дерево src/ гілки з
+# тим, з яким стартував, і за розбіжності завершується — наступний запуск (уже в
 # черзі) стартує з новим кодом. Інакше правки доходили в канали лише за години.
 #
 # Між запусками курсор і райони з тривогою зберігаються в кеші Actions: сигнал,
@@ -50,6 +50,10 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Свіжий код гілки на момент старту, а не коміт, з яким запуск ставили в
+          # чергу (~5 год тому): інакше правки доходили в канали із запізненням.
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -73,7 +77,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
           TICKER_REF: ${{ github.event.repository.default_branch }}
-        run: PYTHONPATH=src python -m telegram_net.cli alerts --interval 30 --max-minutes 320 --state-file work/alerts_state.json
+        run: CODE_TREE=$(git rev-parse HEAD:src) PYTHONPATH=src python -m telegram_net.cli alerts --interval 30 --max-minutes 320 --state-file work/alerts_state.json
 
       - name: Save alert state
         if: always()
