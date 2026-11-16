@@ -75,32 +75,38 @@ def github_dispatcher() -> Callable[[str], None] | None:
     return dispatch
 
 
-def code_update_checker(every_sec: float = 300, clock: Callable[[], float] | None = None) -> Callable[[], bool] | None:
-    """True, коли на гілці в GitHub з'явився коміт, новіший за той, з яким стартував
-    цей запуск (GITHUB_SHA). Без цього правка коду (напр. підпису карти NEPTUN)
-    доходила в канали лише через кілька годин — після кінця поточного циклу."""
+def code_update_checker(
+    every_sec: float = 300,
+    clock: Callable[[], float] | None = None,
+    http: httpx.Client | None = None,
+) -> Callable[[], bool] | None:
+    """True, коли на гілці в GitHub змінився код (`src/`) порівняно з тим, з яким
+    стартував цей запуск (CODE_TREE = `git rev-parse HEAD:src`). Без цього правка
+    коду (напр. підпису карти NEPTUN) доходила в канали лише за кілька годин.
+    Дивимось саме на дерево `src/`: бот комітить стан і чергу кожні ~15 хв, і
+    перезапускатися через кожен такий коміт не треба."""
     import time
 
     token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPOSITORY")
     ref = os.environ.get("TICKER_REF") or os.environ.get("GITHUB_REF_NAME")
-    sha = os.environ.get("GITHUB_SHA")
-    if not (token and repo and ref and sha):
+    tree = os.environ.get("CODE_TREE")
+    if not (token and repo and ref and tree):
         return None
     clock = clock or time.monotonic
-    http = httpx.Client(timeout=15, headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.sha"})
+    http = http or httpx.Client(timeout=15, headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"})
     last = {"at": clock()}
 
     def changed() -> bool:
         if clock() - last["at"] < every_sec:
             return False
         last["at"] = clock()
-        resp = http.get(f"https://api.github.com/repos/{repo}/commits/{ref}")
+        resp = http.get(f"https://api.github.com/repos/{repo}/git/trees/{ref}")
         if resp.status_code != 200:
             return False
-        head = resp.text.strip()
-        if head and head != sha:
-            logger.info("У %s новий код (%s ≠ %s) — перезапуск із ним", ref, head[:7], sha[:7])
+        remote = next((e["sha"] for e in resp.json().get("tree", []) if e.get("path") == "src"), None)
+        if remote and remote != tree:
+            logger.info("У %s новий код src/ (%s ≠ %s) — перезапуск із ним", ref, remote[:7], tree[:7])
             return True
         return False
 
