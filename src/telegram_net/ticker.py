@@ -38,7 +38,7 @@ def jobs_for(config) -> list[Job]:
         # Черга постів: увесь день, плюс одразу після нічної тиші.
         Job("drain.yml", dt.time(s.quiet_to_hour, 0), dt.time(23, 30), 15),
         Job("weather.yml", dt.time(wh, 0), dt.time(min(wh + 2, 23), 0), 20),
-        Job("attack.yml", dt.time(8, 30), dt.time(11, 0), 20),
+        # «Нічна атака» вимкнена (рішення власника 16.11.2026: нудно); код лишився для ручного запуску.
         Job("markets.yml", dt.time(mh, 0), dt.time(min(mh + 2, 23), 0), 20),
     ]
 
@@ -73,6 +73,38 @@ def github_dispatcher() -> Callable[[str], None] | None:
             raise RuntimeError(f"{workflow}: {resp.status_code} {resp.text[:200]}")
 
     return dispatch
+
+
+def code_update_checker(every_sec: float = 300, clock: Callable[[], float] | None = None) -> Callable[[], bool] | None:
+    """True, коли на гілці в GitHub з'явився коміт, новіший за той, з яким стартував
+    цей запуск (GITHUB_SHA). Без цього правка коду (напр. підпису карти NEPTUN)
+    доходила в канали лише через кілька годин — після кінця поточного циклу."""
+    import time
+
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    ref = os.environ.get("TICKER_REF") or os.environ.get("GITHUB_REF_NAME")
+    sha = os.environ.get("GITHUB_SHA")
+    if not (token and repo and ref and sha):
+        return None
+    clock = clock or time.monotonic
+    http = httpx.Client(timeout=15, headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.sha"})
+    last = {"at": clock()}
+
+    def changed() -> bool:
+        if clock() - last["at"] < every_sec:
+            return False
+        last["at"] = clock()
+        resp = http.get(f"https://api.github.com/repos/{repo}/commits/{ref}")
+        if resp.status_code != 200:
+            return False
+        head = resp.text.strip()
+        if head and head != sha:
+            logger.info("У %s новий код (%s ≠ %s) — перезапуск із ним", ref, head[:7], sha[:7])
+            return True
+        return False
+
+    return changed
 
 
 class Ticker:

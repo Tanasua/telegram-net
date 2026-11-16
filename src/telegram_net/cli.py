@@ -268,10 +268,10 @@ def cmd_alerts(args) -> int:
             saved["value"] = current
 
     # Годинник: цикл тривог працює безперервно, тож він і запускає щоденні
-    # workflow (черга, погода, нічна атака, курс) — розклад GitHub ненадійний.
+    # workflow (черга, погода, курс) — розклад GitHub ненадійний.
     from zoneinfo import ZoneInfo
 
-    from telegram_net.ticker import Ticker, github_dispatcher
+    from telegram_net.ticker import Ticker, code_update_checker, github_dispatcher
 
     ticker = Ticker(config, None if args.dry_run else github_dispatcher(), ZoneInfo(config.settings.timezone))
     if state_file and state_file.exists():
@@ -288,7 +288,14 @@ def cmd_alerts(args) -> int:
             saved["value"] = current
 
     logger.info("Слухаю сигнали тривоги з %s кожні %s с", url, args.interval)
-    run_loop(relay, fetch, interval_sec=args.interval, max_runtime_min=args.max_minutes, after_tick=after_tick)
+    run_loop(
+        relay,
+        fetch,
+        interval_sec=args.interval,
+        max_runtime_min=args.max_minutes,
+        after_tick=after_tick,
+        should_stop=None if args.dry_run else code_update_checker(),
+    )
     after_tick()
     return 0
 
