@@ -52,7 +52,4 @@ def capture_map(url: str = MAP_URL, timeout_ms: int = 45000) -> bytes | None:
 
 def map_caption(at: dt.datetime) -> str:
     local = at.astimezone(KYIV)
-    return (
-        f"🗺 Карта повітряних загроз станом на {local:%H:%M}\n"
-        f"Неофіційні дані з відкритих джерел ({SOURCE_URL}) — орієнтуйтеся на сигнали тривоги."
-    )
+    return f"🗺 Карта повітряних загроз станом на {local:%H:%M}"

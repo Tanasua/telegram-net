@@ -152,7 +152,8 @@ def test_map_is_sent_when_a_new_alert_starts_and_refreshed_while_it_lasts():
     sender, relay = _relay_with_map(provider)
     relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=0)], NOW)
     assert [chat for chat, _, _ in sender.photos] == ["@mymalyn"] and len(shots) == 1
-    assert "Карта повітряних загроз" in sender.photos[0][2] and "neptun.in.ua" in sender.photos[0][2]
+    assert sender.photos[0][2].startswith("🗺 Карта повітряних загроз станом на ")
+    assert "Неофіційні" not in sender.photos[0][2] and "neptun" not in sender.photos[0][2]  # застережень у підписі нема
     assert "Підписатися" not in sender.photos[0][2]  # підпису каналу під картою нема
 
     # Зміна рівня — теж сигнал, тож і карта.
