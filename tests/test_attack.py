@@ -145,3 +145,16 @@ def test_publish_once_a_day_after_summary(tmp_path):
 def test_dry_run_writes_images(tmp_path):
     lines = publish_attack(make_config(), State(tmp_path), None, now=NOW, out_dir=tmp_path / "out", fetch=_feed())
     assert (tmp_path / "out" / "attack_malyn.png").exists() and "[пробний]" in lines[0]
+
+
+def test_northern_launch_site_stays_below_the_stat_tiles():
+    """Шаталово лежить північніше за плитки з цифрами: точка й підпис не мають налазити на них."""
+    from telegram_net.attack import STATS_BOTTOM, LAUNCH_SITES, project
+
+    assert "Шаталово" in LAUNCH_SITES
+    lat, lon = LAUNCH_SITES["Шаталово"]
+    assert project(lon, lat)[1] < STATS_BOTTOM  # без поправки точка була б усередині блоку цифр
+    summary = SUMMARY.replace("Брянськ, Орел", "Шаталово, Брянськ, Орел")
+    r = build_report([_item(16, summary, 8, 1)], KYIV, dt.date(2026, 11, 15))
+    assert "Шаталово" in r.summary.directions
+    render(r, "Мій Житомир")  # не падає, коли підпис ставиться збоку

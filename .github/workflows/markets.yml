@@ -31,6 +31,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Свіжий кінчик гілки, а не SHA на момент постановки в чергу: запуск, що чекав
+          # в concurrency, інакше бере застарілий стан і втрачає його при push.
+          ref: ${{ github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
