@@ -310,3 +310,20 @@ def test_national_has_own_run_slot_beyond_local_limit(tmp_path):
     # але не більше однієї всеукраїнської за прогін на канал
     _, errors = prepare(_run([_post(kind="national", candidate_ids=["n1"]), _post(kind="national", candidate_ids=["n2"])]), config, state, NOW)
     assert len(errors) == 1 and "не більше однієї всеукраїнської" in errors[0]
+
+
+def test_second_editor_in_the_same_hour_is_skipped(tmp_path):
+    config, state, publisher = make_config(), _state(tmp_path, ("c1", "local"), ("c2", "local")), FakePublisher()
+    publish_run({"run_id": "2026-11-16T07-47", "posts": [_post(candidate_ids=["c1"])], "keep": []}, config, state, publisher, NOW)
+    second = publish_run({"run_id": "2026-11-16T07-49", "posts": [_post(candidate_ids=["c2"])], "keep": []}, config, state, publisher, NOW)
+    assert second.skipped_run and len(publisher.sent) == 1
+
+
+def test_evening_summary_is_dropped_rather_than_moved_to_morning(tmp_path):
+    config = make_config()
+    late = dt.datetime(2026, 11, 14, 20, 50, tzinfo=dt.timezone.utc)  # 22:50 за Києвом
+    state = _state(tmp_path, ("c1", "local"))
+    publisher = FakePublisher()
+    rubric = {"channel_id": "malyn", "kind": "evening", "text": "Головне за день у Малині."}
+    publish_run(_run([_post(candidate_ids=["c1"]), rubric]), config, state, publisher, late)
+    assert len(publisher.sent) == 1 and state.queue == []  # новина вийшла, підсумок не переїхав на ранок

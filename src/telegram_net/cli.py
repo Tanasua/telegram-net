@@ -267,9 +267,29 @@ def cmd_alerts(args) -> int:
             state_file.write_text(json.dumps(current, ensure_ascii=False), encoding="utf-8")
             saved["value"] = current
 
+    # Годинник: цикл тривог працює безперервно, тож він і запускає щоденні
+    # workflow (черга, погода, нічна атака, курс) — розклад GitHub ненадійний.
+    from zoneinfo import ZoneInfo
+
+    from telegram_net.ticker import Ticker, github_dispatcher
+
+    ticker = Ticker(config, None if args.dry_run else github_dispatcher(), ZoneInfo(config.settings.timezone))
+    if state_file and state_file.exists():
+        ticker.last_run = json.loads(state_file.read_text(encoding="utf-8")).get("ticker", {})
+
+    def after_tick() -> None:
+        ticker.tick()
+        if state_file is None:
+            return
+        current = {**relay.dump_state(), "ticker": ticker.last_run}
+        if current != saved["value"]:
+            state_file.parent.mkdir(parents=True, exist_ok=True)
+            state_file.write_text(json.dumps(current, ensure_ascii=False), encoding="utf-8")
+            saved["value"] = current
+
     logger.info("Слухаю сигнали тривоги з %s кожні %s с", url, args.interval)
-    run_loop(relay, fetch, interval_sec=args.interval, max_runtime_min=args.max_minutes, after_tick=save_state)
-    save_state()
+    run_loop(relay, fetch, interval_sec=args.interval, max_runtime_min=args.max_minutes, after_tick=after_tick)
+    after_tick()
     return 0
 
 

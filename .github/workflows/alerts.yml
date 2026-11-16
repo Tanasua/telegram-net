@@ -3,10 +3,14 @@ name: Air raid alerts
 # Сигнали тривоги й відбою: цикл, що раз на 30 с читає канал Житомирської ОВА
 # і за шаблоном публікує сигнали в канали відповідного району (src/telegram_net/alerts.py).
 #
-# Працює цілодобово: кожен запуск триває 5 год 20 хв, а новий стартує кожні
-# 5 годин і стає в чергу (concurrency), тож наступний починається щойно
-# закінчився попередній. Для публічного репозиторію хвилини GitHub Actions
-# безкоштовні й не лімітовані.
+# Працює цілодобово: кожен запуск на старті сам ставить у чергу наступний
+# (workflow_dispatch), тож новий починається щойно закінчився попередній —
+# незалежно від розкладу GitHub, який запізнюється на години. Cron лишається
+# лише як запасний перезапуск, якщо ланцюжок колись обірветься. Для публічного
+# репозиторію хвилини GitHub Actions безкоштовні й не лімітовані.
+#
+# Цей цикл — ще й «годинник» мережі (src/telegram_net/ticker.py): щохвилини він
+# запускає чергу постів, погоду, нічну атаку й курс валют у їхні вікна.
 #
 # Між запусками курсор і райони з тривогою зберігаються в кеші Actions: сигнал,
 # що прийшов під час перезапуску, новий запуск надішле (якщо він не старший за
@@ -23,11 +27,23 @@ concurrency:
   group: telegram-net-alerts
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  actions: write  # годинник і ланцюжок запусків — через workflow_dispatch
+
 jobs:
   alerts:
     runs-on: ubuntu-latest
     timeout-minutes: 345
     steps:
+      - name: Queue the next run (keeps the loop going without cron)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/alerts.yml/dispatches" \
+            -d '{"ref":"${{ github.event.repository.default_branch }}"}' -o /dev/null -w "next run queued: %{http_code}\n"
+
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -51,6 +67,8 @@ jobs:
       - name: Relay alerts
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          TICKER_REF: ${{ github.event.repository.default_branch }}
         run: PYTHONPATH=src python -m telegram_net.cli alerts --interval 30 --max-minutes 320 --state-file work/alerts_state.json
 
       - name: Save alert state
