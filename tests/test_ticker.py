@@ -18,7 +18,7 @@ def test_windows_and_intervals():
     assert names(at(3)) == []  # ніч — нічого
     assert names(at(7, 1)) == ["drain.yml"]
     assert names(at(8, 5)) == ["drain.yml", "weather.yml"]
-    assert names(at(8, 40)) == ["drain.yml", "weather.yml", "attack.yml"]
+    assert names(at(8, 40)) == ["drain.yml", "weather.yml"]  # «Нічна атака» вимкнена
     assert names(at(19, 2)) == ["drain.yml", "markets.yml"]
     assert names(at(23, 45)) == []
     # Нещодавно запущений — чекає свого інтервалу.

@@ -268,7 +268,7 @@ def cmd_alerts(args) -> int:
             saved["value"] = current
 
     # Годинник: цикл тривог працює безперервно, тож він і запускає щоденні
-    # workflow (черга, погода, нічна атака, курс) — розклад GitHub ненадійний.
+    # workflow (черга, погода, курс) — розклад GitHub ненадійний.
     from zoneinfo import ZoneInfo
 
     from telegram_net.ticker import Ticker, code_update_checker, github_dispatcher
