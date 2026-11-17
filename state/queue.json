@@ -1,1 +1,24 @@
-[]
+[
+ {
+  "attempts": 0,
+  "candidate_ids": [
+   "03cb02e5"
+  ],
+  "channel_id": "berdychiv",
+  "due_at": "2026-11-17T16:29:23+00:00",
+  "html": "<b>🇫🇷 Бердичів і Франція підписали меморандум про «Шлях Бальзака»</b>\n\nМіський голова Сергій Орлюк і президент Франко-української асоціації «Бальзак — Ганська» Жан Рош домовилися про створення міжнародного культурно-туристичного маршруту «Шлях Бальзака» та фестиваль Balzac FEST раз на два роки.\n\nОчікують, що партнерство допоможе залучати гранти й розвивати туризм на Бердичівщині.\n\n<b>❤️ Мій Бердичів | Новини Бердичева 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/myberdychivnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
+  "kind": "local",
+  "media": [
+   {
+    "type": "photo",
+    "url": "https://cdn4.telesco.pe/file/Z92Ku_SlXAL4LMzScbdDAmJ9rYcKEobfI0M2SqmHkSfqEOVIcl1u4bd-ingd4LSUvanJOCCsrTF8oWUhATHepeY35w0eryYy4ivh0hQ86T5Wk4E1bBkJbyIlYRGVynNNGt42B40xJwLi43P0rv9UaedU2bjQnp5RBMlOM1FgRAZVHvukroz0UHHJkzSmbw7TfEwrwk-CND6lA8lcN95aTW5onSHTK0RqjHaErZQW9uiE-y4_YQMD_dPkw36JCNTJVKmxQyjSl1h3z1A2CfqSX5eH5YX0G6URjE24DftkLcJV0BEYoQt-FXzdSHyfNirY5lbr4625Wqj__lWSH0y9aw.jpg"
+   }
+  ],
+  "run_id": "2026-11-17T17-47",
+  "source_urls": [
+   "https://t.me/Officially_in_Berdychiv/66367"
+  ],
+  "text": "🇫🇷 Бердичів і Франція підписали меморандум про «Шлях Бальзака»\n\nМіський голова Сергій Орлюк і президент Франко-української асоціації «Бальзак — Ганська» Жан Рош домовилися про створення міжнародного культурно-туристичного маршруту «Шлях Бальзака» та фестиваль Balzac FEST раз на два роки.\n\nОчікують, що партнерство допоможе залучати гранти й розвивати туризм на Бердичівщині.",
+  "urgent": false
+ }
+]
