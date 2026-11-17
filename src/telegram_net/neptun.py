@@ -48,6 +48,11 @@ def capture_map(url: str = MAP_URL, timeout_ms: int = 45000) -> bytes | None:
         return None
 
 
-def map_caption(at: dt.datetime) -> str:
+def map_caption(at: dt.datetime, district: str | None = None, threat: str | None = None) -> str:
     local = at.astimezone(KYIV)
-    return f"🗺 Карта повітряних загроз станом на {local:%H:%M}"
+    parts = [f"🗺 Карта повітряних загроз станом на {local:%H:%M}"]
+    if threat and district:
+        parts.append(f"{threat} у напрямку {district}ого району")
+    elif threat:
+        parts.append(threat)
+    return "\n".join(parts)

@@ -5,7 +5,8 @@
     check   <файл>     перевірити файл рішень редактора, нічого не надсилаючи
     publish <файл…>    опублікувати рішення (потрібен TELEGRAM_BOT_TOKEN)
     attack             ранкова інфографіка «Нічна атака» в усі канали
-    markets            вечірня інфографіка «Курс валют і пальне»
+    fuel               обідня інфографіка «Ціни на пальне»
+    markets            вечірня інфографіка «Курс валют»
     weather            ранкова інфографіка погоди в усі канали
     drain              надіслати з черги пости, чий час настав
     report             стан мережі: пости за добу, проблемні джерела
@@ -177,6 +178,22 @@ def cmd_attack(args) -> int:
     return 1 if any("ПОМИЛКА" in line for line in lines) else 0
 
 
+def cmd_fuel(args) -> int:
+    from telegram_net.fuel import publish_fuel
+
+    config = load_config(args.config)
+    state = State(args.state)
+    publisher = None if args.dry_run else _publisher(required=True)
+    lines = publish_fuel(config, state, publisher, force=args.force, out_dir=Path(args.out) if args.out else None)
+    for line in lines:
+        print(line)
+    sent = any("надіслано" in line for line in lines)
+    if sent:
+        state.save()
+    _github_output(save_state=sent)
+    return 1 if any("ПОМИЛКА" in line for line in lines) else 0
+
+
 def cmd_markets(args) -> int:
     from telegram_net.markets import publish_markets
 
@@ -337,6 +354,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dry-run", action="store_true", help="нічого не надсилати")
     p.add_argument("--out", default=None, help="куди зберегти картинки")
     p.set_defaults(func=cmd_attack)
+
+    p = sub.add_parser("fuel")
+    p.add_argument("--force", action="store_true", help="не перевіряти годину")
+    p.add_argument("--dry-run", action="store_true", help="нічого не надсилати")
+    p.add_argument("--out", default=None, help="куди зберегти картинки")
+    p.set_defaults(func=cmd_fuel)
 
     p = sub.add_parser("markets")
     p.add_argument("--force", action="store_true", help="не перевіряти годину")
