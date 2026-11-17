@@ -59,13 +59,13 @@ def test_clear_evening_and_night_show_the_moon_and_frost_tip():
 
 
 def test_render_produces_square_png():
-    png = render(summarize(_hours(), DAY, "Коростишеві"), "Мій Коростишів")
-    assert png[:8] == b"\x89PNG\r\n\x1a\n"
-    from io import BytesIO
-
-    from PIL import Image
-
-    assert Image.open(BytesIO(png)).size == (1080, 1080)
+    forecast = summarize(_hours(), DAY, "Коростишеві")
+    for v in (0, 1, 2):
+        png = render(forecast, "Мій Коростишів", variant=v)
+        assert png[:8] == b"\x89PNG\r\n\x1a\n"
+        from io import BytesIO
+        from PIL import Image
+        assert Image.open(BytesIO(png)).size == (1080, 1080)
 
 
 @respx.mock

@@ -33,12 +33,13 @@ class Job:
 
 def jobs_for(config) -> list[Job]:
     s = config.settings
-    wh, mh = s.weather_hour, getattr(s, "markets_hour", 19)
+    wh = s.weather_hour
+    fh = getattr(s, "fuel_hour", 12)
+    mh = getattr(s, "markets_hour", 19)
     return [
-        # Черга постів: увесь день, плюс одразу після нічної тиші.
         Job("drain.yml", dt.time(s.quiet_to_hour, 0), dt.time(23, 30), 15),
         Job("weather.yml", dt.time(wh, 0), dt.time(min(wh + 2, 23), 0), 20),
-        # «Нічна атака» вимкнена (рішення власника 16.11.2026: нудно); код лишився для ручного запуску.
+        Job("fuel.yml", dt.time(fh, 0), dt.time(min(fh + 2, 23), 0), 20),
         Job("markets.yml", dt.time(mh, 0), dt.time(min(mh + 2, 23), 0), 20),
     ]
 

@@ -83,10 +83,9 @@ def _markets():
 def test_caption_and_render():
     m = _markets()
     assert caption(m).startswith("Курс НБУ на 16 листопада: USD 45,43 грн, готівка 45,30/45,95; EUR 50,22 грн")
-    assert "А-95 — 87,55, ДП — 102,49, Газ — 61,36 грн/л." in caption(m)
     from PIL import Image
 
-    assert Image.open(BytesIO(render(m, "Мій Малин", dt.date(2026, 11, 15)))).size == (1080, 1350)
+    assert Image.open(BytesIO(render(m, "Мій Малин", dt.date(2026, 11, 15)))).size == (1080, 1080)
 
 
 class FakePhotoPublisher:
@@ -108,11 +107,11 @@ def test_publish_once_a_day_at_seven(tmp_path):
 
     publish_markets(config, state, publisher, now=SEVEN_PM, fetch=_markets)
     assert [c for c, _ in publisher.sent] == ["@mymalyn", "@myzhytomyr"]
-    assert publisher.sent[0][1].startswith("<b>Курс валют і ціни на пальне</b>\n")
+    assert publisher.sent[0][1].startswith("<b>Курс валют</b>\n")
     assert state.channel_post_count("malyn") == 0  # службовий пост — не забирає ліміт
 
     again = publish_markets(config, state, publisher, now=SEVEN_PM + dt.timedelta(minutes=30), fetch=_markets, force=True)
-    assert len(publisher.sent) == 2 and "вже були" in again[0]
+    assert len(publisher.sent) == 2 and "вже був" in again[0]
 
 
 def test_data_failure_is_reported(tmp_path):

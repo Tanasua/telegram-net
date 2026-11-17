@@ -1,0 +1,58 @@
+name: Noon fuel prices
+
+# О 12:00 за Києвом — інфографіка «Ціни на пальне» в кожен канал
+# (src/telegram_net/fuel.py). Без моделей: ціни з index.minfin.com.ua.
+#
+# Спроб кілька (о :07, :27, :47 з 09:00 до 11:59 UTC). Код публікує
+# з 12:00 до 13:59 за Києвом і лише раз на добу.
+on:
+  schedule:
+    - cron: "7,27,47 9,10,11 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Опублікувати зараз, не чекаючи 12:00"
+        type: boolean
+        default: false
+
+concurrency:
+  group: telegram-net-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  fuel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet "httpx>=0.27" "pillow>=10.0" "beautifulsoup4>=4.12" "lxml>=5.2"
+
+      - name: Publish fuel prices
+        id: fuel
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: PYTHONPATH=src python -m telegram_net.cli fuel $FORCE
+
+      - name: Save state
+        if: always() && steps.fuel.outputs.save_state == 'true'
+        run: |
+          git config user.name "telegram-net-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state
+          git diff --cached --quiet || git commit -m "Noon fuel prices"
+          git pull --rebase --quiet || true
+          git push || (git pull --rebase && git push)
