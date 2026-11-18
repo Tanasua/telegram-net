@@ -2,51 +2,6 @@
  {
   "attempts": 0,
   "candidate_ids": [
-   "64489432",
-   "4e7b41f9",
-   "3e5cd719"
-  ],
-  "channel_id": "berdychiv",
-  "due_at": "2026-11-18T08:29:19+00:00",
-  "html": "<b>🌍 Уночі Україну сколихнув землетрус із Румунії: поштовхи відчули й сусіди Бердичева</b>\n\nБлизько 02:48 у румунській сейсмічній зоні Вранча стався землетрус магнітудою близько 5,3–5,7 за різними попередніми даними. Поштовхи зафіксували в кількох областях України, зокрема у Вінницькій і Київській, а також у Молдові.\n\n<b>❤️ Мій Бердичів | Новини Бердичева 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/myberdychivnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
-  "kind": "oblast",
-  "media": [],
-  "run_id": "2026-11-18T09-47",
-  "source_urls": [
-   "https://t.me/rio_berdychiv_informatsiya/37319",
-   "https://www.berdichev.biz/zemletrus-u-rumunii-mahnitudoiu-5-7-vidchuly-v-moldov/",
-   "https://t.me/suspilnenews/79451"
-  ],
-  "text": "🌍 Уночі Україну сколихнув землетрус із Румунії: поштовхи відчули й сусіди Бердичева\n\nБлизько 02:48 у румунській сейсмічній зоні Вранча стався землетрус магнітудою близько 5,3–5,7 за різними попередніми даними. Поштовхи зафіксували в кількох областях України, зокрема у Вінницькій і Київській, а також у Молдові.",
-  "urgent": false
- },
- {
-  "attempts": 0,
-  "candidate_ids": [
-   "8fe3daf4",
-   "5c2f3554"
-  ],
-  "channel_id": "korosten",
-  "due_at": "2026-11-18T08:29:19+00:00",
-  "html": "<b>🚒 В Олевську сусіди винесли з палаючого будинку 29-річного чоловіка</b>\n\nВночі в приватній оселі виникла пожежа. Ще до приїзду рятувальників сусіди винесли чоловіка без свідомості з задимленого будинку. Рятувальники надали йому домедичну допомогу, його госпіталізували з отруєнням чадним газом.\n\nПожежу ліквідували. Попередньо, вона виникла через порушення правил монтажу димаря, остаточну причину встановлюватимуть далі.\n\n<b>❤️ Мій Коростень | Новини Коростеня 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/mykorostennews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
-  "kind": "oblast",
-  "media": [
-   {
-    "type": "photo",
-    "url": "https://cdn4.telesco.pe/file/trbyZiq08UBhvY9Hd5uB-PluBEcmVjeH3zciW48Yknw4rK6KFqArlP7hDAAflux61gkyvBsbxf0WvQaVqU_URF3DhJfANHtvA1GADlZr2aiA4gWX_cEKsvL2hZ649HiyyLpJyRkVg-DRmgSEQ703HlrN3M3rzz58wWxupnU2vUstWS3cdid1toZSTwbN4uqedc3t-pxIAqIaP30FcHMQYj1_NyvfODISQ7Ffyx_80gnmZDhZTqeP2Sg9dEsv7gSQ5IgcgQnPWDnJcDSBUUJVIN2eSttMFzRpIS0KmIJopQAxmVME-NyeR77TwTa0tMsPZIihoVSeh5Qih2fBZBlqeg.jpg"
-   }
-  ],
-  "run_id": "2026-11-18T09-47",
-  "source_urls": [
-   "https://t.me/DSNS_Zhytomyr/39663",
-   "https://zhitomir-online.com/na-pivnochi-zhytomyrshchyny-susidy-vynesly-z-palaiuchoho-budynku-cholovika.html"
-  ],
-  "text": "🚒 В Олевську сусіди винесли з палаючого будинку 29-річного чоловіка\n\nВночі в приватній оселі виникла пожежа. Ще до приїзду рятувальників сусіди винесли чоловіка без свідомості з задимленого будинку. Рятувальники надали йому домедичну допомогу, його госпіталізували з отруєнням чадним газом.\n\nПожежу ліквідували. Попередньо, вона виникла через порушення правил монтажу димаря, остаточну причину встановлюватимуть далі.",
-  "urgent": false
- },
- {
-  "attempts": 0,
-  "candidate_ids": [
    "bfa1aa4a"
   ],
   "channel_id": "zhytomyr",
