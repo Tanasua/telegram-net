@@ -2,28 +2,6 @@
  {
   "attempts": 0,
   "candidate_ids": [
-   "7e42ddb4"
-  ],
-  "channel_id": "berdychiv",
-  "due_at": "2026-11-18T11:51:10+00:00",
-  "html": "<b>🕯 19 листопада Бердичів зустрічатиме «на щиті» захисника Дмитра Сідлецького</b>\n\nТраурний кортеж вирушить о 10:00 від будинку в Бердичеві, де Дмитро жив із батьками. Маршрут пролягає через Семенівку й Великі Низгірці, далі буде прощання в храмі та поховання на кладовищі.\n\nГромаду закликають вийти зустріти Героя.\n\n<b>❤️ Мій Бердичів | Новини Бердичева 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/myberdychivnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
-  "kind": "local",
-  "media": [
-   {
-    "type": "photo",
-    "url": "https://cdn4.telesco.pe/file/lCGOuA87sdJM_J2RFQIxKfxk9X2lNry0CrOi2sFEjc07fodUZn7ZnLEc4e8xUBmDFpZjMMljs4mQEp2hrBpRAsXR2MPHBbWGM_nblTYevUDvNon_uoV1UXMP4xyWSGYhraBIU2Jpz2ps2tVUPLegNg3bDmw7KmZgd_10Y7ZdIhr6Hc9DqqDlphGBIOqRSSiwDBKBmRHeL1MW5512JY1wp2mAydImbNOOTNcU5mFZAaMYXZhUy6DGwfXlbsLznWCD-m9UDCSe-iTzmrBBtkrdXAYFO7AO_cE2RT0gYTFBFDjo_1T5k_Cnz--faKhyf48ZlnvBJoeDnjfTi2zCpajDMQ.jpg"
-   }
-  ],
-  "run_id": "2026-11-18T13-47",
-  "source_urls": [
-   "https://t.me/rio_berdychiv_informatsiya/37332"
-  ],
-  "text": "🕯 19 листопада Бердичів зустрічатиме «на щиті» захисника Дмитра Сідлецького\n\nТраурний кортеж вирушить о 10:00 від будинку в Бердичеві, де Дмитро жив із батьками. Маршрут пролягає через Семенівку й Великі Низгірці, далі буде прощання в храмі та поховання на кладовищі.\n\nГромаду закликають вийти зустріти Героя.",
-  "urgent": false
- },
- {
-  "attempts": 0,
-  "candidate_ids": [
    "7ec091f2"
   ],
   "channel_id": "zhytomyr",
