@@ -12,29 +12,41 @@
 Стану на диску немає: під час старту процес читає останні повідомлення джерела,
 відновлює з них, де тривога зараз триває (щоб порахувати тривалість до відбою),
 і публікує лише те, що з'явиться ПІСЛЯ старту.
+
+Кожне повідомлення про тривогу / відбій супроводжується квадратною картинкою
+(жовта/червона для тривоги, зелена для відбою) з лого каналу.  Карту повітряних
+загроз (NEPTUN) надсилаємо лише раз — наступним повідомленням після першого
+оголошення тривоги в районі.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import io
 import logging
 import re
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable, Protocol
 
 from telegram_net.config import ChannelConfig, Config
-from telegram_net.signature import signature_html
+from telegram_net.signature import signature_html, channel_title
 from telegram_net.fetchers.base import FetchedItem
 from telegram_net.neptun import map_caption
 
 logger = logging.getLogger(__name__)
 
+ASSETS = Path(__file__).resolve().parents[2] / "assets"
+SIZE = 1080
+
 DISTRICTS = ("Житомирський", "Бердичівський", "Коростенський", "Звягельський")
-MAX_EVENT_AGE = dt.timedelta(minutes=10)  # після простою не публікуємо застарілі сигнали
-MAP_REPEAT = dt.timedelta(minutes=30)  # поки тривога триває, свіжу карту — не частіше за цей інтервал
+MAX_EVENT_AGE = dt.timedelta(minutes=10)
 
 _LEVEL_SUFFIX_RE = re.compile(r"\s*\((?:жовтий|червоний) рівень\)\s*", re.IGNORECASE)
+
+WHITE = (255, 255, 255)
+SOFT = (255, 255, 255, 200)
 
 
 @dataclass(frozen=True)
@@ -99,6 +111,106 @@ def render_alert(event: AlertEvent, district: str, started_at: dt.datetime | Non
     return text
 
 
+# --- малювання картинок тривоги / відбою (1080×1080, з лого каналу) -----------
+
+
+def _font(size: int, weight: str = "ExtraBold"):
+    from PIL import ImageFont
+
+    font = ImageFont.truetype(str(ASSETS / "fonts" / "Nunito.ttf"), size)
+    try:
+        font.set_variation_by_name(weight)
+    except (OSError, ValueError):
+        pass
+    return font
+
+
+def _gradient(top: tuple, bottom: tuple):
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGBA", (SIZE, SIZE))
+    d = ImageDraw.Draw(img)
+    for y in range(SIZE):
+        t = y / (SIZE - 1)
+        c = tuple(round(a + (b - a) * t) for a, b in zip(top, bottom))
+        d.line([(0, y), (SIZE, y)], fill=c + (255,))
+    return img
+
+
+def render_alert_image(district: str, level: str | None, threat: str | None, ch_title: str) -> bytes:
+    from PIL import Image, ImageDraw, ImageFilter
+
+    if level == "red":
+        img = _gradient((180, 30, 30), (120, 15, 15))
+    else:
+        img = _gradient((180, 140, 20), (140, 100, 10))
+
+    glow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse((200, 50, 880, 650), fill=(255, 255, 255, 40))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(100)))
+
+    d = ImageDraw.Draw(img)
+    cx = SIZE // 2
+
+    d.text((cx, 300), "ПОВІТРЯНА", font=_font(90), fill=WHITE, anchor="mm")
+    d.text((cx, 400), "ТРИВОГА", font=_font(90), fill=WHITE, anchor="mm")
+
+    level_text = {"red": "червоний рівень", "yellow": "жовтий рівень"}.get(level or "", "")
+    if level_text:
+        pill_font = _font(34, "Bold")
+        tw = d.textlength(level_text, font=pill_font)
+        px, py = cx - tw / 2 - 30, 460
+        pill_fill = (255, 80, 80, 200) if level == "red" else (255, 200, 60, 200)
+        pill = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+        ImageDraw.Draw(pill).rounded_rectangle((px, py, px + tw + 60, py + 52), radius=26, fill=pill_fill)
+        img.alpha_composite(pill)
+        d = ImageDraw.Draw(img)
+        d.text((cx, py + 26), level_text, font=pill_font, fill=WHITE, anchor="mm")
+
+    d.text((cx, 580), f"{district} район", font=_font(50, "Bold"), fill=WHITE, anchor="mm")
+
+    if threat:
+        d.text((cx, 660), threat, font=_font(36, "SemiBold"), fill=SOFT, anchor="mm")
+
+    d.text((cx, 760), "Бережіть себе!", font=_font(46, "Bold"), fill=WHITE, anchor="mm")
+
+    from telegram_net.heart import draw_title_with_heart
+
+    draw_title_with_heart(img, d, (cx, 960), ch_title, _font(28, "SemiBold"), SOFT)
+
+    out = io.BytesIO()
+    img.convert("RGB").save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
+def render_clear_image(district: str, duration_str: str | None, ch_title: str) -> bytes:
+    from PIL import Image, ImageDraw, ImageFilter
+
+    img = _gradient((20, 120, 60), (10, 80, 40))
+
+    glow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse((200, 100, 880, 700), fill=(100, 255, 160, 45))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(100)))
+
+    d = ImageDraw.Draw(img)
+    cx = SIZE // 2
+
+    d.text((cx, 350), "ВІДБІЙ", font=_font(100), fill=WHITE, anchor="mm")
+    d.text((cx, 460), "ПОВІТРЯНОЇ ТРИВОГИ", font=_font(60, "Bold"), fill=WHITE, anchor="mm")
+    d.text((cx, 560), f"{district} район", font=_font(50, "Bold"), fill=SOFT, anchor="mm")
+
+    if duration_str:
+        d.text((cx, 650), f"Тривога тривала {duration_str}", font=_font(36, "SemiBold"), fill=SOFT, anchor="mm")
+
+    from telegram_net.heart import draw_title_with_heart
+
+    draw_title_with_heart(img, d, (cx, 960), ch_title, _font(28, "SemiBold"), SOFT)
+
+    out = io.BytesIO()
+    img.convert("RGB").save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
 class TextSender(Protocol):
     def send_text(self, chat_id: str, text: str) -> int: ...
 
@@ -108,30 +220,24 @@ class TextSender(Protocol):
 class AlertRelay:
     def __init__(self, config: Config, sender: TextSender | None, map_provider: Callable[[], bytes | None] | None = None):
         self._sender = sender
-        self._map_provider = map_provider  # знімок карти NEPTUN; None — без карт
-        self.last_map: dict[str, dt.datetime] = {}  # район -> коли востаннє надсилали карту
+        self._map_provider = map_provider
         self._channels_by_district: dict[str, list[ChannelConfig]] = {}
         for ch in config.active_channels:
             if ch.alert_district:
                 self._channels_by_district.setdefault(ch.alert_district, []).append(ch)
         self.cursor: int | None = None
-        self.active: dict[str, dt.datetime] = {}  # район -> коли почалась тривога
-        self.sent: list[tuple[str, str]] = []  # (chat_id, текст) — для логу й тестів
+        self.active: dict[str, dt.datetime] = {}
+        self.sent: list[tuple[str, str]] = []
 
-    # --- стан між перезапусками (GitHub Actions перезапускає цикл кожні ~5 год) ---
     def dump_state(self) -> dict:
         return {
             "cursor": self.cursor,
             "active": {d: t.isoformat() for d, t in self.active.items()},
-            "last_map": {d: t.isoformat() for d, t in self.last_map.items()},
         }
 
     def load_state(self, data: dict) -> None:
-        """Продовжити з місця, де зупинився попередній запуск: сигнали, що прийшли
-        під час перезапуску (новіші за курсор і не старші за 10 хв), буде надіслано."""
         self.cursor = data.get("cursor")
         self.active = {d: dt.datetime.fromisoformat(t) for d, t in (data.get("active") or {}).items()}
-        self.last_map = {d: dt.datetime.fromisoformat(t) for d, t in (data.get("last_map") or {}).items()}
 
     def process(self, items: list[FetchedItem], now: dt.datetime) -> None:
         """items — повідомлення джерела від старішого до новішого."""
@@ -147,27 +253,19 @@ class AlertRelay:
                 for district in event.districts:
                     started = self.active.get(district)
                     if event.kind == "alert":
+                        was_active = district in self.active
                         self.active.setdefault(district, at)
+                        if fresh:
+                            self._announce(event, district, started, at)
+                            if not was_active:
+                                self._send_map(district, now, event.threat)
                     else:
                         self.active.pop(district, None)
-                    if fresh:
-                        self._announce(render_alert(event, district, started, at), district)
-                        self._send_map(district, now)  # карта під кожним сигналом: тривога, зміна рівня, відбій
-                    if event.kind == "clear":
-                        self.last_map.pop(district, None)
+                        if fresh:
+                            self._announce(event, district, started, at)
             self.cursor = msg_id if self.cursor is None else max(self.cursor, msg_id)
-        self._refresh_maps(now)
 
-    def _refresh_maps(self, now: dt.datetime) -> None:
-        """Поки в районі триває тривога — свіжа карта раз на MAP_REPEAT."""
-        for district in list(self.active):
-            last = self.last_map.get(district)
-            if last is not None and now - last >= MAP_REPEAT:
-                self._send_map(district, now)
-
-    def _send_map(self, district: str, now: dt.datetime) -> None:
-        """Карта NEPTUN у канали району. Збій знімка чи відправки не зачіпає сигнали тривоги."""
-        self.last_map[district] = now  # навіть при збої — щоб не знімати щотіка
+    def _send_map(self, district: str, now: dt.datetime, threat: str | None = None) -> None:
         channels = self._channels_by_district.get(district, [])
         if self._map_provider is None or not channels:
             return
@@ -175,26 +273,33 @@ class AlertRelay:
         if image is None:
             return
         for ch in channels:
-            caption = map_caption(now)  # без підпису каналу: лише дата й застереження з джерелом
-            self.sent.append((ch.telegram_chat_id, f"[карта] {caption}"))
+            cap = map_caption(now, district, threat)
+            self.sent.append((ch.telegram_chat_id, f"[карта] {cap}"))
             if self._sender is None:
                 logger.info("[пробний] %s: карта NEPTUN (%d байт)", ch.telegram_chat_id, len(image))
                 continue
             try:
-                self._sender.send_photo_bytes(ch.telegram_chat_id, image, caption=caption, filename="neptun.png")
+                self._sender.send_photo_bytes(ch.telegram_chat_id, image, caption=cap, filename="neptun.png")
             except Exception:
                 logger.exception("Не вдалося надіслати карту в %s", ch.telegram_chat_id)
 
-    def _announce(self, base: str, district: str) -> None:
+    def _announce(self, event: AlertEvent, district: str, started: dt.datetime | None, at: dt.datetime) -> None:
+        base = render_alert(event, district, started, at)
         for ch in self._channels_by_district.get(district, []):
             chat_id = ch.telegram_chat_id
             text = f"{base}\n\n{signature_html(ch)}"
+            ch_title = channel_title(ch)
+            if event.kind == "alert":
+                image = render_alert_image(district, event.level, event.threat, ch_title)
+            else:
+                dur = format_duration(at - started) if started and at > started else None
+                image = render_clear_image(district, dur, ch_title)
             self.sent.append((chat_id, text))
             if self._sender is None:
                 logger.info("[пробний] %s: %s", chat_id, text.replace("\n", " | "))
                 continue
             try:
-                self._sender.send_text(chat_id, text)
+                self._sender.send_photo_bytes(chat_id, image, caption=text, filename="alert.png")
             except Exception:
                 logger.exception("Не вдалося надіслати сигнал у %s", chat_id)
 
@@ -206,6 +311,7 @@ def run_loop(
     max_runtime_min: float | None = None,
     sleep: Callable[[float], None] = time.sleep,
     after_tick: Callable[[], None] | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> None:
     started = time.monotonic()
     while True:
@@ -217,4 +323,11 @@ def run_loop(
             after_tick()
         if max_runtime_min is not None and (time.monotonic() - started) / 60 >= max_runtime_min:
             return
+        if should_stop is not None:
+            try:
+                if should_stop():
+                    logger.info("Зупиняю цикл достроково — наступний запуск продовжить")
+                    return
+            except Exception:
+                logger.exception("Перевірка дострокової зупинки не вдалася — працюю далі")
         sleep(interval_sec)

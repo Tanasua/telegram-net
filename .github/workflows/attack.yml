@@ -8,9 +8,10 @@ name: Night attack summary
 # часом пропускає заплановані запуски, тому спроб кілька (о :11 і :41 з 05:00 до
 # 08:59 UTC). Код публікує лише з 08:30 до 11:00, лише коли зведення вже є, і
 # лише раз на добу; зайві спроби — кілька секунд.
+#
+# ВИМКНЕНО (рішення власника 16.11.2026: щоденне зведення нудне) — розкладу немає,
+# годинник (ticker.py) його не запускає. Лише ручний запуск з --force.
 on:
-  schedule:
-    - cron: "11,41 5,6,7,8 * * *"
   workflow_dispatch:
     inputs:
       force:
@@ -33,9 +34,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          # Свіжий кінчик гілки, а не SHA на момент постановки в чергу: запуск, що чекав
-          # в concurrency, інакше бере застарілий стан і втрачає його при push.
-          ref: ${{ github.ref_name }}
+          # Найсвіжіший стан гілки, а не коміт на момент запуску: запуски стоять
+          # у черзі (concurrency), і попередній міг уже записати state.
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -59,5 +60,4 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add state
           git diff --cached --quiet || git commit -m "Night attack summary"
-          git pull --rebase --quiet || true
-          git push
+          git push || (git pull --rebase && git push)

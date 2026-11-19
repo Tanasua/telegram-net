@@ -2,8 +2,7 @@
 
 Сайт — безкоштовний інформаційний агрегатор; для вбудовування в інші сторінки в
 нього є віджет `/embed/map` — його й відкриваємо в безголовому браузері та
-знімаємо картинку. Це неофіційні дані з відкритих джерел, тому в підписі є
-застереження і посилання на джерело.
+знімаємо картинку. Підпис — лише час знімка, без застережень і посилань.
 
 Що саме показує карта — вирішує сайт; код нічого на ній не домальовує і не
 прибирає. Правило редакції: позицій ППО й ударів по військових об'єктах не
@@ -22,7 +21,6 @@ from zoneinfo import ZoneInfo
 logger = logging.getLogger(__name__)
 
 MAP_URL = "https://neptun.in.ua/embed/map"
-SOURCE_URL = "neptun.in.ua"
 VIEWPORT = {"width": 1000, "height": 800}
 SETTLE_MS = 6000  # карта домальовується після networkidle
 KYIV = ZoneInfo("Europe/Kyiv")
@@ -50,6 +48,11 @@ def capture_map(url: str = MAP_URL, timeout_ms: int = 45000) -> bytes | None:
         return None
 
 
-def map_caption(at: dt.datetime) -> str:
+def map_caption(at: dt.datetime, district: str | None = None, threat: str | None = None) -> str:
     local = at.astimezone(KYIV)
-    return f"🗺 Карта повітряних загроз станом на {local:%H:%M}"
+    parts = [f"🗺 Карта повітряних загроз станом на {local:%H:%M}"]
+    if threat and district:
+        parts.append(f"{threat} у напрямку {district}ого району")
+    elif threat:
+        parts.append(threat)
+    return "\n".join(parts)

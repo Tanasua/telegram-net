@@ -1,8 +1,7 @@
-name: Evening currency and fuel
+name: Evening currency rates
 
-# О 19:00 за Києвом — інфографіка «Курс валют і пальне» в кожен канал
-# (src/telegram_net/markets.py). Без моделей: курс НБУ, готівка ПриватБанку,
-# ціни на пальне по Житомирщині з index.minfin.com.ua.
+# О 19:00 за Києвом — інфографіка «Курс валют» в кожен канал
+# (src/telegram_net/markets.py). Без моделей: курс НБУ, готівка ПриватБанку.
 #
 # GitHub не знає про літній час і часом пропускає заплановані запуски, тому
 # спроб кілька (о :07, :27, :47 з 16:00 до 18:59 UTC). Код публікує з 19:00 до
@@ -32,9 +31,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          # Свіжий кінчик гілки, а не SHA на момент постановки в чергу: запуск, що чекав
-          # в concurrency, інакше бере застарілий стан і втрачає його при push.
-          ref: ${{ github.ref_name }}
+          # Найсвіжіший стан гілки, а не коміт на момент запуску: запуски стоять
+          # у черзі (concurrency), і попередній міг уже записати state.
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -59,4 +58,4 @@ jobs:
           git add state
           git diff --cached --quiet || git commit -m "Evening currency and fuel"
           git pull --rebase --quiet || true
-          git push
+          git push || (git pull --rebase && git push)

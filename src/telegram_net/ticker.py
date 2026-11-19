@@ -33,12 +33,13 @@ class Job:
 
 def jobs_for(config) -> list[Job]:
     s = config.settings
-    wh, mh = s.weather_hour, getattr(s, "markets_hour", 19)
+    wh = s.weather_hour
+    fh = getattr(s, "fuel_hour", 12)
+    mh = getattr(s, "markets_hour", 19)
     return [
-        # Черга постів: увесь день, плюс одразу після нічної тиші.
         Job("drain.yml", dt.time(s.quiet_to_hour, 0), dt.time(23, 30), 15),
         Job("weather.yml", dt.time(wh, 0), dt.time(min(wh + 2, 23), 0), 20),
-        Job("attack.yml", dt.time(8, 30), dt.time(11, 0), 20),
+        Job("fuel.yml", dt.time(fh, 0), dt.time(min(fh + 2, 23), 0), 20),
         Job("markets.yml", dt.time(mh, 0), dt.time(min(mh + 2, 23), 0), 20),
     ]
 
@@ -73,6 +74,44 @@ def github_dispatcher() -> Callable[[str], None] | None:
             raise RuntimeError(f"{workflow}: {resp.status_code} {resp.text[:200]}")
 
     return dispatch
+
+
+def code_update_checker(
+    every_sec: float = 300,
+    clock: Callable[[], float] | None = None,
+    http: httpx.Client | None = None,
+) -> Callable[[], bool] | None:
+    """True, коли на гілці в GitHub змінився код (`src/`) порівняно з тим, з яким
+    стартував цей запуск (CODE_TREE = `git rev-parse HEAD:src`). Без цього правка
+    коду (напр. підпису карти NEPTUN) доходила в канали лише за кілька годин.
+    Дивимось саме на дерево `src/`: бот комітить стан і чергу кожні ~15 хв, і
+    перезапускатися через кожен такий коміт не треба."""
+    import time
+
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    ref = os.environ.get("TICKER_REF") or os.environ.get("GITHUB_REF_NAME")
+    tree = os.environ.get("CODE_TREE")
+    if not (token and repo and ref and tree):
+        return None
+    clock = clock or time.monotonic
+    http = http or httpx.Client(timeout=15, headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"})
+    last = {"at": clock()}
+
+    def changed() -> bool:
+        if clock() - last["at"] < every_sec:
+            return False
+        last["at"] = clock()
+        resp = http.get(f"https://api.github.com/repos/{repo}/git/trees/{ref}")
+        if resp.status_code != 200:
+            return False
+        remote = next((e["sha"] for e in resp.json().get("tree", []) if e.get("path") == "src"), None)
+        if remote and remote != tree:
+            logger.info("У %s новий код src/ (%s ≠ %s) — перезапуск із ним", ref, remote[:7], tree[:7])
+            return True
+        return False
+
+    return changed
 
 
 class Ticker:

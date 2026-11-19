@@ -30,9 +30,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          # Свіжий кінчик гілки, а не SHA на момент постановки в чергу: запуск, що чекав
-          # в concurrency, інакше бере застарілий стан і втрачає його при push.
-          ref: ${{ github.ref_name }}
+          # Найсвіжіший стан гілки, а не коміт на момент запуску: запуски стоять
+          # у черзі (concurrency), і попередній міг уже записати state.
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Check the queue
         id: queue
@@ -65,5 +65,4 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add state
           git diff --cached --quiet || git commit -m "Send queued posts"
-          git pull --rebase --quiet || true
-          git push
+          git push || (git pull --rebase && git push)

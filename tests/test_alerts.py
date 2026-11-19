@@ -36,27 +36,32 @@ def test_render_and_duration():
     assert format_duration(dt.timedelta(minutes=135)) == "2 год 15 хв" and format_duration(dt.timedelta(hours=1)) == "1 год"
 
 
-class Sender:
+class PhotoSender:
     def __init__(self):
         self.sent = []
+        self.photos = []
 
     def send_text(self, chat_id, text):
         self.sent.append((chat_id, text))
         return 1
 
+    def send_photo_bytes(self, chat_id, image, caption=None, filename="image.png"):
+        self.photos.append((chat_id, image, caption))
+        return 2
+
 
 def test_relay_bootstraps_silently_then_publishes_new_signals_to_matching_channels():
-    sender = Sender()
+    sender = PhotoSender()
     relay = AlertRelay(make_config(), sender)
     history = [
         item(1, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=20),
         item(2, "Звичайна новина ОВА", minutes_ago=15),
     ]
     relay.process(history, NOW)
-    assert sender.sent == [] and relay.cursor == 2 and "Коростенський" in relay.active  # старт: лише відновили стан
+    assert sender.photos == [] and relay.cursor == 2 and "Коростенський" in relay.active
 
     relay.process(history, NOW)
-    assert sender.sent == []  # нічого нового
+    assert sender.photos == []
 
     relay.process(
         history
@@ -67,23 +72,23 @@ def test_relay_bootstraps_silently_then_publishes_new_signals_to_matching_channe
         ],
         NOW,
     )
-    assert [chat for chat, _ in sender.sent] == ["@mymalyn", "@myzhytomyr"]
-    assert "Відбій" in sender.sent[0][1] and "Тривога тривала 19 хв." in sender.sent[0][1]
-    assert "червоний рівень" in sender.sent[1][1] and "Ракетна загроза." in sender.sent[1][1]
+    assert [chat for chat, _, _ in sender.photos] == ["@mymalyn", "@myzhytomyr"]
+    assert "Відбій" in sender.photos[0][2] and "Тривога тривала 19 хв." in sender.photos[0][2]
+    assert "червоний рівень" in sender.photos[1][2] and "Ракетна загроза." in sender.photos[1][2]
     assert relay.cursor == 5 and set(relay.active) == {"Житомирський", "Бердичівський"}
 
 
 def test_stale_signals_after_downtime_are_not_published():
-    sender = Sender()
+    sender = PhotoSender()
     relay = AlertRelay(make_config(), sender)
     relay.process([item(1, "новина", minutes_ago=60)], NOW)
     relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=25)], NOW)
-    assert sender.sent == [] and "Коростенський" in relay.active
+    assert sender.photos == [] and "Коростенський" in relay.active
 
 
 def test_send_failure_does_not_break_relay():
     class Broken:
-        def send_text(self, chat_id, text):
+        def send_photo_bytes(self, *a, **k):
             raise RuntimeError("boom")
 
     relay = AlertRelay(make_config(), Broken())
@@ -107,42 +112,53 @@ def test_loop_survives_fetch_errors_and_stops_by_runtime():
     assert len(calls) == 1 and sleeps == []
 
 
+def test_loop_stops_early_when_new_code_is_out():
+    relay = AlertRelay(make_config(), None)
+    answers = iter([False, False, True])
+    sleeps = []
+    run_loop(relay, lambda: [], interval_sec=30, max_runtime_min=600, sleep=sleeps.append, should_stop=lambda: next(answers))
+    assert len(sleeps) == 2
+
+
+def test_loop_keeps_running_when_stop_check_fails():
+    relay = AlertRelay(make_config(), None)
+    calls = []
+
+    def should_stop():
+        calls.append(1)
+        if len(calls) == 1:
+            raise RuntimeError("api")
+        return True
+
+    sleeps = []
+    run_loop(relay, lambda: [], interval_sec=30, max_runtime_min=600, sleep=sleeps.append, should_stop=should_stop)
+    assert len(sleeps) == 1
+
+
 def test_state_survives_restart_and_catches_signals_from_the_gap():
-    """GitHub Actions перезапускає цикл кожні ~5 год. Сигнал, що прийшов під час
-    перезапуску, має вийти, а вже надіслані — не повторитись."""
-    first = AlertRelay(make_config(), Sender())
+    first = AlertRelay(make_config(), PhotoSender())
     first.process([item(1, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=20)], NOW)
     first.process([item(1, "x", 20), item(2, "🟡 Житомирський район — повітряна тривога, жовтий рівень", minutes_ago=5)], NOW)
     saved = first.dump_state()
     assert saved["cursor"] == 2 and set(saved["active"]) == {"Коростенський", "Житомирський"}
 
-    sender = Sender()
+    sender = PhotoSender()
     second = AlertRelay(make_config(), sender)
     second.load_state(saved)
     history = [item(1, "x", 20), item(2, "x", 5), item(3, "🟢 Коростенський район — відбій повітряної тривоги", minutes_ago=1)]
     second.process(history, NOW)
-    assert [chat for chat, _ in sender.sent] == ["@mymalyn"]  # лише відбій із «розриву», без повтору тривог
-    assert "Тривога тривала 19 хв." in sender.sent[0][1]
-
-
-class PhotoSender(Sender):
-    def __init__(self):
-        super().__init__()
-        self.photos = []
-
-    def send_photo_bytes(self, chat_id, image, caption=None, filename="image.png"):
-        self.photos.append((chat_id, image, caption))
-        return 2
+    assert [chat for chat, _, _ in sender.photos] == ["@mymalyn"]
+    assert "Тривога тривала 19 хв." in sender.photos[0][2]
 
 
 def _relay_with_map(provider):
     sender = PhotoSender()
     relay = AlertRelay(make_config(), sender, provider)
-    relay.process([item(1, "новина", minutes_ago=30)], NOW)  # старт без сигналів
+    relay.process([item(1, "новина", minutes_ago=30)], NOW)
     return sender, relay
 
 
-def test_map_is_sent_when_a_new_alert_starts_and_refreshed_while_it_lasts():
+def test_map_is_sent_once_when_a_new_alert_starts():
     shots = []
 
     def provider():
@@ -151,30 +167,47 @@ def test_map_is_sent_when_a_new_alert_starts_and_refreshed_while_it_lasts():
 
     sender, relay = _relay_with_map(provider)
     relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=0)], NOW)
-    assert [chat for chat, _, _ in sender.photos] == ["@mymalyn"] and len(shots) == 1
-    assert sender.photos[0][2].startswith("🗺 Карта повітряних загроз станом на ")
-    assert "Неофіційні" not in sender.photos[0][2] and "neptun" not in sender.photos[0][2]  # застережень у підписі нема
-    assert "Підписатися" not in sender.photos[0][2]  # підпису каналу під картою нема
+    map_photos = [p for p in sender.photos if p[2] and "Карта" in p[2]]
+    assert len(map_photos) == 1 and len(shots) == 1
+    assert map_photos[0][2].startswith("🗺 Карта повітряних загроз станом на ")
+    assert "Підписатися" not in map_photos[0][2]
 
-    # Зміна рівня — теж сигнал, тож і карта.
+    # Level change — map NOT sent again (district was already active)
     relay.process([item(3, "🔴 Коростенський район — повітряна тривога, червоний рівень", minutes_ago=0)], NOW + dt.timedelta(minutes=5))
-    assert len(sender.photos) == 2
-    relay.process([], NOW + dt.timedelta(minutes=20))
-    assert len(sender.photos) == 2  # пауза між повторами ще не минула
+    map_photos2 = [p for p in sender.photos if p[2] and "Карта" in p[2]]
+    assert len(map_photos2) == 1
 
-    relay.process([], NOW + dt.timedelta(minutes=36))  # 30 хв від останньої карти, тривога триває
-    assert len(sender.photos) == 3
+    # Time passes — no more map refreshes
+    relay.process([], NOW + dt.timedelta(minutes=36))
+    map_photos3 = [p for p in sender.photos if p[2] and "Карта" in p[2]]
+    assert len(map_photos3) == 1
 
+    # Clear — no map
     relay.process([item(4, "🟢 Коростенський район — відбій повітряної тривоги", minutes_ago=-40)], NOW + dt.timedelta(minutes=40))
-    assert len(sender.photos) == 4  # відбій теж із картою
-    relay.process([], NOW + dt.timedelta(minutes=80))
-    assert len(sender.photos) == 4  # далі карт нема
+    map_photos4 = [p for p in sender.photos if p[2] and "Карта" in p[2]]
+    assert len(map_photos4) == 1
+
+    # New alert after clear — map sent again
+    relay.process([item(5, "🟡 Коростенський район — повітряна тривога, жовтий рівень: Дронова загроза", minutes_ago=-50)], NOW + dt.timedelta(minutes=50))
+    map_photos5 = [p for p in sender.photos if p[2] and "Карта" in p[2]]
+    assert len(map_photos5) == 2
 
 
-def test_map_failure_does_not_block_alert_text():
+def test_map_caption_includes_threat_and_district():
+    sender, relay = _relay_with_map(lambda: b"PNG")
+    relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень: Дронова загроза (жовтий рівень)", minutes_ago=0)], NOW)
+    map_photos = [p for p in sender.photos if p[2] and "Карта" in p[2]]
+    assert len(map_photos) == 1
+    assert "Дронова загроза" in map_photos[0][2] and "Коростенськ" in map_photos[0][2]
+
+
+def test_map_failure_does_not_block_alert_photo():
     sender, relay = _relay_with_map(lambda: None)
     relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=0)], NOW)
-    assert len(sender.sent) == 1 and sender.photos == []
+    alert_photos = [p for p in sender.photos if p[2] and "тривога" in p[2].lower()]
+    assert len(alert_photos) == 1  # alert photo was sent
+    map_photos = [p for p in sender.photos if p[2] and "Карта" in p[2]]
+    assert map_photos == []  # map failed gracefully
 
     class BrokenPhoto(PhotoSender):
         def send_photo_bytes(self, *a, **k):
@@ -184,11 +217,3 @@ def test_map_failure_does_not_block_alert_text():
     relay.process([item(1, "новина", minutes_ago=30)], NOW)
     relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=0)], NOW)
     assert relay.cursor == 2
-
-
-def test_map_state_survives_restart():
-    sender, relay = _relay_with_map(lambda: b"PNG")
-    relay.process([item(2, "🟡 Коростенський район — повітряна тривога, жовтий рівень", minutes_ago=0)], NOW)
-    restored = AlertRelay(make_config(), sender, lambda: b"PNG")
-    restored.load_state(relay.dump_state())
-    assert restored.last_map == relay.last_map
