@@ -5,7 +5,8 @@
     check   <файл>     перевірити файл рішень редактора, нічого не надсилаючи
     publish <файл…>    опублікувати рішення (потрібен TELEGRAM_BOT_TOKEN)
     attack             ранкова інфографіка «Нічна атака» в усі канали
-    markets            вечірня інфографіка «Курс валют і пальне»
+    fuel               обідня інфографіка «Ціни на пальне»
+    markets            вечірня інфографіка «Курс валют»
     weather            ранкова інфографіка погоди в усі канали
     drain              надіслати з черги пости, чий час настав
     report             стан мережі: пости за добу, проблемні джерела
@@ -177,6 +178,22 @@ def cmd_attack(args) -> int:
     return 1 if any("ПОМИЛКА" in line for line in lines) else 0
 
 
+def cmd_fuel(args) -> int:
+    from telegram_net.fuel import publish_fuel
+
+    config = load_config(args.config)
+    state = State(args.state)
+    publisher = None if args.dry_run else _publisher(required=True)
+    lines = publish_fuel(config, state, publisher, force=args.force, out_dir=Path(args.out) if args.out else None)
+    for line in lines:
+        print(line)
+    sent = any("надіслано" in line for line in lines)
+    if sent:
+        state.save()
+    _github_output(save_state=sent)
+    return 1 if any("ПОМИЛКА" in line for line in lines) else 0
+
+
 def cmd_markets(args) -> int:
     from telegram_net.markets import publish_markets
 
@@ -237,17 +254,13 @@ def cmd_alerts(args) -> int:
 
     config = load_config(args.config)
     sender = None if args.dry_run else _publisher(required=True)
-    capturer = None
-    if not args.no_neptun:
-        try:
-            import playwright.sync_api  # noqa: F401
-        except ImportError:
-            logger.warning("playwright не встановлено — скріншотів Нептуна не буде")
-        else:
-            from telegram_net.neptun import default_capturer
+    map_provider = local_maps = None
+    if not args.no_map:
+        from telegram_net.neptun import capture_map
+        from telegram_net.neptun_view import default_capturer
 
-            capturer = default_capturer
-    relay = AlertRelay(config, sender, capturer=capturer, map_dir="work" if args.dry_run else None)
+        map_provider, local_maps = capture_map, default_capturer
+    relay = AlertRelay(config, sender, map_provider, local_maps=local_maps)
     http = httpx.Client(timeout=15)
     url = f"https://t.me/s/{config.settings.alerts_source}"
 
@@ -272,9 +285,36 @@ def cmd_alerts(args) -> int:
             state_file.write_text(json.dumps(current, ensure_ascii=False), encoding="utf-8")
             saved["value"] = current
 
+    # Годинник: цикл тривог працює безперервно, тож він і запускає щоденні
+    # workflow (черга, погода, курс) — розклад GitHub ненадійний.
+    from zoneinfo import ZoneInfo
+
+    from telegram_net.ticker import Ticker, code_update_checker, github_dispatcher
+
+    ticker = Ticker(config, None if args.dry_run else github_dispatcher(), ZoneInfo(config.settings.timezone))
+    if state_file and state_file.exists():
+        ticker.last_run = json.loads(state_file.read_text(encoding="utf-8")).get("ticker", {})
+
+    def after_tick() -> None:
+        ticker.tick()
+        if state_file is None:
+            return
+        current = {**relay.dump_state(), "ticker": ticker.last_run}
+        if current != saved["value"]:
+            state_file.parent.mkdir(parents=True, exist_ok=True)
+            state_file.write_text(json.dumps(current, ensure_ascii=False), encoding="utf-8")
+            saved["value"] = current
+
     logger.info("Слухаю сигнали тривоги з %s кожні %s с", url, args.interval)
-    run_loop(relay, fetch, interval_sec=args.interval, max_runtime_min=args.max_minutes, after_tick=save_state)
-    save_state()
+    run_loop(
+        relay,
+        fetch,
+        interval_sec=args.interval,
+        max_runtime_min=args.max_minutes,
+        after_tick=after_tick,
+        should_stop=None if args.dry_run else code_update_checker(),
+    )
+    after_tick()
     return 0
 
 
@@ -316,6 +356,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", default=None, help="куди зберегти картинки")
     p.set_defaults(func=cmd_attack)
 
+    p = sub.add_parser("fuel")
+    p.add_argument("--force", action="store_true", help="не перевіряти годину")
+    p.add_argument("--dry-run", action="store_true", help="нічого не надсилати")
+    p.add_argument("--out", default=None, help="куди зберегти картинки")
+    p.set_defaults(func=cmd_fuel)
+
     p = sub.add_parser("markets")
     p.add_argument("--force", action="store_true", help="не перевіряти годину")
     p.add_argument("--dry-run", action="store_true", help="нічого не надсилати")
@@ -330,7 +376,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-minutes", type=float, default=None)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--state-file", default=None, help="де зберігати курсор між перезапусками")
-    p.add_argument("--no-neptun", action="store_true", help="не робити скріншоти мапи Нептуна")
+    p.add_argument("--no-map", action="store_true", help="не знімати карту NEPTUN")
     p.set_defaults(func=cmd_alerts)
 
     args = parser.parse_args(argv)

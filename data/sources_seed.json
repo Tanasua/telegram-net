@@ -6,6 +6,7 @@
     "max_age_hours": 12,
     "pool_ttl_hours": 10,
     "national_daily_limit": 4,
+    "national_slot_hours": [12, 17],
     "alerts_source": "zhytomyrmilitaryadministration",
     "addresses": [
       "Котики",

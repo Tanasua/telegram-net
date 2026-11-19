@@ -6,7 +6,7 @@ from helpers import NOW, item, make_config
 
 from telegram_net.alerts import AlertRelay
 from telegram_net.config import ChannelConfig
-from telegram_net.neptun import MapView, Threat, ThreatBook, bearing_deg, compass, describe_threat, haversine_km, nearby, parse_threat, render_caption
+from telegram_net.neptun_view import MapView, Threat, ThreatBook, bearing_deg, compass, describe_threat, haversine_km, nearby, parse_threat, render_caption
 
 BERDYCHIV = MapView(49.8994, 28.6025, 120, "Бердичева")
 
@@ -58,7 +58,7 @@ def test_no_course_when_target_is_the_same_place():
 def test_caption_fits_budget_and_reports_overflow():
     many = nearby([threat(id=str(i), lat=49.9 + i * 0.01) for i in range(9)], BERDYCHIV, NOW)
     caption = render_caption(many, BERDYCHIV, NOW, 600)
-    assert len(caption) <= 600 and "…і ще 4 на мапі" in caption and "Нептуна" in caption
+    assert len(caption) <= 600 and "…і ще 4 на мапі" in caption and "http" not in caption  # без посилань і застережень
     empty = render_caption([], BERDYCHIV, NOW, 600)
     assert "цілей не видно" in empty
 
@@ -79,15 +79,11 @@ def test_threat_book_applies_snapshot_then_upserts_and_removals():
 
 class Sender:
     def __init__(self):
-        self.texts, self.photos = [], []
-
-    def send_text(self, chat_id, text):
-        self.texts.append((chat_id, text))
-        return 1
+        self.photos = []  # (chat, фото чи список фото, підпис)
 
     def send_photo_bytes(self, chat_id, image, caption=None, filename="image.png"):
         self.photos.append((chat_id, image, caption))
-        return 2
+        return 1
 
     def send_photo_group_bytes(self, chat_id, images, caption=None):
         self.photos.append((chat_id, list(images), caption))
@@ -99,81 +95,71 @@ def berdychiv_config():
     ch = ChannelConfig(
         "berdychiv", "Бердичів", "@myberdychivnews", alert_district="Бердичівський",
         subscribe_cta="Підписатися на «Мій Бердичів»", name_genitive="Бердичева",
-        neptun={"lat": 49.8994, "lon": 28.6025, "radius_km": 120},
+        neptun={"lat": 49.8994, "lon": 28.6025, "radius_km": 120, "wide_radius_km": 350},
     )
     return dataclasses.replace(cfg, channels=[*cfg.channels, ch])
 
 
-def run_alert(relay, msg_id, text, now=NOW):
-    relay.process([item(msg_id, text, minutes_ago=0)], now)
-    for f in relay.map_futures:
-        f.result(timeout=5)
+ALERT = "🟡 Бердичівський район — повітряна тривога, жовтий рівень: Дронова загроза"
 
 
-def test_alert_sends_text_at_once_then_map_with_description():
-    sender, calls = Sender(), []
-
-    def capturer(view):
-        calls.append(view)
-        return [b"PNG", b"WIDE"], [threat(to={"name": "Київ"})]
-
-    relay = AlertRelay(berdychiv_config(), sender, capturer=capturer)
-    relay.process([item(1, "Старе повідомлення", minutes_ago=20)], NOW)  # старт — тихо
-    run_alert(relay, 2, "🟡 Бердичівський район — повітряна тривога, жовтий рівень: Дронова загроза")
-    assert len(sender.texts) == 1 and "Повітряна тривога" in sender.texts[0][1]
-    assert len(sender.photos) == 1
-    chat, png, caption = sender.photos[0]
-    assert chat == "@myberdychivnews" and png == [b"PNG", b"WIDE"]  # альбом: крупний і широкий кадри
-    assert "Що на мапі поблизу Бердичева" in caption and "курс на Київ" in caption and "Мій Бердичів" in caption
-    assert calls[0].place_genitive == "Бердичева" and calls[0].radius_km == 120
+def start_alert(relay, text=ALERT, msg_id=2):
+    relay.process([item(1, "старе", minutes_ago=20)], NOW)  # старт — тихо
+    relay.process([item(msg_id, text, minutes_ago=0)], NOW)
 
 
-def test_no_map_when_no_threats_nearby_or_capturer_fails_and_alert_still_sent():
+def album(chat_photos):
+    return [p for p in chat_photos if isinstance(p[1], list)]
+
+
+def test_berdychiv_gets_local_album_with_description_instead_of_generic_map():
+    sender, generic_calls, views = Sender(), [], []
+
+    def local(view):
+        views.append(view)
+        return [b"CLOSE", b"WIDE"], [threat(to={"name": "Київ"})]
+
+    relay = AlertRelay(berdychiv_config(), sender, map_provider=lambda: generic_calls.append(1) or b"GENERIC", local_maps=local)
+    start_alert(relay)
+    maps = [p for p in sender.photos if p[2] and "Що на мапі" in p[2]]
+    assert len(maps) == 1 and maps[0][0] == "@myberdychivnews"
+    assert maps[0][1] == [b"CLOSE", b"WIDE"]  # альбом: крупний і широкий кадри
+    assert "курс на Київ" in maps[0][2] and "Нептуна" not in maps[0][2] and "http" not in maps[0][2]
+    assert views[0].radius_km == 120 and views[0].wide_radius_km == 350 and views[0].place_genitive == "Бердичева"
+    assert generic_calls == []  # загальний знімок цьому каналу не потрібен
+
+
+def test_falls_back_to_generic_map_when_no_threats_nearby_or_local_capture_fails():
     sender = Sender()
-    relay = AlertRelay(berdychiv_config(), sender, capturer=lambda v: ([b"PNG"], [threat(lat=48.0, lon=35.0)]))
-    relay.process([item(1, "x", minutes_ago=20)], NOW)
-    run_alert(relay, 2, "🟡 Бердичівський район — повітряна тривога, жовтий рівень")
-    assert len(sender.texts) == 1 and sender.photos == []
+    relay = AlertRelay(berdychiv_config(), sender, map_provider=lambda: b"GENERIC", local_maps=lambda v: ([b"X"], [threat(lat=48.0, lon=35.0)]))
+    start_alert(relay)
+    assert [p[1] for p in sender.photos if p[1] == b"GENERIC"] == [b"GENERIC"]  # цілей поблизу немає
 
     def boom(view):
         raise RuntimeError("браузер впав")
 
     sender2 = Sender()
-    relay2 = AlertRelay(berdychiv_config(), sender2, capturer=boom)
-    relay2.process([item(1, "x", minutes_ago=20)], NOW)
-    run_alert(relay2, 2, "🟡 Бердичівський район — повітряна тривога, жовтий рівень")
-    assert len(sender2.texts) == 1 and sender2.photos == []  # сигнал не постраждав
+    relay2 = AlertRelay(berdychiv_config(), sender2, map_provider=lambda: b"GENERIC", local_maps=boom)
+    start_alert(relay2)
+    assert any(p[1] == b"GENERIC" for p in sender2.photos)  # і сигнал, і загальна карта на місці
 
 
-def test_map_only_on_alert_start_with_cooldown_and_not_on_clear():
+def test_channels_without_neptun_config_keep_generic_map_only():
+    sender, local_calls = Sender(), []
+    relay = AlertRelay(make_config(), sender, map_provider=lambda: b"GENERIC", local_maps=lambda v: local_calls.append(v) or ([], []))
+    start_alert(relay, "🟡 Коростенський район — повітряна тривога, жовтий рівень")
+    assert local_calls == [] and any(p[1] == b"GENERIC" for p in sender.photos)
+
+
+def test_local_map_only_at_alert_start_and_not_on_clear():
     sender, calls = Sender(), []
 
-    def capturer(view):
+    def local(view):
         calls.append(1)
-        return [b"PNG"], [threat()]
+        return [b"A"], [threat()]
 
-    relay = AlertRelay(berdychiv_config(), sender, capturer=capturer)
-    relay.process([item(1, "x", minutes_ago=20)], NOW)
-    run_alert(relay, 2, "🟡 Бердичівський район — повітряна тривога, жовтий рівень")
-    run_alert(relay, 3, "🔴 Бердичівський район — повітряна тривога, червоний рівень: ракетна загроза")  # тривога вже триває
+    relay = AlertRelay(berdychiv_config(), sender, local_maps=local)
+    start_alert(relay)
+    relay.process([item(3, "🔴 Бердичівський район — повітряна тривога, червоний рівень: ракетна загроза", minutes_ago=0)], NOW)  # вже триває
+    relay.process([item(4, "🟢 Бердичівський район — відбій повітряної тривоги", minutes_ago=0)], NOW)
     assert len(calls) == 1
-    run_alert(relay, 4, "🟢 Бердичівський район — відбій повітряної тривоги")
-    assert len(calls) == 1
-    # нова тривога за 5 хв — у межах кулдауну; за 30 хв — знову знімок
-    later = NOW + dt.timedelta(minutes=5)
-    relay.process([item(5, "🟡 Бердичівський район — повітряна тривога, жовтий рівень", minutes_ago=-5)], later)
-    for f in relay.map_futures: f.result(timeout=5)
-    assert len(calls) == 1
-    relay.process([item(6, "🟢 Бердичівський район — відбій повітряної тривоги", minutes_ago=-5)], later)
-    much_later = NOW + dt.timedelta(minutes=30)
-    relay.process([item(7, "🟡 Бердичівський район — повітряна тривога, жовтий рівень", minutes_ago=-30)], much_later)
-    for f in relay.map_futures: f.result(timeout=5)
-    assert len(calls) == 2
-
-
-def test_channels_without_neptun_config_get_no_map():
-    sender, calls = Sender(), []
-    relay = AlertRelay(make_config(), sender, capturer=lambda v: calls.append(v) or ([], []))
-    relay.process([item(1, "x", minutes_ago=20)], NOW)
-    run_alert(relay, 2, "🟡 Коростенський район — повітряна тривога, жовтий рівень")
-    assert calls == [] and len(sender.texts) == 1

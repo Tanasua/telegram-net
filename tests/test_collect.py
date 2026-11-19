@@ -169,7 +169,7 @@ def test_brief_shows_limits_and_live_channel_posts(tmp_path):
     live = {"malyn": [item(1, "Пост, опублікований вручну"), item(2, "🟢 Коростенський район — відбій повітряної тривоги")]}
     brief = build_brief(config, state, NOW, live_posts=live)
     malyn, zhytomyr = brief["channels"]
-    assert (malyn["posts_today"], malyn["remaining_today"], malyn["national_remaining_today"]) == (2, 10, 3)
+    assert (malyn["posts_today"], malyn["remaining_today"], malyn["national_remaining_today"]) == (2, 11, 3)
     assert [p["text"] for p in malyn["recent_posts"]] == ["Пост, опублікований вручну"]
     assert zhytomyr["posts_today"] == 0 and zhytomyr["recent_posts"] == []
     assert brief["quiet_hours_now"] is False and brief["local_time"].startswith("2026-11-14 15:00")
@@ -301,3 +301,16 @@ def test_official_sources_are_capped_to_freshest(tmp_path):
     items = [item(i, f"Рішення виконкому номер {i} про ремонт дороги на вулиці", minutes_ago=100 - i) for i in range(1, 8)]
     brief, _, _ = _run(tmp_path, [rada], {"@Рада": items})
     assert len(brief["candidates"]) == 3 and brief["stats"]["capped"] == 4
+
+
+def test_national_due_follows_slot_hours(tmp_path):
+    from telegram_net.collect import national_due
+
+    config = make_config([])
+    ch = config.active_channels[0]
+    state = State(tmp_path)
+    kyiv = lambda h: dt.datetime(2026, 11, 14, h - 2, 0, tzinfo=dt.timezone.utc)  # noqa: E731 — взимку Київ = UTC+2
+    assert [national_due(config, state, ch, kyiv(h)) for h in (9, 12, 17)] == [0, 1, 2]
+    state.log_post({"channel_id": ch.channel_id, "published_at": iso(kyiv(12)), "kind": "national", "text": "т", "candidate_ids": []})
+    assert [national_due(config, state, ch, kyiv(h)) for h in (13, 17)] == [0, 1]
+    assert build_brief(config, state, kyiv(17))["channels"][0]["national_due"] == 1

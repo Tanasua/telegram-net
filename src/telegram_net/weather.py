@@ -325,6 +325,22 @@ INK = (31, 42, 68)
 SOFT = (255, 255, 255, 215)  # напівпрозорий білий для другорядного тексту
 
 
+def _warm_tint(color: tuple[int, ...]) -> tuple[int, ...]:
+    return tuple(round(c * 0.8 + w * 0.2) for c, w in zip(color, (200, 120, 60)))
+
+
+def _cool_tint(color: tuple[int, ...]) -> tuple[int, ...]:
+    return tuple(round(c * 0.8 + w * 0.2) for c, w in zip(color, (40, 50, 100)))
+
+
+_WEATHER_VARIANTS = (
+    # (tint, glow_rect, glow_fill, card_fill, card_outline, tip_fill)
+    (None, (150, 230, 510, 590), (255, 255, 255, 70), (255, 255, 255, 46), (255, 255, 255, 70), (255, 255, 255, 235)),
+    (_warm_tint, (500, 200, 980, 650), (255, 180, 100, 55), (255, 255, 255, 55), (255, 200, 150, 80), (255, 245, 230, 235)),
+    (_cool_tint, (0, 300, 450, 700), (150, 180, 255, 50), (200, 220, 255, 40), (180, 200, 255, 60), (230, 240, 255, 235)),
+)
+
+
 def _font(size: int, weight: str = "ExtraBold"):
     from PIL import ImageFont
 
@@ -354,19 +370,21 @@ def _paste_center(base, im, cx: int, cy: int) -> None:
     base.alpha_composite(im, (round(cx - im.width / 2), round(cy - im.height / 2)))
 
 
-def render(f: DayForecast, channel_title: str) -> bytes:
+def render(f: DayForecast, channel_title: str, variant: int = 0) -> bytes:
     from PIL import Image, ImageDraw, ImageFilter
 
+    tint, glow_rect, glow_fill, card_fill, card_outline, tip_fill = _WEATHER_VARIANTS[variant % len(_WEATHER_VARIANTS)]
     top, bottom = _BACKGROUNDS.get(f.hero_icon, _BACKGROUNDS["cloudy"])
+    if tint is not None:
+        top, bottom = tint(top), tint(bottom)
     img = Image.new("RGBA", (SIZE, SIZE))
     grad = ImageDraw.Draw(img)
     for y in range(SIZE):
         k = y / (SIZE - 1)
         grad.line([(0, y), (SIZE, y)], fill=tuple(round(a + (b - a) * k) for a, b in zip(top, bottom)) + (255,))
 
-    # м'яке світіння за головною іконкою
     glow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    ImageDraw.Draw(glow).ellipse((150, 230, 510, 590), fill=(255, 255, 255, 70))
+    ImageDraw.Draw(glow).ellipse(glow_rect, fill=glow_fill)
     img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(70)))
 
     overlay = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
@@ -399,7 +417,7 @@ def render(f: DayForecast, channel_title: str) -> bytes:
     y0, y1 = 590, 850
     for i in range(n):
         x0 = left + i * (width + gap)
-        od.rounded_rectangle((x0, y0, x0 + width, y1), radius=40, fill=(255, 255, 255, 46), outline=(255, 255, 255, 70), width=2)
+        od.rounded_rectangle((x0, y0, x0 + width, y1), radius=40, fill=card_fill, outline=card_outline, width=2)
         part = f.parts[i]
         mid = x0 + width / 2
         od.text((mid, y0 + 44), part.name, font=_font(34, "Bold"), fill=SOFT, anchor="mm")
@@ -410,11 +428,13 @@ def render(f: DayForecast, channel_title: str) -> bytes:
     tip_w = od.textlength(f.tip, font=tip_font)
     tip_icon = _icon(f.tip_icon, 66)
     total = tip_icon.width + 16 + tip_w
-    od.rounded_rectangle((cx - total / 2 - 36, 890, cx + total / 2 + 36, 972), radius=41, fill=(255, 255, 255, 235))
+    od.rounded_rectangle((cx - total / 2 - 36, 890, cx + total / 2 + 36, 972), radius=41, fill=tip_fill)
     od.text((cx - total / 2 + tip_icon.width + 16, 931), f.tip, font=tip_font, fill=INK, anchor="lm")
 
-    od.text((cx, 1020), channel_title, font=_font(28, "SemiBold"), fill=(255, 255, 255, 170), anchor="mm")
     img.alpha_composite(overlay)
+    from telegram_net.heart import draw_title_with_heart
+
+    draw_title_with_heart(img, ImageDraw.Draw(img), (cx, 1020), channel_title, _font(28, "SemiBold"), (255, 255, 255, 200))
 
     # іконки — поверх, щоб не пригасали під напівпрозорими шарами
     _paste_center(img, _icon(f.hero_icon, 300), 320, 395)
@@ -453,8 +473,10 @@ def publish_weather(config, state, publisher, now: dt.datetime | None = None, fo
 
     now = now or dt.datetime.now(dt.timezone.utc)
     local = local_now(config, now)
-    if not force and local.hour != config.settings.weather_hour:
-        return [f"Зараз {local:%H:%M} за Києвом — погода виходить о {config.settings.weather_hour}:00, пропускаю"]
+    start = config.settings.weather_hour
+    # Вікно у 2 години: GitHub часом пропускає заплановані запуски, тож пізніша спроба — запасна.
+    if not force and not (start <= local.hour < start + 2):
+        return [f"Зараз {local:%H:%M} за Києвом — погода виходить з {start}:00 до {start + 2}:00, пропускаю"]
     tz = ZoneInfo(config.settings.timezone)
     day_start = start_of_local_day(config, now)
     lines = []
@@ -470,7 +492,8 @@ def publish_weather(config, state, publisher, now: dt.datetime | None = None, fo
             if key not in cache:
                 cache[key] = fetch(key[0], key[1], tz)
             forecast = summarize(cache[key], local.date(), ch.weather["city_loc"])
-            image = render(forecast, _channel_title(ch))
+            variant = local.date().timetuple().tm_yday % len(_WEATHER_VARIANTS)
+            image = render(forecast, _channel_title(ch), variant=variant)
         except Exception as exc:
             logger.exception("Погода для %s не вдалася", ch.channel_id)
             lines.append(f"{ch.channel_id}: ПОМИЛКА — {exc}")

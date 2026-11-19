@@ -154,12 +154,19 @@ def prepare(decisions: dict, config: Config, state: State, now: dt.datetime | No
 
         today = [p for p in state.posts_since(channel.channel_id, day_start) if p.get("kind") not in SERVICE_KINDS]
         this_run = in_run.get(channel.channel_id, [])
-        if len(today) + len(this_run) >= channel.daily_limit:
+        # Всеукраїнські поза квотою каналу: не рахуються й не блокуються добовим лімітом.
+        local_today = [p for p in today if p.get("kind") != "national"] + [p for p in this_run if p.kind != "national"]
+        if kind != "national" and len(local_today) >= channel.daily_limit:
             fail(f"добовий ліміт каналу ({channel.daily_limit}) вичерпано")
             continue
-        news_this_run = [p for p in this_run if p.kind in NEWS_KINDS]
-        if kind in NEWS_KINDS and len(news_this_run) >= channel.max_posts_per_run:
+        # «Україна» має власний слот: один пост за прогін поверх ліміту місцевих,
+        # щоб місцеве не витісняло всеукраїнське.
+        news_this_run = [p for p in this_run if p.kind in NEWS_KINDS and p.kind != "national"]
+        if kind in NEWS_KINDS and kind != "national" and len(news_this_run) >= channel.max_posts_per_run:
             fail(f"ліміт новин за прогін ({channel.max_posts_per_run}) вичерпано")
+            continue
+        if kind == "national" and any(p.kind == "national" for p in this_run):
+            fail("за один прогін у канал — не більше однієї всеукраїнської новини")
             continue
         if kind in RUBRIC_KINDS and (
             any(p.kind == kind for p in this_run) or any(p.get("kind") == kind for p in today)
@@ -230,6 +237,14 @@ def publish_run(
     if run_id in processed:
         # Повторний запуск workflow для того самого файлу не має дублювати пости.
         report.skipped_run = True
+        return report
+    slot = run_id[:13]  # «2026-11-16T07» — година прогону
+    if not dry_run and len(run_id) >= 13 and any(r[:13] == slot for r in processed if len(r) >= 13):
+        # Захист від двох редакторів одночасно (так було 16.11, коли старе
+        # завдання не видалилось): другий прогін у ту саму годину пропускаємо.
+        report.skipped_run = True
+        report.published.append(f"прогін {run_id} пропущено: у цю годину вже був інший прогін (два редактори?)")
+        processed.append(run_id)
         return report
 
     prepared, errors = prepare(decisions, config, state, now)
@@ -305,7 +320,12 @@ def schedule(prepared: list[PreparedPost], config: Config, state: State, now: dt
             due = now
         else:
             due = max(now, last[cid] + spacing) if cid in last else now
-            due = _next_open_time(config, due)
+            opened = _next_open_time(config, due)
+            if opened != due and p.kind == "evening":
+                # «Головне за день» уранці наступного дня нікому не потрібне.
+                logger.info("Вечірній підсумок %s не встигає до нічної тиші — пропускаю", cid)
+                continue
+            due = opened
         last[cid] = max(last.get(cid, due), due)
         entries.append(
             {
