@@ -2,28 +2,6 @@
  {
   "attempts": 0,
   "candidate_ids": [
-   "e851bb44"
-  ],
-  "channel_id": "zhytomyr",
-  "due_at": "2026-11-20T11:19:41+00:00",
-  "html": "<b>🎭 У Житомирі до 22 листопада триває дитячий театральний фестиваль «Метафора FEST 2026»</b>\n\n🎭 У Житомирі до 22 листопада триває дитячий театральний фестиваль «Метафора FEST 2026»\n\nУ Житомирському драмтеатрі з 20 по 22 листопада виступлять колективи із десяти областей України. Глядачам покажуть понад двадцять робіт у різних жанрах — від комедій та казок до сучасних адаптацій класики й експериментальних сценічних ескізів до 15 хвилин.\n\nВхід на всі покази вільний.\n\n<b>❤️ Мій Житомир | Новини Житомира 🇺🇦</b>\n\n⚡️Новини нашого району⚡️\n\n<a href=\"https://t.me/myzhytomyrnews\"><b>👉👉👉 Підписатися 👈👈👈</b></a>",
-  "kind": "local",
-  "media": [
-   {
-    "type": "photo",
-    "url": "https://cdn4.telesco.pe/file/HEcNAiWtNGLJtMG7wDrhuig8zWS5mtu8JE-r36CDXFmhr_lxxCJ5hW9JhW1TC-o3dv_B1LOejnF2A_wx05r95mDRx1NbW56kh-bH7u_qVSeCXb7vTllxXqlE6-ysiM4wjCjytA48U96k6wZBYgiAel0Yoy3F1NglFFeRfpNBekqIOYixaPUVEFXb6vZiIgCIqSl1m1ElkrS1g1Sk8aeBSKHJp8viuRbdPb-5LIWIVs7MKfcFvum9_QWlguwQ4oflF-IGRuRfHGDlKrEDBPHaC8ZuvJVYav6Z8IcsfFsqgDQxY-5825x8b38cfwX9jXRKWEEugYExn2LSiBMoAd-h2g.jpg"
-   }
-  ],
-  "run_id": "2026-11-20T09-48",
-  "source_urls": [
-   "https://t.me/FirstZt/13648"
-  ],
-  "text": "🎭 У Житомирі до 22 листопада триває дитячий театральний фестиваль «Метафора FEST 2026»\n\n🎭 У Житомирі до 22 листопада триває дитячий театральний фестиваль «Метафора FEST 2026»\n\nУ Житомирському драмтеатрі з 20 по 22 листопада виступлять колективи із десяти областей України. Глядачам покажуть понад двадцять робіт у різних жанрах — від комедій та казок до сучасних адаптацій класики й експериментальних сценічних ескізів до 15 хвилин.\n\nВхід на всі покази вільний.",
-  "urgent": false
- },
- {
-  "attempts": 0,
-  "candidate_ids": [
    "b7620df3"
   ],
   "channel_id": "zhytomyr",
