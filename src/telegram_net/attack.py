@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 ASSETS = Path(__file__).resolve().parents[2] / "assets"
 SOURCE = "kpszsu"
 MAX_PAGES = 40
+STATS_BOTTOM = 340  # нижня межа блоку «158 / 131 / 19» на картинці: підписи не можуть бути вище
 ZHYTOMYR = "UA-18"
 
 MONTHS_GEN = {
@@ -436,6 +437,7 @@ def render(r: NightReport, channel_title: str) -> bytes:
         drawn.add(site)
         lat, lon = LAUNCH_SITES[site]
         sx, sy = project(lon, lat)
+        sy = max(sy, STATS_BOTTOM + 24)  # точки на самому півдні/півночі за межею карти не лізуть під плитки з цифрами
         dist = math.hypot(target[0] - sx, target[1] - sy)
         length = min(130, dist * 0.45)
         ex = sx + (target[0] - sx) / dist * length
@@ -446,7 +448,12 @@ def render(r: NightReport, channel_title: str) -> bytes:
         half = d.textlength(site, font=site_font) / 2
         lx = min(max(sx, 24 + half), W - 24 - half)
         below = sy > target[1] + 60
-        site_labels.append(((lx, sy + 18 if below else sy - 16), site, "mt" if below else "mb"))
+        if not below and sy - 16 - 26 < STATS_BOTTOM:
+            # північні точки пуску лежать під блоком цифр: підпис над ними налазить на плитки,
+            # а під точкою — на стрілку; ставимо ліворуч від точки
+            site_labels.append(((sx - 16, sy), site, "rm"))
+        else:
+            site_labels.append(((lx, sy + 18 if below else sy - 16), site, "mt" if below else "mb"))
         site_dots.append((sx, sy))
 
     # напівпрозорі елементи — окремим шаром, інакше альфа не змішується з тлом
