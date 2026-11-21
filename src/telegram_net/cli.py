@@ -254,12 +254,13 @@ def cmd_alerts(args) -> int:
 
     config = load_config(args.config)
     sender = None if args.dry_run else _publisher(required=True)
-    map_provider = None
+    map_provider = local_maps = None
     if not args.no_map:
         from telegram_net.neptun import capture_map
+        from telegram_net.neptun_view import default_capturer
 
-        map_provider = capture_map
-    relay = AlertRelay(config, sender, map_provider)
+        map_provider, local_maps = capture_map, default_capturer
+    relay = AlertRelay(config, sender, map_provider, local_maps=local_maps)
     http = httpx.Client(timeout=15)
     url = f"https://t.me/s/{config.settings.alerts_source}"
 

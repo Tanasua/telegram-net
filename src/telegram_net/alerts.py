@@ -33,7 +33,8 @@ from typing import Callable, Protocol
 from telegram_net.config import ChannelConfig, Config
 from telegram_net.signature import signature_html, channel_title
 from telegram_net.fetchers.base import FetchedItem
-from telegram_net.neptun import map_caption
+from telegram_net.neptun import KYIV, map_caption
+from telegram_net.neptun_view import Capturer, MapView, nearby, render_caption
 
 logger = logging.getLogger(__name__)
 
@@ -216,11 +217,21 @@ class TextSender(Protocol):
 
     def send_photo_bytes(self, chat_id: str, image: bytes, caption: str | None = None, filename: str = "image.png") -> int: ...
 
+    def send_photo_group_bytes(self, chat_id: str, images: list[bytes], caption: str | None = None) -> list[int]: ...
+
 
 class AlertRelay:
-    def __init__(self, config: Config, sender: TextSender | None, map_provider: Callable[[], bytes | None] | None = None):
+    def __init__(
+        self,
+        config: Config,
+        sender: TextSender | None,
+        map_provider: Callable[[], bytes | None] | None = None,
+        local_maps: Capturer | None = None,
+    ):
         self._sender = sender
         self._map_provider = map_provider
+        self._local_maps = local_maps  # місцева мапа з описом цілей (neptun_view.py) для каналів із полем neptun
+        self._max_caption = config.settings.max_caption_chars
         self._channels_by_district: dict[str, list[ChannelConfig]] = {}
         for ch in config.active_channels:
             if ch.alert_district:
@@ -266,13 +277,20 @@ class AlertRelay:
             self.cursor = msg_id if self.cursor is None else max(self.cursor, msg_id)
 
     def _send_map(self, district: str, now: dt.datetime, threat: str | None = None) -> None:
-        channels = self._channels_by_district.get(district, [])
-        if self._map_provider is None or not channels:
-            return
-        image = self._map_provider()
-        if image is None:
-            return
-        for ch in channels:
+        """Карта після першого оголошення тривоги в районі. Канали з полем `neptun`
+        отримують місцеву мапу з описом цілей; якщо поблизу цілей немає чи зйомка не
+        вдалась — як усі інші канали, загальний знімок віджета."""
+        generic: list[bytes | None] = []  # лінива зйомка: один знімок на всі канали
+        for ch in self._channels_by_district.get(district, []):
+            if self._send_local_map(ch, now):
+                continue
+            if self._map_provider is None:
+                continue
+            if not generic:
+                generic.append(self._map_provider())
+            image = generic[0]
+            if image is None:
+                continue
             cap = map_caption(now, district, threat)
             self.sent.append((ch.telegram_chat_id, f"[карта] {cap}"))
             if self._sender is None:
@@ -282,6 +300,38 @@ class AlertRelay:
                 self._sender.send_photo_bytes(ch.telegram_chat_id, image, caption=cap, filename="neptun.png")
             except Exception:
                 logger.exception("Не вдалося надіслати карту в %s", ch.telegram_chat_id)
+
+    def _send_local_map(self, ch: ChannelConfig, now: dt.datetime) -> bool:
+        """True — місцеву мапу надіслано (чи показано в пробному прогоні)."""
+        cfg = ch.neptun
+        if not cfg or self._local_maps is None:
+            return False
+        view = MapView(
+            lat=cfg["lat"],
+            lon=cfg["lon"],
+            radius_km=cfg.get("radius_km", 120),
+            place_genitive=ch.name_genitive or "",
+            wide_radius_km=cfg.get("wide_radius_km"),
+        )
+        try:
+            shots, threats = self._local_maps(view)
+            found = nearby(threats, view, now)
+            if not found or not shots:
+                logger.info("Нептун: поблизу %s цілей немає — шлю загальну карту", ch.channel_id)
+                return False
+            caption = render_caption(found, view, now.astimezone(KYIV), self._max_caption)
+            self.sent.append((ch.telegram_chat_id, f"[карта] {caption}"))
+            if self._sender is None:
+                logger.info("[пробний] %s: місцева карта NEPTUN (%d кадр.): %s", ch.telegram_chat_id, len(shots), caption.replace("\n", " | "))
+                return True
+            if len(shots) > 1:
+                self._sender.send_photo_group_bytes(ch.telegram_chat_id, shots, caption=caption)
+            else:
+                self._sender.send_photo_bytes(ch.telegram_chat_id, shots[0], caption=caption, filename="neptun.png")
+            return True
+        except Exception:
+            logger.exception("Не вдалося зробити місцеву карту для %s", ch.channel_id)
+            return False
 
     def _announce(self, event: AlertEvent, district: str, started: dt.datetime | None, at: dt.datetime) -> None:
         base = render_alert(event, district, started, at)
