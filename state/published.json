@@ -9620,5 +9620,75 @@
   ],
   "published_at": "2026-11-24T10:00:35+00:00",
   "text": "Середні ціни на пальне на Житомирщині: А-95 — 83,17, ДП — 97,80, Газ — 61,86 грн/л."
+ },
+ {
+  "candidate_ids": [],
+  "channel_id": "zhytomyr",
+  "kind": "currency",
+  "message_ids": [
+   314
+  ],
+  "published_at": "2026-11-24T17:00:30+00:00",
+  "text": "Курс НБУ на 25 листопада: USD 45,35 грн, готівка 44,90/45,60; EUR 49,61 грн, готівка 49,05/50,05."
+ },
+ {
+  "candidate_ids": [],
+  "channel_id": "berdychiv",
+  "kind": "currency",
+  "message_ids": [
+   160
+  ],
+  "published_at": "2026-11-24T17:00:30+00:00",
+  "text": "Курс НБУ на 25 листопада: USD 45,35 грн, готівка 44,90/45,60; EUR 49,61 грн, готівка 49,05/50,05."
+ },
+ {
+  "candidate_ids": [],
+  "channel_id": "korosten",
+  "kind": "currency",
+  "message_ids": [
+   168
+  ],
+  "published_at": "2026-11-24T17:00:30+00:00",
+  "text": "Курс НБУ на 25 листопада: USD 45,35 грн, готівка 44,90/45,60; EUR 49,61 грн, готівка 49,05/50,05."
+ },
+ {
+  "candidate_ids": [],
+  "channel_id": "zvyahel",
+  "kind": "currency",
+  "message_ids": [
+   180
+  ],
+  "published_at": "2026-11-24T17:00:30+00:00",
+  "text": "Курс НБУ на 25 листопада: USD 45,35 грн, готівка 44,90/45,60; EUR 49,61 грн, готівка 49,05/50,05."
+ },
+ {
+  "candidate_ids": [],
+  "channel_id": "malyn",
+  "kind": "currency",
+  "message_ids": [
+   191
+  ],
+  "published_at": "2026-11-24T17:00:30+00:00",
+  "text": "Курс НБУ на 25 листопада: USD 45,35 грн, готівка 44,90/45,60; EUR 49,61 грн, готівка 49,05/50,05."
+ },
+ {
+  "candidate_ids": [],
+  "channel_id": "radomyshl",
+  "kind": "currency",
+  "message_ids": [
+   157
+  ],
+  "published_at": "2026-11-24T17:00:30+00:00",
+  "text": "Курс НБУ на 25 листопада: USD 45,35 грн, готівка 44,90/45,60; EUR 49,61 грн, готівка 49,05/50,05."
+ },
+ {
+  "candidate_ids": [],
+  "channel_id": "korostyshiv",
+  "kind": "currency",
+  "message_ids": [
+   147
+  ],
+  "published_at": "2026-11-24T17:00:30+00:00",
+  "text": "Курс НБУ на 25 листопада: USD 45,35 грн, готівка 44,90/45,60; EUR 49,61 грн, готівка 49,05/50,05."
  }
 ]
