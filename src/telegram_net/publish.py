@@ -92,6 +92,8 @@ def load_decisions(path: str | Path) -> dict:
 
 def _render(headline: str, text: str, channel: ChannelConfig) -> tuple[str, str]:
     """Текст посту + підпис каналу (однаковий під усіма постами)."""
+    if headline and text.startswith(headline):
+        text = text[len(headline):].lstrip("\n")
     plain = f"{headline}\n\n{text}" if headline else text
     body = f"<b>{html.escape(headline)}</b>\n\n{html.escape(text)}" if headline else html.escape(text)
     return plain, f"{body}\n\n{signature_html(channel)}"
