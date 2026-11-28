@@ -60,6 +60,7 @@ class ChannelConfig:
     subscribe_cta: str | None = None  # «Підписатися на «Мій Малин»» — з нього береться «Мій Малин» у підписі
     name_genitive: str | None = None  # «Малина» — для рядка «Новини Малина» в підписі під постами
     weather: dict | None = None  # {"lat", "lon", "city_loc"} — для ранкової інфографіки погоди
+    neptun: dict | None = None  # {"lat", "lon", "radius_km"} — скріншот мапи Нептуна після сигналу тривоги
 
 
 @dataclass(frozen=True)
@@ -132,6 +133,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> Config:
             subscribe_cta=c.get("subscribe_cta") or f"Підписуйся на {c['name']}",
             name_genitive=c.get("name_genitive"),
             weather=c.get("weather"),
+            neptun=c.get("neptun"),
         )
         for c in data["channels"]
     ]
